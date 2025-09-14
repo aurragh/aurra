@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurra AI - Event Style Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px 20px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header button {
+            padding: 10px 25px;
+            font-size: 1em;
+            background-color: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #f9f9f9;
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+        }
+
+        .card p {
+            margin: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .info {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px auto;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .info div {
+            max-width: 300px;
+        }
+
+        .subscribe {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #f4f4f4;
+        }
+
+        .subscribe input {
+            padding: 10px;
+            width: 300px;
+            max-width: 90%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .subscribe button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Effortlessly create stunning looks for any event</h1>
+    <button>Generate Look</button>
+</header>
+
+<section class="grid">
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Wedding"><p>Wedding</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Gala"><p>Gala</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Festival"><p>Festival</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Cocktail"><p>Cocktail</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Elegant"><p>Elegant</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Business"><p>Business</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Autumn"><p>Autumn</p></div>
+    <div class="card"><img src="https://via.placeholder.com/300x400?text=Casual"><p>Casual</p></div>
+</section>
+
+<section class="info">
+    <div>
+        <h3>How It Works</h3>
+        <p>Describe the event and your preferences, and our AI generates personalized outfit ideas instantly.</p>
+    </div>
+    <div>
+        <h3>Benefits for Event Organizers</h3>
+        <p>Delight your guests with customized fashion inspiration and save time on outfit planning.</p>
+    </div>
+</section>
+
+<section class="subscribe">
+    <h2>Get the latest looks</h2>
+    <p>Sign up for fresh style inspiration sent to your inbox.</p>
+    <input type="email" placeholder="Your email">
+    <button>Subscribe</button>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aurra Dashboard - Account Overview</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', sans-serif;
+            background-color: #f9f9f9;
+            color: #1f1f1f;
+        }
+
+        .sidebar {
+            position: fixed;
+            width: 220px;
+            height: 100vh;
+            background-color: #fff;
+            border-right: 1px solid #eee;
+            padding: 30px 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5em;
+            margin-bottom: 40px;
+        }
+
+        .sidebar a {
+            display: block;
+            text-decoration: none;
+            color: #333;
+            margin: 15px 0;
+            font-size: 1em;
+        }
+
+        .main {
+            margin-left: 240px;
+            padding: 40px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            font-size: 1.2em;
+            margin-bottom: 12px;
+        }
+
+        .plan {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .btn-group {
+            margin-top: 12px;
+        }
+
+        .btn-group a {
+            text-decoration: none;
+            font-size: 0.9em;
+            margin-right: 12px;
+            padding: 8px 12px;
+            background: #000;
+            color: #fff;
+            border-radius: 6px;
+        }
+
+        .points {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .style-profile {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .style-profile img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .style-profile-details {
+            font-size: 0.95em;
+        }
+
+        .collected-tag {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 3px 8px;
+            background-color: #efefef;
+            font-size: 0.75em;
+            border-radius: 4px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>AURRA</h2>
+    <a href="#">My Board</a>
+    <a href="#">Create Look</a>
+    <a href="#">Style Profile</a>
+    <a href="#">Points & Rewards</a>
+    <a href="#">Subscription</a>
+    <a href="#">Settings</a>
+</div>
+
+<div class="main">
+    <h1>Account Overview</h1>
+    <div class="dashboard-grid">
+        <!-- Subscription Box -->
+        <div class="card">
+            <h3>Subscription</h3>
+            <div class="plan">PRO</div>
+            <div style="color:#555;">Renews on June 15, 2024</div>
+            <div class="btn-group">
+                <a href="#">Upgrade</a>
+                <a href="#">Manage billing</a>
+            </div>
+        </div>
+
+        <!-- Points Tracker -->
+        <div class="card">
+            <h3>Points & Rewards</h3>
+            <div class="points">8,350 points</div>
+            <div style="color:#555;">Collected — 1,650 to next reward</div>
+        </div>
+
+        <!-- Style Profile Summary -->
+        <div class="card">
+            <h3>Style Profile</h3>
+            <div class="style-profile">
+                <img src="https://via.placeholder.com/80" alt="User Avatar">
+                <div class="style-profile-details">
+                    <div><strong>Queen</strong></div>
+                    <div>Fiery, Sophisticated</div>
+                    <div class="collected-tag">Collected</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

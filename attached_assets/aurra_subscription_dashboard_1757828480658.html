@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard - Subscription</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', sans-serif;
+            background-color: #f9f9f9;
+        }
+
+        .sidebar {
+            width: 220px;
+            height: 100vh;
+            background-color: #1f1f1f;
+            color: white;
+            padding: 30px 20px;
+            position: fixed;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5em;
+            margin-bottom: 40px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            margin: 15px 0;
+            font-size: 1em;
+        }
+
+        .main {
+            margin-left: 240px;
+            padding: 40px;
+        }
+
+        .subscription {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .subscription h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .plan-box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .billing-history {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .view-link {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Aurra</h2>
+    <a href="#">My Board</a>
+    <a href="#">Create Look</a>
+    <a href="#">Style Profile</a>
+    <a href="#">Points & Rewards</a>
+    <a href="#">Subscription</a>
+    <a href="#">Settings</a>
+</div>
+
+<div class="main">
+    <div class="subscription">
+        <h2>Subscription</h2>
+        <div class="plan-box">
+            <div>
+                <div style="font-weight: bold;">Active Plan</div>
+                <div style="font-size: 1.2em; margin: 4px 0;">Monthly</div>
+                <div style="color: #555;">Renews on June 12, 2024</div>
+            </div>
+            <div>
+                <a href="#" style="color: #007bff;">Change</a>
+            </div>
+        </div>
+
+        <div class="billing-history">
+            <h3>Billing History</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Invoice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>May 12, 2024</td>
+                        <td>Paid</td>
+                        <td><span class="view-link">View</span></td>
+                    </tr>
+                    <tr>
+                        <td>April 12, 2024</td>
+                        <td>Paid</td>
+                        <td><span class="view-link">View</span></td>
+                    </tr>
+                    <tr>
+                        <td>March 12, 2024</td>
+                        <td>Paid</td>
+                        <td><span class="view-link">View</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

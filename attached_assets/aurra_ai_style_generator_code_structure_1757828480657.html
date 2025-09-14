@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurra AI - Style Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #d2b48c;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .output {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .output img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .output .btn-group {
+            margin-top: 15px;
+        }
+
+        .output .btn-group button {
+            margin: 0 10px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Create Your Style Profile</h2>
+
+    <!-- Sign Up Form -->
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="Enter your email">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Create a password">
+
+    <hr>
+
+    <!-- Persistent Profile Setup -->
+    <label for="height">Height</label>
+    <select id="height">
+        <option>Select</option>
+        <option>Short</option>
+        <option>Average</option>
+        <option>Tall</option>
+    </select>
+
+    <label for="body">Body Type</label>
+    <select id="body">
+        <option>Select</option>
+        <option>Pear</option>
+        <option>Hourglass</option>
+        <option>Rectangle</option>
+    </select>
+
+    <label for="face">Face Shape</label>
+    <select id="face">
+        <option>Select</option>
+        <option>Oval</option>
+        <option>Round</option>
+        <option>Heart</option>
+    </select>
+
+    <label for="hair">Hair Length</label>
+    <select id="hair">
+        <option>Select</option>
+        <option>Short</option>
+        <option>Medium</option>
+        <option>Long</option>
+    </select>
+
+    <!-- Event Generator -->
+    <hr>
+    <label for="eventType">Event Type</label>
+    <select id="eventType">
+        <option>Select</option>
+        <option>Wedding</option>
+        <option>Gala</option>
+        <option>Conference</option>
+    </select>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="useSavedProfile" checked>
+        <label for="useSavedProfile">Use my saved style profile</label>
+    </div>
+
+    <div class="actions">
+        <button onclick="generateLook()">Generate Look</button>
+    </div>
+
+    <!-- Output Section -->
+    <div class="output" id="output" style="display:none;">
+        <h3>Your Look</h3>
+        <img src="https://via.placeholder.com/400x500?text=Generated+Look" alt="AI Look">
+        <div class="btn-group">
+            <button>Save</button>
+            <button>Share</button>
+            <button>Shop Similar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function generateLook() {
+        document.getElementById('output').style.display = 'block';
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
