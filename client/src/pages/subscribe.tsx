@@ -13,10 +13,9 @@ import { ArrowLeft, Check, Star, Sparkles, Crown } from "lucide-react";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 const SubscribeForm = () => {
   const stripe = useStripe();
@@ -251,9 +250,30 @@ export default function Subscribe() {
 
           {/* Payment Form */}
           <div>
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <SubscribeForm />
-            </Elements>
+            {stripePromise ? (
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <SubscribeForm />
+              </Elements>
+            ) : (
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-payment-unavailable">
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    <Star className="w-8 h-8 text-purple-400 mr-3" />
+                    <h3 className="text-2xl font-semibold text-white">Coming Soon</h3>
+                  </div>
+                  <p className="text-gray-300 mb-6">
+                    Payment processing is currently being set up. We're working on bringing you the best payment experience with PayPal integration.
+                  </p>
+                  <Button 
+                    disabled
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 opacity-50"
+                    data-testid="button-subscribe-disabled"
+                  >
+                    Payment Coming Soon
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="mt-6 text-center">
               <p className="text-gray-400 text-sm mb-4">
