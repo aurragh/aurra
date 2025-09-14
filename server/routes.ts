@@ -6,13 +6,10 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateOutfitRecommendations, analyzeStyleProfile } from "./openai";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema } from "@shared/schema";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+// Make Stripe optional - will work without payment features
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
-});
+}) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -199,6 +196,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stripe subscription management
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
+    if (!stripe) {
+      return res.status(503).json({ message: "Payment processing not configured. Please contact support." });
+    }
+    
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -211,7 +212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
         
         if (subscription.latest_invoice && typeof subscription.latest_invoice === 'object') {
-          const paymentIntent = subscription.latest_invoice.payment_intent;
+          const invoice = subscription.latest_invoice as any;
+          const paymentIntent = invoice.payment_intent;
           
           res.json({
             subscriptionId: subscription.id,
@@ -242,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUserStripeInfo(userId, customer.id, subscription.id);
 
       const latestInvoice = subscription.latest_invoice;
-      const paymentIntent = typeof latestInvoice === 'object' && latestInvoice?.payment_intent;
+      const paymentIntent = typeof latestInvoice === 'object' && (latestInvoice as any)?.payment_intent;
       
       res.json({
         subscriptionId: subscription.id,

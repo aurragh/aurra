@@ -23,6 +23,7 @@ import {
   ShoppingBag,
   ArrowLeft
 } from "lucide-react";
+import { type Outfit, type StyleCollection, type UserPoints } from "@shared/schema";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -46,17 +47,17 @@ export default function Dashboard() {
     }
   }, [user, isLoading, toast]);
 
-  const { data: outfits = [], refetch: refetchOutfits } = useQuery({
+  const { data: outfits = [], refetch: refetchOutfits } = useQuery<Outfit[]>({
     queryKey: ["/api/outfits"],
     enabled: !!user,
   });
 
-  const { data: collections = [] } = useQuery({
+  const { data: collections = [] } = useQuery<StyleCollection[]>({
     queryKey: ["/api/collections"],
     enabled: !!user,
   });
 
-  const { data: userPoints } = useQuery({
+  const { data: userPoints } = useQuery<UserPoints>({
     queryKey: ["/api/user/points"],
     enabled: !!user,
   });
@@ -147,7 +148,7 @@ export default function Dashboard() {
     generateOutfitsMutation.mutate({ occasion: selectedOccasion, count: 3 });
   };
 
-  const favoriteOutfits = outfits.filter((outfit: any) => outfit.isFavorite);
+  const favoriteOutfits = outfits.filter((outfit) => outfit.isFavorite);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">

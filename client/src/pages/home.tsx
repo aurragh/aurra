@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Sparkles, ShoppingBag, Star, TrendingUp, Award, Users } from "lucide-react";
+import { type StyleProfile, type UserPoints, type Outfit } from "@shared/schema";
 
 export default function Home() {
   const { user, isLoading } = useAuth();
@@ -27,17 +28,17 @@ export default function Home() {
     }
   }, [user, isLoading, toast]);
 
-  const { data: styleProfile } = useQuery({
+  const { data: styleProfile } = useQuery<StyleProfile>({
     queryKey: ["/api/style-profile"],
     enabled: !!user,
   });
 
-  const { data: userPoints } = useQuery({
+  const { data: userPoints } = useQuery<UserPoints>({
     queryKey: ["/api/user/points"],
     enabled: !!user,
   });
 
-  const { data: recentOutfits } = useQuery({
+  const { data: recentOutfits } = useQuery<Outfit[]>({
     queryKey: ["/api/outfits"],
     enabled: !!user,
   });
@@ -230,7 +231,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
-                {recentOutfits.slice(0, 3).map((outfit: any) => (
+                {recentOutfits.slice(0, 3).map((outfit) => (
                   <Card key={outfit.id} className="bg-white/5 border-white/10" data-testid={`card-recent-outfit-${outfit.id}`}>
                     <CardContent className="p-4">
                       <h4 className="text-white font-medium mb-2">{outfit.name}</h4>

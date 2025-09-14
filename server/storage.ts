@@ -196,8 +196,8 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getUserPoints(userId);
     
     if (existing) {
-      const newPoints = existing.points + pointsToAdd;
-      const newTotal = existing.totalEarned + pointsToAdd;
+      const newPoints = (existing.points ?? 0) + pointsToAdd;
+      const newTotal = (existing.totalEarned ?? 0) + pointsToAdd;
       let newLevel = existing.level;
       
       // Level progression
