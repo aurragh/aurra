@@ -201,13 +201,17 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-generate">
-            <CardContent className="p-6 text-center">
-              <ShoppingBag className="w-12 h-12 text-purple-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold text-white mb-2">Generate Outfits</h3>
-              <p className="text-gray-300 text-sm">AI-powered styling</p>
-            </CardContent>
-          </Card>
+          <Link href={needsStyleProfile ? "/quiz" : "/dashboard"}>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-generate">
+              <CardContent className="p-6 text-center">
+                <ShoppingBag className="w-12 h-12 text-purple-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-white mb-2">Generate Outfits</h3>
+                <p className="text-gray-300 text-sm">
+                  {needsStyleProfile ? "Complete quiz first" : "AI-powered styling"}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Link href="/subscribe">
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-premium">
