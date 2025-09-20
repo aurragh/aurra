@@ -116,18 +116,14 @@ export async function generateOutfitImage(
 ): Promise<string | null> {
   try {
     const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
-    const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
-    const stylePrefs = profile.stylePreferences ? JSON.parse(profile.stylePreferences) : [];
     
-    // Create a detailed description for the outfit image
-    const outfitDescription = items.map(item => 
-      `${item.color} ${item.description} in ${item.style} style`
+    // Create a safe, simple description for the outfit image
+    const basicItems = items.slice(0, 3).map(item => 
+      `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    const styleContext = stylePrefs.length > 0 ? stylePrefs.join(', ') : 'modern';
-    const colorContext = colorPrefs.length > 0 ? colorPrefs.join(', ') : 'neutral';
-    
-    const imagePrompt = `A high-quality fashion outfit photo for ${occasion}. The outfit includes: ${outfitDescription}. Style: ${styleContext}. Color palette: ${colorContext}. Professional fashion photography, clean background, well-lit, styled on a mannequin or model, modern and trendy, high resolution, magazine quality`;
+    // Very simple, safe prompt
+    const imagePrompt = `Professional fashion outfit for ${occasion}. Clothing items: ${basicItems}. Clean studio photography, neutral background, well-lit, commercial style`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -140,9 +136,32 @@ export async function generateOutfitImage(
 
     return response.data?.[0]?.url || null;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("DALL-E API error:", error);
     console.error("Error details:", JSON.stringify(error, null, 2));
+    
+    // If it's a safety system error, try with an even more basic prompt
+    if (error?.code === 'content_policy_violation') {
+      try {
+        console.log("Retrying with basic prompt due to safety violation...");
+        const fallbackPrompt = `${occasion} outfit, professional fashion photography, clean background`;
+        
+        const retryResponse = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: fallbackPrompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard",
+          style: "natural"
+        });
+
+        return retryResponse.data?.[0]?.url || null;
+      } catch (retryError) {
+        console.error("Retry also failed:", retryError);
+        return null;
+      }
+    }
+    
     return null;
   }
 }
