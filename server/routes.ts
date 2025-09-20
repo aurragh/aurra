@@ -67,37 +67,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { occasion, count = 3 } = req.body;
       
+      console.log(`Generating outfits for user ${userId}, occasion: ${occasion}, count: ${count}`);
+      
       const profile = await storage.getStyleProfile(userId);
+      console.log('Retrieved style profile:', profile ? 'found' : 'not found', profile ? `completed: ${profile.completed}` : '');
+      
       if (!profile || !profile.completed) {
+        console.log('Style profile incomplete, returning 400');
         return res.status(400).json({ message: "Complete your style profile first" });
       }
 
+      console.log('Calling generateOutfitRecommendations...');
       const outfits = await generateOutfitRecommendations(profile, occasion, count);
+      console.log(`Generated ${outfits.length} outfits from OpenAI:`, outfits.map(o => o.name));
       
       // Generate images for each outfit
+      console.log('Generating images for outfits...');
       const outfitsWithImages = await Promise.all(
-        outfits.map(async (outfit) => {
-          const imageUrl = await generateOutfitImage(outfit, profile, occasion);
-          return {
-            ...outfit,
-            imageUrl,
-            userId,
-            occasion,
-          };
+        outfits.map(async (outfit, index) => {
+          console.log(`Generating image for outfit ${index + 1}: ${outfit.name}`);
+          try {
+            const imageUrl = await generateOutfitImage(outfit, profile, occasion);
+            console.log(`Image generated for outfit ${index + 1}:`, imageUrl ? 'success' : 'failed');
+            return {
+              ...outfit,
+              imageUrl,
+              userId,
+              occasion,
+            };
+          } catch (error) {
+            console.error(`Failed to generate image for outfit ${index + 1}:`, error);
+            return {
+              ...outfit,
+              imageUrl: null, // Continue without image if generation fails
+              userId,
+              occasion,
+            };
+          }
         })
       );
       
       // Save generated outfits with images
+      console.log('Saving outfits to database...');
       const savedOutfits = await Promise.all(
-        outfitsWithImages.map(outfit => storage.createOutfit(outfit))
+        outfitsWithImages.map(async (outfit, index) => {
+          try {
+            console.log(`Saving outfit ${index + 1}: ${outfit.name}`);
+            const saved = await storage.createOutfit(outfit);
+            console.log(`Saved outfit ${index + 1} with ID: ${saved.id}`);
+            return saved;
+          } catch (error) {
+            console.error(`Failed to save outfit ${index + 1}:`, error);
+            throw error;
+          }
+        })
       );
 
       // Award points for generating outfits
+      console.log('Awarding points to user...');
       await storage.updateUserPoints(userId, 50);
+      console.log(`Successfully generated and saved ${savedOutfits.length} outfits`);
 
       res.json(savedOutfits);
+      console.log('Response sent successfully');
     } catch (error) {
       console.error("Error generating outfits:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       res.status(500).json({ message: "Failed to generate outfits" });
     }
   });

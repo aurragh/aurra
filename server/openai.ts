@@ -56,9 +56,9 @@ Respond with a JSON object containing an array of outfits. Each outfit should ha
 
 Focus on current fashion trends, body-flattering silhouettes, and practical styling advice.`;
 
-    // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+    // Use the most reliable OpenAI model for outfit generation
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -85,6 +85,7 @@ Focus on current fashion trends, body-flattering silhouettes, and practical styl
 
   } catch (error) {
     console.error("OpenAI API error:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
     // Fallback outfit recommendation
     return [{
       name: `Classic ${occasion} Look`,
@@ -141,6 +142,7 @@ export async function generateOutfitImage(
 
   } catch (error) {
     console.error("DALL-E API error:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
     return null;
   }
 }
@@ -160,9 +162,9 @@ Provide a comprehensive style analysis including:
 
 Respond with insightful, actionable advice in a friendly, expert tone.`;
 
-    // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+    // Use the most reliable OpenAI model for style analysis
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system", 
