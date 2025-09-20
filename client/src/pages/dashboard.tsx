@@ -77,8 +77,8 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Show quiz immediately if no completed profile
-  const shouldShowQuiz = !styleProfile || !styleProfile.completed;
+  // Show quiz if no completed profile OR if we're on the final generation step
+  const showQuiz = (!styleProfile || !styleProfile.completed) || (currentQuizStep === 5 && !quizCompleted);
 
   const generateOutfitsMutation = useMutation({
     mutationFn: async (data: { occasion: string; count?: number }) => {
@@ -260,7 +260,7 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Style Quiz - primary interface when no completed profile */}
-        {shouldShowQuiz && !quizCompleted && (
+        {showQuiz && (
           <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 mb-8" data-testid="card-style-quiz">
             <CardHeader className="text-center">
               <CardTitle className="text-white text-2xl flex items-center justify-center">
@@ -581,7 +581,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Header - shown when quiz is completed */}
-        {(quizCompleted || (!shouldShowQuiz && styleProfile?.completed)) && (
+        {(quizCompleted || (!showQuiz && styleProfile?.completed)) && (
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
               <CardContent className="p-6">
@@ -628,8 +628,57 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Generate More Outfits CTA for returning users */}
+        {!showQuiz && styleProfile?.completed && (
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-generate-more">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Sparkles className="w-6 h-6 mr-2 text-purple-400" />
+                Generate More Outfits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { value: 'work', label: 'Work', icon: '💼' },
+                  { value: 'casual', label: 'Casual', icon: '👕' },
+                  { value: 'date-night', label: 'Date Night', icon: '💕' },
+                  { value: 'social-events', label: 'Social', icon: '🎉' },
+                  { value: 'travel', label: 'Travel', icon: '✈️' },
+                  { value: 'formal', label: 'Formal', icon: '🤵' },
+                  { value: 'weekend', label: 'Weekend', icon: '🌞' },
+                  { value: 'workout', label: 'Workout', icon: '💪' },
+                ].map((occasion) => (
+                  <Card 
+                    key={occasion.value}
+                    className={`cursor-pointer transition-all duration-200 hover:scale-105 bg-white/5 border-white/20 hover:border-purple-400 ${generateOutfitsMutation.isPending ? 'opacity-50 pointer-events-none' : ''}`}
+                    onClick={() => {
+                      if (!generateOutfitsMutation.isPending) {
+                        generateOutfitsMutation.mutate({ occasion: occasion.value, count: 3 });
+                      }
+                    }}
+                    data-testid={`generate-more-${occasion.value}`}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl mb-2">{occasion.icon}</div>
+                      <p className="text-white text-sm font-medium">{occasion.label}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {generateOutfitsMutation.isPending && (
+                <div className="text-center mt-6">
+                  <div className="animate-spin w-6 h-6 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-2" />
+                  <p className="text-purple-200 text-sm">Generating new outfits...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Additional tabs for managing outfits */}
-        {(quizCompleted || (!shouldShowQuiz && styleProfile?.completed)) && outfits.length > 0 && (
+        {(quizCompleted || (!showQuiz && styleProfile?.completed)) && outfits.length > 0 && (
           <Tabs defaultValue="outfits" className="space-y-6">
             <TabsList className="bg-white/10 border-white/20" data-testid="tabs-dashboard">
               <TabsTrigger value="outfits" className="data-[state=active]:bg-purple-600">
