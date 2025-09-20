@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -18,11 +16,8 @@ import { Link } from "wouter";
 import { 
   Sparkles, 
   Heart, 
-  Trash2, 
-  Plus, 
   Star, 
   Award, 
-  TrendingUp,
   ShoppingBag,
   ArrowLeft,
   ArrowRight,
@@ -34,21 +29,9 @@ export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedOccasion, setSelectedOccasion] = useState("");
-  const [generatingOutfits, setGeneratingOutfits] = useState(false);
-  const [showStyleQuiz, setShowStyleQuiz] = useState(false);
   const [currentQuizStep, setCurrentQuizStep] = useState(0);
-
-  // Check for quiz URL parameter to auto-open quiz
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('quiz') === 'true') {
-      setShowStyleQuiz(true);
-      // Clear the URL parameter without reloading
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, []);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [generatingOutfits, setGeneratingOutfits] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState({
     personality: {} as Record<string, string>,
     bodyType: "",
@@ -94,20 +77,26 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  // Show quiz immediately if no completed profile
+  const shouldShowQuiz = !styleProfile || !styleProfile.completed;
+
   const generateOutfitsMutation = useMutation({
     mutationFn: async (data: { occasion: string; count?: number }) => {
       const response = await apiRequest("POST", "/api/generate-outfits", data);
       return response.json();
     },
     onSuccess: () => {
+      setGeneratingOutfits(false);
       toast({
         title: "Outfits Generated!",
-        description: "Check out your new AI-styled looks.",
+        description: "Your personalized outfits are ready!",
       });
       refetchOutfits();
       queryClient.invalidateQueries({ queryKey: ["/api/user/points"] });
+      setQuizCompleted(true);
     },
     onError: (error) => {
+      setGeneratingOutfits(false);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -127,63 +116,9 @@ export default function Dashboard() {
     },
   });
 
-  const toggleFavoriteMutation = useMutation({
-    mutationFn: async (outfitId: string) => {
-      const response = await apiRequest("PATCH", `/api/outfits/${outfitId}/favorite`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      refetchOutfits();
-      toast({
-        title: "Favorite Updated",
-        description: "Outfit favorite status updated.",
-      });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to update favorite. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  const handleGenerateOutfits = () => {
-    // Check if style profile is completed
-    if (!styleProfile || !styleProfile.completed) {
-      setShowStyleQuiz(true);
-      return;
-    }
-
-    if (!selectedOccasion) {
-      toast({
-        title: "Select Occasion",
-        description: "Please select an occasion to generate outfits for.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    generateOutfitsMutation.mutate({ occasion: selectedOccasion, count: 3 });
+  const handleGenerateOutfitsFromQuiz = (occasion: string) => {
+    setGeneratingOutfits(true);
+    generateOutfitsMutation.mutate({ occasion, count: 3 });
   };
 
   const saveProfileMutation = useMutation({
@@ -193,16 +128,10 @@ export default function Dashboard() {
     onSuccess: () => {
       toast({
         title: "Style Profile Saved!",
-        description: "Your personalized recommendations are ready.",
+        description: "Choose an occasion to generate your first outfits!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/style-profile"] });
-      setShowStyleQuiz(false);
-      // Auto-generate outfits after completing quiz if occasion is selected
-      if (selectedOccasion) {
-        setTimeout(() => {
-          generateOutfitsMutation.mutate({ occasion: selectedOccasion, count: 3 });
-        }, 1000);
-      }
+      setCurrentQuizStep(5); // Move to final step with occasion selection
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -224,20 +153,19 @@ export default function Dashboard() {
     },
   });
 
-  const favoriteOutfits = outfits.filter((outfit) => outfit.isFavorite);
-
   const QUIZ_STEPS = [
     { id: "personality", title: "Your Personality", description: "Tell us about your style personality" },
     { id: "bodyType", title: "Body Type", description: "Help us recommend flattering silhouettes" },
     { id: "preferences", title: "Style Preferences", description: "What styles speak to you?" },
     { id: "lifestyle", title: "Lifestyle", description: "How do you live and work?" },
     { id: "budget", title: "Budget & Shopping", description: "What's your fashion budget?" },
+    { id: "generate", title: "Generate Outfits", description: "Choose an occasion and create your personalized outfits" },
   ];
 
   const handleQuizNext = () => {
-    if (currentQuizStep < QUIZ_STEPS.length - 1) {
+    if (currentQuizStep < 4) {
       setCurrentQuizStep(currentQuizStep + 1);
-    } else {
+    } else if (currentQuizStep === 4) {
       handleQuizSubmit();
     }
   };
@@ -290,6 +218,16 @@ export default function Dashboard() {
     }));
   };
 
+  const favoriteOutfits = outfits.filter((outfit) => outfit.isFavorite);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Navigation */}
@@ -321,62 +259,8 @@ export default function Dashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Header */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm">Style Level</p>
-                  <p className="text-2xl font-bold text-white">{userPoints?.level || 'Beginner'}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-purple-200 text-sm">{userPoints?.points || 0} points</span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-400">Total: {userPoints?.totalEarned || 0}</span>
-                  </div>
-                  <div className="mt-2">
-                    <div className="flex items-start">
-                      <Info className="w-3 h-3 text-gray-400 mr-1 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-gray-400">
-                        Earn points by generating outfits, completing your profile, and using premium features
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <Award className="w-10 h-10 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-outfits">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm">Total Outfits</p>
-                  <p className="text-2xl font-bold text-white">{outfits.length}</p>
-                  <p className="text-purple-200 text-sm">{favoriteOutfits.length} favorites</p>
-                </div>
-                <ShoppingBag className="w-10 h-10 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-collections">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm">Collections</p>
-                  <p className="text-2xl font-bold text-white">{collections.length}</p>
-                  <p className="text-purple-200 text-sm">Style sets</p>
-                </div>
-                <Star className="w-10 h-10 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Inline Style Quiz - shown when needed */}
-        {showStyleQuiz && (
+        {/* Style Quiz - primary interface when no completed profile */}
+        {shouldShowQuiz && !quizCompleted && (
           <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 mb-8" data-testid="card-style-quiz">
             <CardHeader className="text-center">
               <CardTitle className="text-white text-2xl flex items-center justify-center">
@@ -388,7 +272,7 @@ export default function Dashboard() {
                 <Progress 
                   value={((currentQuizStep + 1) / QUIZ_STEPS.length) * 100} 
                   className="max-w-md mx-auto" 
-                  data-testid="progress-inline-quiz" 
+                  data-testid="progress-quiz" 
                 />
                 <p className="text-gray-400 text-sm mt-2">
                   Step {currentQuizStep + 1} of {QUIZ_STEPS.length}: {QUIZ_STEPS[currentQuizStep].title}
@@ -399,7 +283,7 @@ export default function Dashboard() {
               <div className="max-w-2xl mx-auto">
                 {/* Step 1: Personality */}
                 {currentQuizStep === 0 && (
-                  <div className="space-y-6" data-testid="inline-step-personality">
+                  <div className="space-y-6" data-testid="step-personality">
                     <div>
                       <Label className="text-white text-lg mb-4 block">How would you describe your style?</Label>
                       <RadioGroup 
@@ -434,7 +318,7 @@ export default function Dashboard() {
 
                 {/* Step 2: Body Type */}
                 {currentQuizStep === 1 && (
-                  <div data-testid="inline-step-body-type">
+                  <div data-testid="step-body-type">
                     <Label className="text-white text-lg mb-6 block">What's your body type?</Label>
                     <RadioGroup value={quizAnswers.bodyType} onValueChange={(value) => updateQuizAnswer('bodyType', value)}>
                       {['Apple', 'Pear', 'Hourglass', 'Rectangle', 'Inverted Triangle', 'Prefer not to specify'].map((type) => (
@@ -455,7 +339,7 @@ export default function Dashboard() {
 
                 {/* Step 3: Preferences */}
                 {currentQuizStep === 2 && (
-                  <div className="space-y-8" data-testid="inline-step-preferences">
+                  <div className="space-y-8" data-testid="step-preferences">
                     <div>
                       <Label className="text-white text-lg mb-4 block">What colors do you love? (Select all that apply)</Label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -492,7 +376,7 @@ export default function Dashboard() {
 
                 {/* Step 4: Lifestyle */}
                 {currentQuizStep === 3 && (
-                  <div className="space-y-6" data-testid="inline-step-lifestyle">
+                  <div className="space-y-6" data-testid="step-lifestyle">
                     <div>
                       <Label className="text-white text-lg mb-4 block">What's your work environment?</Label>
                       <RadioGroup 
@@ -527,7 +411,7 @@ export default function Dashboard() {
 
                 {/* Step 5: Budget & Occasions */}
                 {currentQuizStep === 4 && (
-                  <div className="space-y-6" data-testid="inline-step-budget">
+                  <div className="space-y-6" data-testid="step-budget">
                     <div>
                       <Label className="text-white text-lg mb-4 block">What's your typical budget for clothing?</Label>
                       <RadioGroup value={quizAnswers.budget} onValueChange={(value) => updateQuizAnswer('budget', value)}>
@@ -557,41 +441,81 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
+
+                {/* Step 6: Generate Outfits */}
+                {currentQuizStep === 5 && (
+                  <div className="text-center space-y-6" data-testid="step-generate">
+                    <div className="flex items-center justify-center mb-6">
+                      <Sparkles className="w-12 h-12 text-purple-400 animate-pulse" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-4">Ready to Generate Your Outfits!</h3>
+                    <p className="text-gray-300 mb-6">Choose an occasion below and we'll create personalized outfits based on your style profile.</p>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                      {[
+                        { value: 'work', label: 'Work', icon: '💼' },
+                        { value: 'casual', label: 'Casual', icon: '👕' },
+                        { value: 'date-night', label: 'Date Night', icon: '💕' },
+                        { value: 'social-events', label: 'Social', icon: '🎉' },
+                        { value: 'travel', label: 'Travel', icon: '✈️' },
+                        { value: 'formal', label: 'Formal', icon: '🤵' },
+                        { value: 'weekend', label: 'Weekend', icon: '🌞' },
+                        { value: 'workout', label: 'Workout', icon: '💪' },
+                      ].map((occasion) => (
+                        <Card 
+                          key={occasion.value}
+                          className={`cursor-pointer transition-all duration-200 hover:scale-105 bg-white/5 border-white/20 hover:border-purple-400 ${generatingOutfits ? 'opacity-50 pointer-events-none' : ''}`}
+                          onClick={() => {
+                            if (!generatingOutfits) {
+                              handleGenerateOutfitsFromQuiz(occasion.value);
+                            }
+                          }}
+                          data-testid={`occasion-${occasion.value}`}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <div className="text-2xl mb-2">{occasion.icon}</div>
+                            <p className="text-white text-sm font-medium">{occasion.label}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {generatingOutfits && (
+                      <div className="text-center">
+                        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4" />
+                        <p className="text-purple-200">Creating your personalized outfits...</p>
+                        <p className="text-gray-400 text-sm mt-2">This may take 30-45 seconds</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
             
             {/* Quiz Navigation */}
-            <div className="flex justify-between px-8 pb-8">
-              <Button 
-                variant="outline" 
-                onClick={handleQuizBack}
-                disabled={currentQuizStep === 0}
-                className="border-white/20 text-white hover:bg-white/10"
-                data-testid="button-quiz-back"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              
-              <div className="flex items-center space-x-3">
+            {currentQuizStep < 5 && (
+              <div className="flex justify-between px-8 pb-8">
                 <Button 
-                  variant="ghost"
-                  onClick={() => setShowStyleQuiz(false)}
-                  className="text-gray-400 hover:text-white hover:bg-white/10"
-                  data-testid="button-skip-quiz"
+                  variant="outline" 
+                  onClick={handleQuizBack}
+                  disabled={currentQuizStep === 0}
+                  className="border-white/20 text-white hover:bg-white/10"
+                  data-testid="button-quiz-back"
                 >
-                  Skip for now
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
                 </Button>
+                
                 <Button 
                   onClick={handleQuizNext}
-                  disabled={saveProfileMutation.isPending}
+                  disabled={saveProfileMutation.isPending || (currentQuizStep === 4 && !quizAnswers.budget)}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                   data-testid="button-quiz-next"
                 >
                   {saveProfileMutation.isPending ? (
                     "Saving..."
-                  ) : currentQuizStep === QUIZ_STEPS.length - 1 ? (
-                    "Complete Profile"
+                  ) : currentQuizStep === 4 ? (
+                    "Save Profile & Generate Outfits"
                   ) : (
                     <>
                       Next
@@ -600,88 +524,125 @@ export default function Dashboard() {
                   )}
                 </Button>
               </div>
-            </div>
+            )}
           </Card>
         )}
 
-        {/* AI Outfit Generator */}
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-outfit-generator">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Sparkles className="w-6 h-6 mr-2 text-purple-400" />
-              AI Outfit Generator
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
-              <div className="flex-1">
-                <Label htmlFor="occasion" className="text-gray-300">Select Occasion</Label>
-                <Select value={selectedOccasion} onValueChange={setSelectedOccasion}>
-                  <SelectTrigger className="bg-white/5 border-white/20 text-white" data-testid="select-occasion">
-                    <SelectValue placeholder="Choose an occasion..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="work">Work/Professional</SelectItem>
-                    <SelectItem value="casual">Casual Daily Wear</SelectItem>
-                    <SelectItem value="date-night">Date Night</SelectItem>
-                    <SelectItem value="social-events">Social Events</SelectItem>
-                    <SelectItem value="travel">Travel</SelectItem>
-                    <SelectItem value="formal">Formal Events</SelectItem>
-                    <SelectItem value="weekend">Weekend Outings</SelectItem>
-                  </SelectContent>
-                </Select>
+        {/* Generated Outfits - shown after quiz completion */}
+        {quizCompleted && outfits.length > 0 && (
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-generated-outfits">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Sparkles className="w-6 h-6 mr-2 text-purple-400" />
+                Your Personalized Outfits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {outfits.slice(-3).map((outfit: any) => (
+                  <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20 border-green-400/30" data-testid={`card-new-outfit-${outfit.id}`}>
+                    <CardContent className="p-0">
+                      {outfit.imageUrl && (
+                        <div className="relative w-full h-48 mb-4">
+                          <img 
+                            src={outfit.imageUrl} 
+                            alt={outfit.name}
+                            className="w-full h-full object-cover rounded-t-lg"
+                            data-testid={`img-new-outfit-${outfit.id}`}
+                          />
+                          <Badge className="absolute top-2 right-2 bg-green-600 text-white">New!</Badge>
+                        </div>
+                      )}
+                      <div className="p-6">
+                        <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
+                        <Badge 
+                          variant="secondary" 
+                          className="bg-purple-600/20 text-purple-200 mb-4"
+                        >
+                          {outfit.occasion}
+                        </Badge>
+                        <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
+                        
+                        <div className="space-y-2">
+                          <p className="text-gray-400 text-xs font-medium">Items:</p>
+                          {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
+                            <div key={index} className="text-xs text-gray-300">
+                              <span className="font-medium">{item.category}:</span> {item.description}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <Button 
-                onClick={handleGenerateOutfits}
-                disabled={generateOutfitsMutation.isPending || !selectedOccasion}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                data-testid="button-generate-outfits"
-              >
-                {generateOutfitsMutation.isPending ? (
-                  "Generating..."
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Generate Outfits
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="outfits" className="space-y-6">
-          <TabsList className="bg-white/10 border-white/20" data-testid="tabs-dashboard">
-            <TabsTrigger value="outfits" className="data-[state=active]:bg-purple-600">
-              My Outfits
-            </TabsTrigger>
-            <TabsTrigger value="favorites" className="data-[state=active]:bg-purple-600">
-              Favorites
-            </TabsTrigger>
-            <TabsTrigger value="collections" className="data-[state=active]:bg-purple-600">
-              Collections
-            </TabsTrigger>
-          </TabsList>
+        {/* Stats Header - shown when quiz is completed */}
+        {(quizCompleted || (!shouldShowQuiz && styleProfile?.completed)) && (
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-300 text-sm">Style Level</p>
+                    <p className="text-2xl font-bold text-white">{userPoints?.level || 'Beginner'}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-purple-200 text-sm">{userPoints?.points || 0} points</span>
+                      <span className="text-xs text-gray-400">•</span>
+                      <span className="text-xs text-gray-400">Total: {userPoints?.totalEarned || 0}</span>
+                    </div>
+                  </div>
+                  <Award className="w-10 h-10 text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
 
-          <TabsContent value="outfits" data-testid="tab-content-outfits">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {outfits.length === 0 ? (
-                <Card className="bg-white/10 backdrop-blur-sm border-white/20 col-span-full" data-testid="card-no-outfits">
-                  <CardContent className="p-12 text-center">
-                    <ShoppingBag className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No Outfits Yet</h3>
-                    <p className="text-gray-300 mb-6">Generate your first AI-styled outfit to get started!</p>
-                    <Button 
-                      onClick={() => setShowStyleQuiz(true)}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                    >
-                      Complete Style Quiz
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                outfits.map((outfit: any) => (
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-outfits">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-300 text-sm">Total Outfits</p>
+                    <p className="text-2xl font-bold text-white">{outfits.length}</p>
+                    <p className="text-purple-200 text-sm">{favoriteOutfits.length} favorites</p>
+                  </div>
+                  <ShoppingBag className="w-10 h-10 text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-collections">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-300 text-sm">Collections</p>
+                    <p className="text-2xl font-bold text-white">{collections.length}</p>
+                    <p className="text-purple-200 text-sm">Style sets</p>
+                  </div>
+                  <Star className="w-10 h-10 text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Additional tabs for managing outfits */}
+        {(quizCompleted || (!shouldShowQuiz && styleProfile?.completed)) && outfits.length > 0 && (
+          <Tabs defaultValue="outfits" className="space-y-6">
+            <TabsList className="bg-white/10 border-white/20" data-testid="tabs-dashboard">
+              <TabsTrigger value="outfits" className="data-[state=active]:bg-purple-600">
+                All Outfits
+              </TabsTrigger>
+              <TabsTrigger value="favorites" className="data-[state=active]:bg-purple-600">
+                Favorites
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="outfits" data-testid="tab-content-outfits">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {outfits.map((outfit: any) => (
                   <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-outfit-${outfit.id}`}>
                     <CardContent className="p-0">
                       {outfit.imageUrl && (
@@ -709,7 +670,6 @@ export default function Dashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => toggleFavoriteMutation.mutate(outfit.id)}
                             className="text-white hover:bg-white/10"
                             data-testid={`button-favorite-${outfit.id}`}
                           >
@@ -732,108 +692,68 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
-              )}
-            </div>
-          </TabsContent>
+                ))}
+              </div>
+            </TabsContent>
 
-          <TabsContent value="favorites" data-testid="tab-content-favorites">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {favoriteOutfits.length === 0 ? (
-                <Card className="bg-white/10 backdrop-blur-sm border-white/20 col-span-full" data-testid="card-no-favorites">
-                  <CardContent className="p-12 text-center">
-                    <Heart className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No Favorites Yet</h3>
-                    <p className="text-gray-300">Heart your favorite outfits to see them here!</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                favoriteOutfits.map((outfit: any) => (
-                  <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20 border-red-400/30" data-testid={`card-favorite-${outfit.id}`}>
-                    <CardContent className="p-0">
-                      {outfit.imageUrl && (
-                        <div className="relative w-full h-48 mb-4">
-                          <img 
-                            src={outfit.imageUrl} 
-                            alt={outfit.name}
-                            className="w-full h-full object-cover rounded-t-lg"
-                            data-testid={`img-favorite-${outfit.id}`}
-                          />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
-                            <Badge 
-                              variant="secondary" 
-                              className="bg-purple-600/20 text-purple-200"
-                              data-testid={`badge-favorite-occasion-${outfit.id}`}
-                            >
-                              {outfit.occasion}
-                            </Badge>
+            <TabsContent value="favorites" data-testid="tab-content-favorites">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favoriteOutfits.length === 0 ? (
+                  <Card className="bg-white/10 backdrop-blur-sm border-white/20 col-span-full" data-testid="card-no-favorites">
+                    <CardContent className="p-12 text-center">
+                      <Heart className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">No Favorites Yet</h3>
+                      <p className="text-gray-300">Heart your favorite outfits to see them here!</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  favoriteOutfits.map((outfit: any) => (
+                    <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20 border-red-400/30" data-testid={`card-favorite-${outfit.id}`}>
+                      <CardContent className="p-0">
+                        {outfit.imageUrl && (
+                          <div className="relative w-full h-48 mb-4">
+                            <img 
+                              src={outfit.imageUrl} 
+                              alt={outfit.name}
+                              className="w-full h-full object-cover rounded-t-lg"
+                              data-testid={`img-favorite-${outfit.id}`}
+                            />
                           </div>
-                          <Heart className="w-5 h-5 fill-red-400 text-red-400" />
-                        </div>
-                        
-                        <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
-                        
-                        <div className="space-y-2">
-                          <p className="text-gray-400 text-xs font-medium">Items:</p>
-                          {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
-                            <div key={index} className="text-xs text-gray-300" data-testid={`favorite-item-${outfit.id}-${index}`}>
-                              <span className="font-medium">{item.category}:</span> {item.description}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="collections" data-testid="tab-content-collections">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {collections.length === 0 ? (
-                <Card className="bg-white/10 backdrop-blur-sm border-white/20 col-span-full" data-testid="card-no-collections">
-                  <CardContent className="p-12 text-center">
-                    <Star className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No Collections Yet</h3>
-                    <p className="text-gray-300 mb-6">Create collections to organize your favorite outfit combinations!</p>
-                    <Button 
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                      data-testid="button-create-collection"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Collection
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                collections.map((collection: any) => (
-                  <Card key={collection.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-collection-${collection.id}`}>
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold text-white mb-2">{collection.name}</h3>
-                      <p className="text-gray-300 text-sm mb-4">{collection.description}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-purple-200 text-sm">
-                          {JSON.parse(collection.outfitIds || '[]').length} outfits
-                        </span>
-                        {collection.nftMinted && (
-                          <Badge variant="secondary" className="bg-green-600/20 text-green-200">
-                            NFT Minted
-                          </Badge>
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                        <div className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
+                              <Badge 
+                                variant="secondary" 
+                                className="bg-purple-600/20 text-purple-200"
+                                data-testid={`badge-favorite-occasion-${outfit.id}`}
+                              >
+                                {outfit.occasion}
+                              </Badge>
+                            </div>
+                            <Heart className="w-5 h-5 fill-red-400 text-red-400" />
+                          </div>
+                          
+                          <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
+                          
+                          <div className="space-y-2">
+                            <p className="text-gray-400 text-xs font-medium">Items:</p>
+                            {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
+                              <div key={index} className="text-xs text-gray-300" data-testid={`favorite-item-${outfit.id}-${index}`}>
+                                <span className="font-medium">{item.category}:</span> {item.description}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );
