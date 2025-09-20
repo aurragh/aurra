@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -21,9 +24,11 @@ import {
   Award, 
   TrendingUp,
   ShoppingBag,
-  ArrowLeft
+  ArrowLeft,
+  ArrowRight,
+  Info
 } from "lucide-react";
-import { type Outfit, type StyleCollection, type UserPoints } from "@shared/schema";
+import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -31,6 +36,28 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [selectedOccasion, setSelectedOccasion] = useState("");
   const [generatingOutfits, setGeneratingOutfits] = useState(false);
+  const [showStyleQuiz, setShowStyleQuiz] = useState(false);
+  const [currentQuizStep, setCurrentQuizStep] = useState(0);
+
+  // Check for quiz URL parameter to auto-open quiz
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('quiz') === 'true') {
+      setShowStyleQuiz(true);
+      // Clear the URL parameter without reloading
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+  const [quizAnswers, setQuizAnswers] = useState({
+    personality: {} as Record<string, string>,
+    bodyType: "",
+    colorPreferences: [] as string[],
+    stylePreferences: [] as string[],
+    lifestyle: {} as Record<string, string>,
+    budget: "",
+    occasions: [] as string[],
+  });
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -59,6 +86,11 @@ export default function Dashboard() {
 
   const { data: userPoints } = useQuery<UserPoints>({
     queryKey: ["/api/user/points"],
+    enabled: !!user,
+  });
+
+  const { data: styleProfile } = useQuery<StyleProfile>({
+    queryKey: ["/api/style-profile"],
     enabled: !!user,
   });
 
@@ -136,6 +168,12 @@ export default function Dashboard() {
   }
 
   const handleGenerateOutfits = () => {
+    // Check if style profile is completed
+    if (!styleProfile || !styleProfile.completed) {
+      setShowStyleQuiz(true);
+      return;
+    }
+
     if (!selectedOccasion) {
       toast({
         title: "Select Occasion",
@@ -148,7 +186,109 @@ export default function Dashboard() {
     generateOutfitsMutation.mutate({ occasion: selectedOccasion, count: 3 });
   };
 
+  const saveProfileMutation = useMutation({
+    mutationFn: async (profileData: any) => {
+      await apiRequest("POST", "/api/style-profile", profileData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Style Profile Saved!",
+        description: "Your personalized recommendations are ready.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/style-profile"] });
+      setShowStyleQuiz(false);
+      // Auto-generate outfits after completing quiz if occasion is selected
+      if (selectedOccasion) {
+        setTimeout(() => {
+          generateOutfitsMutation.mutate({ occasion: selectedOccasion, count: 3 });
+        }, 1000);
+      }
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const favoriteOutfits = outfits.filter((outfit) => outfit.isFavorite);
+
+  const QUIZ_STEPS = [
+    { id: "personality", title: "Your Personality", description: "Tell us about your style personality" },
+    { id: "bodyType", title: "Body Type", description: "Help us recommend flattering silhouettes" },
+    { id: "preferences", title: "Style Preferences", description: "What styles speak to you?" },
+    { id: "lifestyle", title: "Lifestyle", description: "How do you live and work?" },
+    { id: "budget", title: "Budget & Shopping", description: "What's your fashion budget?" },
+  ];
+
+  const handleQuizNext = () => {
+    if (currentQuizStep < QUIZ_STEPS.length - 1) {
+      setCurrentQuizStep(currentQuizStep + 1);
+    } else {
+      handleQuizSubmit();
+    }
+  };
+
+  const handleQuizBack = () => {
+    if (currentQuizStep > 0) {
+      setCurrentQuizStep(currentQuizStep - 1);
+    }
+  };
+
+  const handleQuizSubmit = () => {
+    const profileData = {
+      personality: JSON.stringify(quizAnswers.personality),
+      bodyType: quizAnswers.bodyType,
+      colorPreferences: JSON.stringify(quizAnswers.colorPreferences),
+      stylePreferences: JSON.stringify(quizAnswers.stylePreferences),
+      lifestyle: JSON.stringify(quizAnswers.lifestyle),
+      budget: quizAnswers.budget,
+      occasions: JSON.stringify(quizAnswers.occasions),
+      completed: true,
+    };
+
+    saveProfileMutation.mutate(profileData);
+  };
+
+  const updateQuizAnswer = (field: string, value: any) => {
+    setQuizAnswers(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateQuizPersonality = (trait: string, value: string) => {
+    setQuizAnswers(prev => ({
+      ...prev,
+      personality: { ...prev.personality, [trait]: value },
+    }));
+  };
+
+  const updateQuizLifestyle = (aspect: string, value: string) => {
+    setQuizAnswers(prev => ({
+      ...prev,
+      lifestyle: { ...prev.lifestyle, [aspect]: value },
+    }));
+  };
+
+  const toggleQuizArrayItem = (field: 'colorPreferences' | 'stylePreferences' | 'occasions', item: string) => {
+    setQuizAnswers(prev => ({
+      ...prev,
+      [field]: prev[field].includes(item) 
+        ? prev[field].filter(i => i !== item)
+        : [...prev[field], item],
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -189,7 +329,19 @@ export default function Dashboard() {
                 <div>
                   <p className="text-gray-300 text-sm">Style Level</p>
                   <p className="text-2xl font-bold text-white">{userPoints?.level || 'Beginner'}</p>
-                  <p className="text-purple-200 text-sm">{userPoints?.points || 0} points</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-purple-200 text-sm">{userPoints?.points || 0} points</span>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs text-gray-400">Total: {userPoints?.totalEarned || 0}</span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex items-start">
+                      <Info className="w-3 h-3 text-gray-400 mr-1 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-gray-400">
+                        Earn points by generating outfits, completing your profile, and using premium features
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 <Award className="w-10 h-10 text-purple-400" />
               </div>
@@ -222,6 +374,235 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Inline Style Quiz - shown when needed */}
+        {showStyleQuiz && (
+          <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 mb-8" data-testid="card-style-quiz">
+            <CardHeader className="text-center">
+              <CardTitle className="text-white text-2xl flex items-center justify-center">
+                <Sparkles className="w-8 h-8 mr-3 text-purple-400" />
+                Complete Your Style Profile
+              </CardTitle>
+              <p className="text-gray-300">{QUIZ_STEPS[currentQuizStep].description}</p>
+              <div className="mt-4">
+                <Progress 
+                  value={((currentQuizStep + 1) / QUIZ_STEPS.length) * 100} 
+                  className="max-w-md mx-auto" 
+                  data-testid="progress-inline-quiz" 
+                />
+                <p className="text-gray-400 text-sm mt-2">
+                  Step {currentQuizStep + 1} of {QUIZ_STEPS.length}: {QUIZ_STEPS[currentQuizStep].title}
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="max-w-2xl mx-auto">
+                {/* Step 1: Personality */}
+                {currentQuizStep === 0 && (
+                  <div className="space-y-6" data-testid="inline-step-personality">
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">How would you describe your style?</Label>
+                      <RadioGroup 
+                        value={quizAnswers.personality.style} 
+                        onValueChange={(value) => updateQuizPersonality('style', value)}
+                      >
+                        {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold'].map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option} id={option} />
+                            <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">What's your confidence level with fashion?</Label>
+                      <RadioGroup 
+                        value={quizAnswers.personality.confidence} 
+                        onValueChange={(value) => updateQuizPersonality('confidence', value)}
+                      >
+                        {['I love experimenting with new styles', 'I prefer safe, classic choices', 'I need guidance to feel confident', 'I enjoy mixing classic with trendy'].map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option} id={option} />
+                            <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Body Type */}
+                {currentQuizStep === 1 && (
+                  <div data-testid="inline-step-body-type">
+                    <Label className="text-white text-lg mb-6 block">What's your body type?</Label>
+                    <RadioGroup value={quizAnswers.bodyType} onValueChange={(value) => updateQuizAnswer('bodyType', value)}>
+                      {['Apple', 'Pear', 'Hourglass', 'Rectangle', 'Inverted Triangle', 'Prefer not to specify'].map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <RadioGroupItem value={type} id={type} />
+                          <Label htmlFor={type} className="text-gray-200">{type}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                    <div className="flex items-start mt-4 p-4 bg-blue-600/20 rounded-lg">
+                      <Info className="w-5 h-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-blue-200 text-sm">
+                        This helps us recommend the most flattering silhouettes for you.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Preferences */}
+                {currentQuizStep === 2 && (
+                  <div className="space-y-8" data-testid="inline-step-preferences">
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">What colors do you love? (Select all that apply)</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {['Black', 'White', 'Navy', 'Gray', 'Beige', 'Brown', 'Red', 'Pink', 'Blue', 'Green', 'Yellow', 'Purple'].map((color) => (
+                          <div key={color} className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={quizAnswers.colorPreferences.includes(color)}
+                              onCheckedChange={() => toggleQuizArrayItem('colorPreferences', color)}
+                              id={color}
+                            />
+                            <Label htmlFor={color} className="text-gray-200">{color}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">Style preferences (Select all that apply)</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {['Casual & Comfortable', 'Professional & Polished', 'Feminine & Romantic', 'Sporty & Active', 'Vintage & Retro', 'Streetwear & Urban', 'Formal & Elegant', 'Artistic & Creative'].map((style) => (
+                          <div key={style} className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={quizAnswers.stylePreferences.includes(style)}
+                              onCheckedChange={() => toggleQuizArrayItem('stylePreferences', style)}
+                              id={style}
+                            />
+                            <Label htmlFor={style} className="text-gray-200">{style}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Lifestyle */}
+                {currentQuizStep === 3 && (
+                  <div className="space-y-6" data-testid="inline-step-lifestyle">
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">What's your work environment?</Label>
+                      <RadioGroup 
+                        value={quizAnswers.lifestyle.work} 
+                        onValueChange={(value) => updateQuizLifestyle('work', value)}
+                      >
+                        {['Corporate/Office', 'Creative/Casual', 'Work from Home', 'Customer-Facing', 'Outdoor/Physical', 'Freelance/Flexible'].map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option} id={option} />
+                            <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">How active is your lifestyle?</Label>
+                      <RadioGroup 
+                        value={quizAnswers.lifestyle.activity} 
+                        onValueChange={(value) => updateQuizLifestyle('activity', value)}
+                      >
+                        {['Very Active (Daily workouts)', 'Moderately Active (Few times/week)', 'Occasionally Active', 'Prefer Low-Impact Activities', 'Mostly Sedentary'].map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option} id={option} />
+                            <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 5: Budget & Occasions */}
+                {currentQuizStep === 4 && (
+                  <div className="space-y-6" data-testid="inline-step-budget">
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">What's your typical budget for clothing?</Label>
+                      <RadioGroup value={quizAnswers.budget} onValueChange={(value) => updateQuizAnswer('budget', value)}>
+                        {['Under $50 per item', '$50-$100 per item', '$100-$200 per item', '$200-$500 per item', '$500+ per item', 'Budget varies by item'].map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option} id={option} />
+                            <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <Label className="text-white text-lg mb-4 block">What occasions do you need outfits for? (Select all that apply)</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {['Work/Professional', 'Casual Daily Wear', 'Date Night', 'Social Events', 'Travel', 'Workout/Active', 'Formal Events', 'Weekend Outings'].map((occasion) => (
+                          <div key={occasion} className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={quizAnswers.occasions.includes(occasion)}
+                              onCheckedChange={() => toggleQuizArrayItem('occasions', occasion)}
+                              id={occasion}
+                            />
+                            <Label htmlFor={occasion} className="text-gray-200">{occasion}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            
+            {/* Quiz Navigation */}
+            <div className="flex justify-between px-8 pb-8">
+              <Button 
+                variant="outline" 
+                onClick={handleQuizBack}
+                disabled={currentQuizStep === 0}
+                className="border-white/20 text-white hover:bg-white/10"
+                data-testid="button-quiz-back"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              
+              <div className="flex items-center space-x-3">
+                <Button 
+                  variant="ghost"
+                  onClick={() => setShowStyleQuiz(false)}
+                  className="text-gray-400 hover:text-white hover:bg-white/10"
+                  data-testid="button-skip-quiz"
+                >
+                  Skip for now
+                </Button>
+                <Button 
+                  onClick={handleQuizNext}
+                  disabled={saveProfileMutation.isPending}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                  data-testid="button-quiz-next"
+                >
+                  {saveProfileMutation.isPending ? (
+                    "Saving..."
+                  ) : currentQuizStep === QUIZ_STEPS.length - 1 ? (
+                    "Complete Profile"
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* AI Outfit Generator */}
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-outfit-generator">
@@ -291,11 +672,12 @@ export default function Dashboard() {
                     <ShoppingBag className="w-16 h-16 text-purple-400 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-white mb-2">No Outfits Yet</h3>
                     <p className="text-gray-300 mb-6">Generate your first AI-styled outfit to get started!</p>
-                    <Link href="/quiz">
-                      <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
-                        Complete Style Quiz
-                      </Button>
-                    </Link>
+                    <Button 
+                      onClick={() => setShowStyleQuiz(true)}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                    >
+                      Complete Style Quiz
+                    </Button>
                   </CardContent>
                 </Card>
               ) : (

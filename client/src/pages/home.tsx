@@ -106,7 +106,7 @@ export default function Home() {
                 <p className="text-gray-300 mb-6">
                   Take our AI-powered style quiz to get personalized outfit recommendations tailored just for you.
                 </p>
-                <Link href="/quiz">
+                <Link href="/dashboard?quiz=true">
                   <Button 
                     size="lg" 
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
@@ -128,13 +128,17 @@ export default function Home() {
                 <div>
                   <p className="text-gray-300 text-sm">Style Points</p>
                   <p className="text-3xl font-bold text-white">{userPoints?.points || 0}</p>
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-purple-600/20 text-purple-200 mt-2"
-                    data-testid="badge-level"
-                  >
-                    {userPoints?.level || 'Beginner'}
-                  </Badge>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-purple-600/20 text-purple-200"
+                      data-testid="badge-level"
+                    >
+                      {userPoints?.level || 'Beginner'}
+                    </Badge>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs text-gray-400">Earned: {userPoints?.totalEarned || 0}</span>
+                  </div>
                 </div>
                 <Award className="w-12 h-12 text-purple-400" />
               </div>
@@ -158,70 +162,45 @@ export default function Home() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-300 text-sm">Subscription</p>
+                  <p className="text-gray-300 text-sm">Plan Status</p>
                   <p className="text-2xl font-bold text-white capitalize">{user?.subscriptionStatus || 'Free'}</p>
-                  {user?.subscriptionStatus === 'free' && (
-                    <Link href="/subscribe">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="border-purple-400 text-purple-200 hover:bg-purple-600/20 mt-2"
-                        data-testid="button-upgrade"
-                      >
-                        Upgrade
-                      </Button>
-                    </Link>
-                  )}
+                  <p className="text-purple-200 text-sm mt-2">
+                    {user?.subscriptionStatus === 'free' ? 'Limited features' : 'All features unlocked'}
+                  </p>
                 </div>
-                <Star className="w-12 h-12 text-purple-400" />
+                <Star className={`w-12 h-12 ${user?.subscriptionStatus === 'free' ? 'text-gray-400' : 'text-yellow-400'}`} />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Link href="/quiz">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-quiz">
-              <CardContent className="p-6 text-center">
-                <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-white mb-2">Style Quiz</h3>
-                <p className="text-gray-300 text-sm">Discover your style</p>
-              </CardContent>
-            </Card>
-          </Link>
-
+        {/* Main Actions */}
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
           <Link href="/dashboard">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-dashboard">
-              <CardContent className="p-6 text-center">
-                <TrendingUp className="w-12 h-12 text-purple-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-white mb-2">Dashboard</h3>
-                <p className="text-gray-300 text-sm">View your style journey</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href={needsStyleProfile ? "/quiz" : "/dashboard"}>
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-generate">
-              <CardContent className="p-6 text-center">
-                <ShoppingBag className="w-12 h-12 text-purple-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-white mb-2">Generate Outfits</h3>
-                <p className="text-gray-300 text-sm">
-                  {needsStyleProfile ? "Complete quiz first" : "AI-powered styling"}
+            <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 hover:from-purple-600/30 hover:to-pink-600/30 transition-all cursor-pointer group" data-testid="card-action-generate">
+              <CardContent className="p-8 text-center">
+                <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                <h3 className="text-2xl font-semibold text-white mb-3">Generate Outfits</h3>
+                <p className="text-gray-300">
+                  {needsStyleProfile ? "Complete style quiz and get AI-powered outfit recommendations" : "Get new AI-powered outfit recommendations"}
                 </p>
               </CardContent>
             </Card>
           </Link>
 
-          <Link href="/subscribe">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all cursor-pointer group" data-testid="card-action-premium">
-              <CardContent className="p-6 text-center">
-                <Star className="w-12 h-12 text-purple-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-white mb-2">Go Premium</h3>
-                <p className="text-gray-300 text-sm">Unlock all features</p>
-              </CardContent>
-            </Card>
-          </Link>
+          {user?.subscriptionStatus === 'free' && (
+            <Link href="/subscribe">
+              <Card className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 backdrop-blur-sm border-yellow-400/30 hover:from-yellow-600/30 hover:to-orange-600/30 transition-all cursor-pointer group" data-testid="card-action-premium">
+                <CardContent className="p-8 text-center">
+                  <Star className="w-16 h-16 text-yellow-400 mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-2xl font-semibold text-white mb-3">Upgrade to Premium</h3>
+                  <p className="text-gray-300">
+                    Unlimited outfit generation, advanced styling features, and priority support
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
         </div>
 
         {/* Recent Activity */}
