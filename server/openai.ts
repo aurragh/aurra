@@ -108,6 +108,43 @@ Focus on current fashion trends, body-flattering silhouettes, and practical styl
   }
 }
 
+export async function generateOutfitImage(
+  outfit: GeneratedOutfit,
+  profile: StyleProfile,
+  occasion: string
+): Promise<string | null> {
+  try {
+    const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
+    const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
+    const stylePrefs = profile.stylePreferences ? JSON.parse(profile.stylePreferences) : [];
+    
+    // Create a detailed description for the outfit image
+    const outfitDescription = items.map(item => 
+      `${item.color} ${item.description} in ${item.style} style`
+    ).join(', ');
+    
+    const styleContext = stylePrefs.length > 0 ? stylePrefs.join(', ') : 'modern';
+    const colorContext = colorPrefs.length > 0 ? colorPrefs.join(', ') : 'neutral';
+    
+    const imagePrompt = `A high-quality fashion outfit photo for ${occasion}. The outfit includes: ${outfitDescription}. Style: ${styleContext}. Color palette: ${colorContext}. Professional fashion photography, clean background, well-lit, styled on a mannequin or model, modern and trendy, high resolution, magazine quality`;
+
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: imagePrompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+      style: "natural"
+    });
+
+    return response.data?.[0]?.url || null;
+
+  } catch (error) {
+    console.error("DALL-E API error:", error);
+    return null;
+  }
+}
+
 export async function analyzeStyleProfile(profileData: any): Promise<string> {
   try {
     const prompt = `Analyze this style profile and provide personalized fashion insights:

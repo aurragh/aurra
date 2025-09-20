@@ -3,12 +3,12 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateOutfitRecommendations, analyzeStyleProfile } from "./openai";
+import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage } from "./openai";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema } from "@shared/schema";
 
 // Make Stripe optional - will work without payment features
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-08-27.basil",
 }) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -74,15 +74,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const outfits = await generateOutfitRecommendations(profile, occasion, count);
       
-      // Save generated outfits
-      const savedOutfits = await Promise.all(
-        outfits.map(outfit => 
-          storage.createOutfit({
+      // Generate images for each outfit
+      const outfitsWithImages = await Promise.all(
+        outfits.map(async (outfit) => {
+          const imageUrl = await generateOutfitImage(outfit, profile, occasion);
+          return {
             ...outfit,
+            imageUrl,
             userId,
             occasion,
-          })
-        )
+          };
+        })
+      );
+      
+      // Save generated outfits with images
+      const savedOutfits = await Promise.all(
+        outfitsWithImages.map(outfit => storage.createOutfit(outfit))
       );
 
       // Award points for generating outfits

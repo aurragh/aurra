@@ -301,40 +301,52 @@ export default function Dashboard() {
               ) : (
                 outfits.map((outfit: any) => (
                   <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-outfit-${outfit.id}`}>
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
-                          <Badge 
-                            variant="secondary" 
-                            className="bg-purple-600/20 text-purple-200"
-                            data-testid={`badge-occasion-${outfit.id}`}
-                          >
-                            {outfit.occasion}
-                          </Badge>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFavoriteMutation.mutate(outfit.id)}
-                          className="text-white hover:bg-white/10"
-                          data-testid={`button-favorite-${outfit.id}`}
-                        >
-                          <Heart 
-                            className={`w-5 h-5 ${outfit.isFavorite ? 'fill-red-400 text-red-400' : 'text-gray-400'}`} 
+                    <CardContent className="p-0">
+                      {outfit.imageUrl && (
+                        <div className="relative w-full h-48 mb-4">
+                          <img 
+                            src={outfit.imageUrl} 
+                            alt={outfit.name}
+                            className="w-full h-full object-cover rounded-t-lg"
+                            data-testid={`img-outfit-${outfit.id}`}
                           />
-                        </Button>
-                      </div>
-                      
-                      <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
-                      
-                      <div className="space-y-2">
-                        <p className="text-gray-400 text-xs font-medium">Items:</p>
-                        {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
-                          <div key={index} className="text-xs text-gray-300" data-testid={`item-${outfit.id}-${index}`}>
-                            <span className="font-medium">{item.category}:</span> {item.description}
+                        </div>
+                      )}
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
+                            <Badge 
+                              variant="secondary" 
+                              className="bg-purple-600/20 text-purple-200"
+                              data-testid={`badge-occasion-${outfit.id}`}
+                            >
+                              {outfit.occasion}
+                            </Badge>
                           </div>
-                        ))}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFavoriteMutation.mutate(outfit.id)}
+                            className="text-white hover:bg-white/10"
+                            data-testid={`button-favorite-${outfit.id}`}
+                          >
+                            <Heart 
+                              className={`w-5 h-5 ${outfit.isFavorite ? 'fill-red-400 text-red-400' : 'text-gray-400'}`} 
+                            />
+                          </Button>
+                        </div>
+                        
+                        <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
+                        
+                        <div className="space-y-2">
+                          <p className="text-gray-400 text-xs font-medium">Items:</p>
+                          {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
+                            <div key={index} className="text-xs text-gray-300" data-testid={`item-${outfit.id}-${index}`}>
+                              <span className="font-medium">{item.category}:</span> {item.description}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -356,30 +368,42 @@ export default function Dashboard() {
               ) : (
                 favoriteOutfits.map((outfit: any) => (
                   <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20 border-red-400/30" data-testid={`card-favorite-${outfit.id}`}>
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
-                          <Badge 
-                            variant="secondary" 
-                            className="bg-purple-600/20 text-purple-200"
-                            data-testid={`badge-favorite-occasion-${outfit.id}`}
-                          >
-                            {outfit.occasion}
-                          </Badge>
+                    <CardContent className="p-0">
+                      {outfit.imageUrl && (
+                        <div className="relative w-full h-48 mb-4">
+                          <img 
+                            src={outfit.imageUrl} 
+                            alt={outfit.name}
+                            className="w-full h-full object-cover rounded-t-lg"
+                            data-testid={`img-favorite-${outfit.id}`}
+                          />
                         </div>
-                        <Heart className="w-5 h-5 fill-red-400 text-red-400" />
-                      </div>
-                      
-                      <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
-                      
-                      <div className="space-y-2">
-                        <p className="text-gray-400 text-xs font-medium">Items:</p>
-                        {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
-                          <div key={index} className="text-xs text-gray-300" data-testid={`favorite-item-${outfit.id}-${index}`}>
-                            <span className="font-medium">{item.category}:</span> {item.description}
+                      )}
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
+                            <Badge 
+                              variant="secondary" 
+                              className="bg-purple-600/20 text-purple-200"
+                              data-testid={`badge-favorite-occasion-${outfit.id}`}
+                            >
+                              {outfit.occasion}
+                            </Badge>
                           </div>
-                        ))}
+                          <Heart className="w-5 h-5 fill-red-400 text-red-400" />
+                        </div>
+                        
+                        <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>
+                        
+                        <div className="space-y-2">
+                          <p className="text-gray-400 text-xs font-medium">Items:</p>
+                          {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
+                            <div key={index} className="text-xs text-gray-300" data-testid={`favorite-item-${outfit.id}-${index}`}>
+                              <span className="font-medium">{item.category}:</span> {item.description}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
