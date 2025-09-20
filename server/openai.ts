@@ -70,7 +70,7 @@ Focus on current fashion trends, body-flattering silhouettes, and practical styl
         }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{"outfits": []}');
@@ -173,7 +173,7 @@ Respond with insightful, actionable advice in a friendly, expert tone.`;
           content: prompt
         }
       ],
-      max_tokens: 800,
+      max_completion_tokens: 800,
     });
 
     return response.choices[0].message.content || "Your style profile shows great potential for fashion exploration.";
