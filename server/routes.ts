@@ -6,7 +6,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage } from "./openai";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema } from "@shared/schema";
 
-// Make Stripe optional - will work without payment features
+// Stripe configuration - will work without payment features if not configured
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-08-27.basil",
 }) : null;
@@ -242,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{
-          price: process.env.STRIPE_PRICE_ID || 'price_1234567890', // Will need to be set
+          price: process.env.STRIPE_PRICE_ID || process.env.STRIPE_PREMIUM_PRICE_ID || 'price_1234567890', // Configure in environment
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
@@ -260,6 +260,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Stripe subscription error:", error);
       res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
+  // Admin routes - protected by admin check
+  const isAdmin = (req: any, res: any, next: any) => {
+    if (!req.user || req.user.claims.email !== "writersure369@gmail.com") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  };
+
+  app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/outfits', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const outfits = await storage.getAllOutfits();
+      res.json(outfits);
+    } catch (error) {
+      console.error("Error fetching all outfits:", error);
+      res.status(500).json({ message: "Failed to fetch outfits" });
     }
   });
 

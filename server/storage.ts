@@ -44,6 +44,11 @@ export interface IStorage {
   getUserPoints(userId: string): Promise<UserPoints | undefined>;
   updateUserPoints(userId: string, pointsToAdd: number): Promise<UserPoints>;
   initializeUserPoints(userId: string): Promise<UserPoints>;
+  
+  // Admin operations
+  getAllUsers(): Promise<User[]>;
+  getAllOutfits(): Promise<Outfit[]>;
+  getAdminStats(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -232,6 +237,35 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return created;
+  }
+
+  // Admin operations
+  async getAllUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt));
+  }
+
+  async getAllOutfits(): Promise<Outfit[]> {
+    return await db
+      .select()
+      .from(outfits)
+      .orderBy(desc(outfits.createdAt));
+  }
+
+  async getAdminStats(): Promise<any> {
+    const totalUsers = await db.select().from(users);
+    const totalOutfits = await db.select().from(outfits);
+    const premiumUsers = totalUsers.filter(u => u.subscriptionStatus && u.subscriptionStatus !== 'free');
+    
+    return {
+      totalUsers: totalUsers.length,
+      totalOutfits: totalOutfits.length,
+      premiumUsers: premiumUsers.length,
+      conversionRate: totalUsers.length > 0 ? (premiumUsers.length / totalUsers.length) * 100 : 0,
+      estimatedRevenue: premiumUsers.length * 9.99
+    };
   }
 }
 
