@@ -69,15 +69,15 @@ export default function Home() {
         <div className="relative w-full h-full">
           {/* Fashion Background Images */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-20"
+            className="absolute inset-0 bg-cover bg-center opacity-30"
             style={{ backgroundImage: `url(${fashionBg1})` }}
           />
           <div 
-            className="absolute top-0 right-0 w-1/2 h-full bg-cover bg-center opacity-15"
+            className="absolute top-0 right-0 w-1/2 h-full bg-cover bg-center opacity-25"
             style={{ backgroundImage: `url(${fashionBg2})` }}
           />
           <div 
-            className="absolute bottom-0 left-0 w-1/2 h-2/3 bg-cover bg-center opacity-15"
+            className="absolute bottom-0 left-0 w-1/2 h-2/3 bg-cover bg-center opacity-25"
             style={{ backgroundImage: `url(${fashionBg3})` }}
           />
           
