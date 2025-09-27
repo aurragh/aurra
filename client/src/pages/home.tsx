@@ -9,6 +9,11 @@ import { Link } from "wouter";
 import { Sparkles, ShoppingBag, Star, TrendingUp, Award, Users } from "lucide-react";
 import { type StyleProfile, type UserPoints, type Outfit } from "@shared/schema";
 
+// Import background images
+import fashionBg1 from "@assets/image10_1758963741792.jpg";
+import fashionBg2 from "@assets/image9_1758963749625.jpg";
+import fashionBg3 from "@assets/image39_1758963769570.jpg";
+
 export default function Home() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
@@ -58,7 +63,32 @@ export default function Home() {
   const needsStyleProfile = !styleProfile || !styleProfile.completed;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Images Layer */}
+      <div className="absolute inset-0 z-0">
+        <div className="relative w-full h-full">
+          {/* Fashion Background Images */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-20"
+            style={{ backgroundImage: `url(${fashionBg1})` }}
+          />
+          <div 
+            className="absolute top-0 right-0 w-1/2 h-full bg-cover bg-center opacity-15"
+            style={{ backgroundImage: `url(${fashionBg2})` }}
+          />
+          <div 
+            className="absolute bottom-0 left-0 w-1/2 h-2/3 bg-cover bg-center opacity-15"
+            style={{ backgroundImage: `url(${fashionBg3})` }}
+          />
+          
+          {/* Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-purple-900/85 to-slate-900/80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+        </div>
+      </div>
+
+      {/* Content Layer */}
+      <div className="relative z-10">
       {/* Navigation */}
       <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -233,6 +263,7 @@ export default function Home() {
             </CardContent>
           </Card>
         )}
+      </div>
       </div>
     </div>
   );
