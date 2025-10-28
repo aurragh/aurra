@@ -8,20 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, ShoppingBag, ChartLine, Brain, Check, Star, Users, Shield } from "lucide-react";
 import { RotatingBackground } from "@/components/RotatingBackground";
 
-const SectionDivider = () => (
-  <div className="relative py-8">
-    <div className="absolute inset-0 flex items-center">
-      <div className="w-full border-t border-gradient-to-r from-transparent via-purple-500/50 to-transparent" style={{
-        background: 'linear-gradient(to right, transparent, rgb(168, 85, 247, 0.5) 50%, transparent)',
-        height: '2px'
-      }}></div>
-    </div>
-    <div className="relative flex justify-center">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 w-3 h-3 rounded-full"></div>
-    </div>
-  </div>
-);
-
 export default function Landing() {
   const handleGetStarted = () => {
     window.location.href = "/api/login";
@@ -37,10 +23,8 @@ export default function Landing() {
       <Navigation />
       <HeroSection onGetStarted={handleGetStarted} onWatchDemo={handleWatchDemo} />
       
-      <SectionDivider />
-      
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 bg-secondary/10">
+      <section id="how-it-works" className="py-20 bg-black/40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6" data-testid="heading-how-it-works">How It Works</h2>
@@ -81,20 +65,12 @@ export default function Landing() {
         </div>
       </section>
 
-      <SectionDivider />
-
       <FeaturesSection />
-      
-      <SectionDivider />
       
       <PricingSection onSelectPlan={handleGetStarted} />
       
-      <SectionDivider />
-      
       {/* Fashion Inspiration Gallery */}
       <FashionGallery />
-      
-      <SectionDivider />
       
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
