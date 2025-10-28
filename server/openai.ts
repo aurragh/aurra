@@ -122,8 +122,8 @@ export async function generateOutfitImage(
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Pinterest-style fashion photography prompt: single full-body shot, natural outdoor settings
-    const imagePrompt = `Single full-body fashion photograph showing one complete outfit for ${occasion} featuring ${basicItems}. One person, single unified composition, no split screen or multiple angles. Natural outdoor setting with beautiful natural lighting, professional fashion photography style, realistic and elegant. Shot in a scenic outdoor location with soft daylight, similar to Pinterest fashion inspiration photos. Clean single image, full-body view, magazine quality photography.`;
+    // Pinterest-style fashion photography prompt: ONLY ONE PERSON, single shot
+    const imagePrompt = `A single person wearing a complete ${occasion} outfit with ${basicItems}. IMPORTANT: Show only ONE person in the entire image, NOT two people, NOT before/after, NOT side-by-side comparison. Full body view from head to toe in natural outdoor setting with soft lighting. Instagram fashion style, casual elegant pose, scenic background, professional photography. One unified photo showing the complete look.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -144,7 +144,7 @@ export async function generateOutfitImage(
     if (error?.code === 'content_policy_violation') {
       try {
         console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `Single full-body fashion photograph for ${occasion}. One person, single unified composition, no split screen. Outdoor natural setting, professional photography, elegant styling, clean single image, magazine quality`;
+        const fallbackPrompt = `One person wearing ${occasion} outfit, full body view, outdoor setting. IMPORTANT: Only ONE person in the image, not two, not comparison, not before/after. Natural light, Instagram style photo.`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
