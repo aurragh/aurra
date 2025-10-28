@@ -20,6 +20,7 @@ import {
   Trash2
 } from "lucide-react";
 import { type User, type Outfit } from "@shared/schema";
+import { RotatingBackground } from "@/components/RotatingBackground";
 
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
@@ -70,9 +71,11 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
-      </div>
+      <RotatingBackground>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
+        </div>
+      </RotatingBackground>
     );
   }
 
@@ -81,7 +84,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <RotatingBackground>
       {/* Navigation */}
       <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -384,6 +387,6 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </RotatingBackground>
   );
 }

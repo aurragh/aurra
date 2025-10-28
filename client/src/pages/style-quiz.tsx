@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { RotatingBackground } from "@/components/RotatingBackground";
 
 const QUIZ_STEPS = [
   {
@@ -92,9 +93,11 @@ export default function StyleQuiz() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
-      </div>
+      <RotatingBackground>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
+        </div>
+      </RotatingBackground>
     );
   }
 
@@ -167,7 +170,7 @@ export default function StyleQuiz() {
   const currentStepData = QUIZ_STEPS[currentStep];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8">
+    <RotatingBackground className="py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -383,6 +386,6 @@ export default function StyleQuiz() {
           </Button>
         </div>
       </div>
-    </div>
+    </RotatingBackground>
   );
 }

@@ -6,6 +6,7 @@ import PricingSection from "@/components/pricing-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ShoppingBag, ChartLine, Brain, Check, Star, Users, Shield } from "lucide-react";
+import { RotatingBackground } from "@/components/RotatingBackground";
 
 export default function Landing() {
   const handleGetStarted = () => {
@@ -18,7 +19,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <RotatingBackground className="bg-transparent text-foreground">
       <Navigation />
       <HeroSection onGetStarted={handleGetStarted} onWatchDemo={handleWatchDemo} />
       
@@ -183,6 +184,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
+    </RotatingBackground>
   );
 }

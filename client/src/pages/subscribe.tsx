@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import { ArrowLeft, Check, Star, Sparkles, Crown } from "lucide-react";
+import { RotatingBackground } from "@/components/RotatingBackground";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -123,15 +124,17 @@ export default function Subscribe() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
-      </div>
+      <RotatingBackground>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
+        </div>
+      </RotatingBackground>
     );
   }
 
   if (!clientSecret) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <RotatingBackground>
         {/* Navigation */}
         <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -157,13 +160,13 @@ export default function Subscribe() {
             <p className="text-white text-lg">Setting up your subscription...</p>
           </div>
         </div>
-      </div>
+      </RotatingBackground>
     );
   }
 
   // Make SURE to wrap the form in <Elements> which provides the stripe context.
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <RotatingBackground>
       {/* Navigation */}
       <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -289,6 +292,6 @@ export default function Subscribe() {
           </div>
         </div>
       </div>
-    </div>
+    </RotatingBackground>
   );
 }

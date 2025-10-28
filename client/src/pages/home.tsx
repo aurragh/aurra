@@ -1,26 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { RotatingBackground } from "@/components/RotatingBackground";
 
 export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  const [currentBgIndex, setCurrentBgIndex] = useState(0);
-
-  // Background images rotation
-  const backgroundImages = [
-    "/images/hero-fashion1.jpg",
-    "/images/hero-fashion2.jpg",
-    "/images/hero-fashion3.jpg"
-  ];
-
-  // Rotate background images every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBgIndex((prev) => (prev + 1) % backgroundImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const testimonials = [
     {
@@ -44,25 +29,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen relative text-white overflow-hidden">
-      {/* Rotating Background Images */}
-      {backgroundImages.map((image, index) => (
-        <div
-          key={image}
-          className="fixed inset-0 bg-cover bg-center transition-opacity duration-1000"
-          style={{
-            backgroundImage: `url(${image})`,
-            opacity: currentBgIndex === index ? 1 : 0,
-            zIndex: 0
-          }}
-        />
-      ))}
-      
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-gradient-to-b from-purple-900/70 via-black/60 to-black/90" style={{ zIndex: 1 }} />
-      
-      {/* Content wrapper */}
-      <div className="relative" style={{ zIndex: 2 }}>
+    <RotatingBackground>
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -244,7 +211,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-      </div>
-    </div>
+    </RotatingBackground>
   );
 }
