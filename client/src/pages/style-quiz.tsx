@@ -54,11 +54,11 @@ export default function StyleQuiz() {
   const [answers, setAnswers] = useState({
     personality: {} as Record<string, string>,
     bodyType: "",
-    colorPreferences: [] as string[],
-    stylePreferences: [] as string[],
+    colorPreference: "", // Changed to single selection
+    stylePreference: "", // Changed to single selection
     lifestyle: {} as Record<string, string>,
     budget: "",
-    occasions: [] as string[],
+    occasion: "", // Changed to single selection for initial outfit
   });
 
   // Fetch existing style profile
@@ -70,14 +70,19 @@ export default function StyleQuiz() {
   // Pre-fill form with existing profile data
   useEffect(() => {
     if (existingProfile && !isEditing) {
+      // Parse arrays and get first element for single selections
+      const colorPrefs = JSON.parse(existingProfile.colorPreferences || '[]');
+      const stylePrefs = JSON.parse(existingProfile.stylePreferences || '[]');
+      const occasions = JSON.parse(existingProfile.occasions || '[]');
+      
       setAnswers({
         personality: JSON.parse(existingProfile.personality || '{}'),
         bodyType: existingProfile.bodyType || "",
-        colorPreferences: JSON.parse(existingProfile.colorPreferences || '[]'),
-        stylePreferences: JSON.parse(existingProfile.stylePreferences || '[]'),
+        colorPreference: colorPrefs[0] || "", // Take first if array
+        stylePreference: stylePrefs[0] || "", // Take first if array  
         lifestyle: JSON.parse(existingProfile.lifestyle || '{}'),
         budget: existingProfile.budget || "",
-        occasions: JSON.parse(existingProfile.occasions || '[]'),
+        occasion: occasions[0] || "", // Take first if array
       });
       setIsEditing(true);
     }
@@ -87,11 +92,11 @@ export default function StyleQuiz() {
     setAnswers({
       personality: {},
       bodyType: "",
-      colorPreferences: [],
-      stylePreferences: [],
+      colorPreference: "",
+      stylePreference: "",
       lifestyle: {},
       budget: "",
-      occasions: [],
+      occasion: "",
     });
     setCurrentStep(0);
     setIsEditing(false);
@@ -158,14 +163,15 @@ export default function StyleQuiz() {
   };
 
   const handleSubmit = () => {
+    // Convert single selections to arrays for backward compatibility  
     const profileData = {
       personality: JSON.stringify(answers.personality),
       bodyType: answers.bodyType,
-      colorPreferences: JSON.stringify(answers.colorPreferences),
-      stylePreferences: JSON.stringify(answers.stylePreferences),
+      colorPreferences: JSON.stringify([answers.colorPreference].filter(Boolean)),
+      stylePreferences: JSON.stringify([answers.stylePreference].filter(Boolean)),
       lifestyle: JSON.stringify(answers.lifestyle),
       budget: answers.budget,
-      occasions: JSON.stringify(answers.occasions),
+      occasions: JSON.stringify([answers.occasion].filter(Boolean)),
       completed: true,
     };
 
@@ -199,14 +205,7 @@ export default function StyleQuiz() {
     }));
   };
 
-  const toggleArrayItem = (field: 'colorPreferences' | 'stylePreferences' | 'occasions', item: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [field]: prev[field].includes(item) 
-        ? prev[field].filter(i => i !== item)
-        : [...prev[field], item],
-    }));
-  };
+  // Removed toggleArrayItem function since we're using single selections now
 
   const progress = ((currentStep + 1) / QUIZ_STEPS.length) * 100;
   const currentStepData = QUIZ_STEPS[currentStep];
@@ -306,35 +305,27 @@ export default function StyleQuiz() {
             {currentStep === 2 && (
               <div className="space-y-6" data-testid="step-preferences">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">What colors do you love? (Select all that apply)</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {['Black', 'White', 'Navy', 'Gray', 'Beige', 'Brown', 'Red', 'Pink', 'Blue', 'Green', 'Yellow', 'Purple'].map((color) => (
-                      <div key={color} className="flex items-center space-x-2" data-testid={`checkbox-color-${color.toLowerCase()}`}>
-                        <Checkbox 
-                          checked={answers.colorPreferences.includes(color)}
-                          onCheckedChange={() => toggleArrayItem('colorPreferences', color)}
-                          id={color}
-                        />
+                  <Label className="text-white text-lg mb-4 block">What's your favorite color palette?</Label>
+                  <RadioGroup value={answers.colorPreference} onValueChange={(value) => updateAnswer('colorPreference', value)}>
+                    {['Neutral (Black, White, Gray)', 'Earth Tones (Brown, Beige, Tan)', 'Classic (Navy, White, Khaki)', 'Bold & Bright (Red, Yellow, Orange)', 'Cool Tones (Blue, Green, Purple)', 'Soft & Pastel (Pink, Lavender, Mint)'].map((color) => (
+                      <div key={color} className="flex items-center space-x-2" data-testid={`radio-color-${color.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+                        <RadioGroupItem value={color} id={color} />
                         <Label htmlFor={color} className="text-gray-200">{color}</Label>
                       </div>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </div>
 
                 <div>
-                  <Label className="text-white text-lg mb-4 block">Style preferences (Select all that apply)</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Label className="text-white text-lg mb-4 block">What's your primary style preference?</Label>
+                  <RadioGroup value={answers.stylePreference} onValueChange={(value) => updateAnswer('stylePreference', value)}>
                     {['Casual & Comfortable', 'Professional & Polished', 'Feminine & Romantic', 'Sporty & Active', 'Vintage & Retro', 'Streetwear & Urban', 'Formal & Elegant', 'Artistic & Creative'].map((style) => (
-                      <div key={style} className="flex items-center space-x-2" data-testid={`checkbox-style-${style.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <Checkbox 
-                          checked={answers.stylePreferences.includes(style)}
-                          onCheckedChange={() => toggleArrayItem('stylePreferences', style)}
-                          id={style}
-                        />
+                      <div key={style} className="flex items-center space-x-2" data-testid={`radio-style-${style.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+                        <RadioGroupItem value={style} id={style} />
                         <Label htmlFor={style} className="text-gray-200">{style}</Label>
                       </div>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </div>
               </div>
             )}
@@ -390,19 +381,27 @@ export default function StyleQuiz() {
                 </div>
 
                 <div>
-                  <Label className="text-white text-lg mb-4 block">What occasions do you need outfits for? (Select all that apply)</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {['Work/Professional', 'Casual Daily Wear', 'Date Night', 'Social Events', 'Travel', 'Workout/Active', 'Formal Events', 'Weekend Outings'].map((occasion) => (
-                      <div key={occasion} className="flex items-center space-x-2" data-testid={`checkbox-occasion-${occasion.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <Checkbox 
-                          checked={answers.occasions.includes(occasion)}
-                          onCheckedChange={() => toggleArrayItem('occasions', occasion)}
-                          id={occasion}
-                        />
-                        <Label htmlFor={occasion} className="text-gray-200">{occasion}</Label>
+                  <Label className="text-white text-lg mb-4 block">What occasion do you want your first outfit for?</Label>
+                  <RadioGroup value={answers.occasion} onValueChange={(value) => updateAnswer('occasion', value)}>
+                    {[
+                      { value: 'work', label: 'Work/Professional' },
+                      { value: 'casual', label: 'Casual Daily Wear' },
+                      { value: 'date-night', label: 'Date Night' },
+                      { value: 'social-events', label: 'Social Events' },
+                      { value: 'travel', label: 'Travel' },
+                      { value: 'workout', label: 'Workout/Active' },
+                      { value: 'formal', label: 'Formal Events' },
+                      { value: 'weekend', label: 'Weekend Outings' }
+                    ].map((occasion) => (
+                      <div key={occasion.value} className="flex items-center space-x-2" data-testid={`radio-occasion-${occasion.value}`}>
+                        <RadioGroupItem value={occasion.value} id={occasion.value} />
+                        <Label htmlFor={occasion.value} className="text-gray-200">{occasion.label}</Label>
                       </div>
                     ))}
-                  </div>
+                  </RadioGroup>
+                  <p className="text-gray-400 text-sm mt-4">
+                    Don't worry - you can generate outfits for other occasions later!
+                  </p>
                 </div>
               </div>
             )}
