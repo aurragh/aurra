@@ -9,6 +9,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -548,6 +549,7 @@ export default function Dashboard() {
       <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
         <DialogContent className="max-w-4xl w-full bg-black/95 border-white/20 p-0" data-testid="dialog-lightbox">
           <DialogTitle className="sr-only">{lightboxImage?.name || 'Outfit Image'}</DialogTitle>
+          <DialogDescription className="sr-only">Zoomed view of outfit image</DialogDescription>
           <div className="relative">
             <Button
               variant="ghost"

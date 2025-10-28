@@ -283,32 +283,38 @@ export default function StyleQuiz() {
                 <div>
                   <Label className="text-white text-lg mb-4 block">How would you describe your style personality? (Select all that apply)</Label>
                   <div className="space-y-3">
-                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <Checkbox 
-                          id={option}
-                          checked={answers.stylePreference.includes(option)}
-                          onCheckedChange={() => toggleArrayItem('stylePreference', option)}
-                        />
-                        <Label htmlFor={option} className="text-gray-200 cursor-pointer">{option}</Label>
-                      </div>
-                    ))}
+                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => {
+                      const sanitizedId = `style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                      return (
+                        <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-${sanitizedId}`}>
+                          <Checkbox 
+                            id={sanitizedId}
+                            checked={answers.stylePreference.includes(option)}
+                            onCheckedChange={() => toggleArrayItem('stylePreference', option)}
+                          />
+                          <Label htmlFor={sanitizedId} className="text-gray-200 cursor-pointer">{option}</Label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-white text-lg mb-4 block">Which items do you need help styling? (Select all that apply)</Label>
                   <div className="space-y-3">
-                    {['👚 Tops', '👖 Bottoms', '👗 Dresses', '👞 Shoes', '👜 Accessories', '🧥 Outerwear', '💼 Full Outfits'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-clothing-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <Checkbox 
-                          id={option}
-                          checked={answers.clothingItems.includes(option)}
-                          onCheckedChange={() => toggleArrayItem('clothingItems', option)}
-                        />
-                        <Label htmlFor={option} className="text-gray-200 cursor-pointer">{option}</Label>
-                      </div>
-                    ))}
+                    {['👚 Tops', '👖 Bottoms', '👗 Dresses', '👞 Shoes', '👜 Accessories', '🧥 Outerwear', '💼 Full Outfits'].map((option) => {
+                      const sanitizedId = `clothing-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                      return (
+                        <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-${sanitizedId}`}>
+                          <Checkbox 
+                            id={sanitizedId}
+                            checked={answers.clothingItems.includes(option)}
+                            onCheckedChange={() => toggleArrayItem('clothingItems', option)}
+                          />
+                          <Label htmlFor={sanitizedId} className="text-gray-200 cursor-pointer">{option}</Label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -389,19 +395,22 @@ export default function StyleQuiz() {
                       { value: 'formal', label: 'Formal Events', icon: '🤵' },
                       { value: 'weekend', label: 'Weekend', icon: '🌞' },
                       { value: 'workout', label: 'Workout', icon: '💪' }
-                    ].map((occasion) => (
-                      <div key={occasion.value} className="flex items-center space-x-3" data-testid={`checkbox-occasion-${occasion.value}`}>
-                        <Checkbox 
-                          id={occasion.value}
-                          checked={answers.occasions.includes(occasion.value)}
-                          onCheckedChange={() => toggleArrayItem('occasions', occasion.value)}
-                        />
-                        <Label htmlFor={occasion.value} className="text-gray-200 flex items-center cursor-pointer">
-                          <span className="mr-2">{occasion.icon}</span>
-                          {occasion.label}
-                        </Label>
-                      </div>
-                    ))}
+                    ].map((occasion) => {
+                      const sanitizedId = `occasion-${occasion.value}`;
+                      return (
+                        <div key={occasion.value} className="flex items-center space-x-3" data-testid={`checkbox-${sanitizedId}`}>
+                          <Checkbox 
+                            id={sanitizedId}
+                            checked={answers.occasions.includes(occasion.value)}
+                            onCheckedChange={() => toggleArrayItem('occasions', occasion.value)}
+                          />
+                          <Label htmlFor={sanitizedId} className="text-gray-200 flex items-center cursor-pointer">
+                            <span className="mr-2">{occasion.icon}</span>
+                            {occasion.label}
+                          </Label>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="mt-6 p-4 bg-purple-500/10 rounded-lg border border-purple-400/20">
                     <p className="text-purple-200 text-sm">
