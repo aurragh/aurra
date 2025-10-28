@@ -72,7 +72,7 @@ export default function TestimonialsSection() {
   ];
 
   return (
-    <section id="testimonials" className="py-20 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <section id="testimonials" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <p className="text-purple-400 font-semibold mb-4 text-sm uppercase tracking-wider" data-testid="text-testimonials-label">

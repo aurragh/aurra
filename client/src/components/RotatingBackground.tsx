@@ -42,8 +42,8 @@ export function RotatingBackground({ children, className = "" }: RotatingBackgro
         />
       ))}
       
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-gradient-to-b from-purple-900/70 via-black/60 to-black/90" style={{ zIndex: 1 }} />
+      {/* Dark overlay - reduced opacity to show images better */}
+      <div className="fixed inset-0 bg-gradient-to-b from-purple-900/30 via-black/20 to-black/40" style={{ zIndex: 1 }} />
       
       {/* Content wrapper */}
       <div className="relative" style={{ zIndex: 2 }}>
