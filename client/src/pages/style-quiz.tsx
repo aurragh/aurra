@@ -17,29 +17,24 @@ import { type StyleProfile } from "@shared/schema";
 
 const QUIZ_STEPS = [
   {
-    id: "personality",
-    title: "Your Personality",
-    description: "Tell us about your style personality",
+    id: "style",
+    title: "Your Style",
+    description: "Tell us about your fashion personality",
   },
   {
     id: "bodyType",
-    title: "Body Type",
-    description: "Help us recommend flattering silhouettes",
-  },
-  {
-    id: "preferences",
-    title: "Style Preferences",
-    description: "What styles speak to you?",
+    title: "Body & Colors",
+    description: "Help us find your perfect fit and palette",
   },
   {
     id: "lifestyle",
-    title: "Lifestyle",
-    description: "How do you live and work?",
+    title: "Lifestyle & Budget",
+    description: "Match your wardrobe to your life",
   },
   {
-    id: "budget",
-    title: "Budget & Shopping",
-    description: "What's your fashion budget?",
+    id: "firstOutfit",
+    title: "First Outfit",
+    description: "Choose what to generate first",
   },
 ];
 
@@ -248,16 +243,16 @@ export default function StyleQuiz() {
             </p>
           </CardHeader>
           <CardContent className="p-8">
-            {/* Step 1: Personality */}
+            {/* Step 1: Style & Preference */}
             {currentStep === 0 && (
-              <div className="space-y-6" data-testid="step-personality">
+              <div className="space-y-6" data-testid="step-style">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">How would you describe your style?</Label>
+                  <Label className="text-white text-lg mb-4 block">How would you describe your style personality?</Label>
                   <RadioGroup 
-                    value={answers.personality.style} 
-                    onValueChange={(value) => updatePersonality('style', value)}
+                    value={answers.stylePreference} 
+                    onValueChange={(value) => updateAnswer('stylePreference', value)}
                   >
-                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold'].map((option) => (
+                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => (
                       <div key={option} className="flex items-center space-x-2" data-testid={`radio-style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
                         <RadioGroupItem value={option} id={option} />
                         <Label htmlFor={option} className="text-gray-200">{option}</Label>
@@ -265,45 +260,24 @@ export default function StyleQuiz() {
                     ))}
                   </RadioGroup>
                 </div>
+              </div>
+            )}
 
+            {/* Step 2: Body Type & Colors */}
+            {currentStep === 1 && (
+              <div className="space-y-6" data-testid="step-body-colors">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">What's your confidence level with fashion?</Label>
-                  <RadioGroup 
-                    value={answers.personality.confidence} 
-                    onValueChange={(value) => updatePersonality('confidence', value)}
-                  >
-                    {['I love experimenting with new styles', 'I prefer safe, classic choices', 'I need guidance to feel confident', 'I enjoy mixing classic with trendy'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-confidence-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                  <Label className="text-white text-lg mb-4 block">What's your body type?</Label>
+                  <RadioGroup value={answers.bodyType} onValueChange={(value) => updateAnswer('bodyType', value)}>
+                    {['Apple', 'Pear', 'Hourglass', 'Rectangle', 'Inverted Triangle', 'Prefer not to specify'].map((type) => (
+                      <div key={type} className="flex items-center space-x-2" data-testid={`radio-body-type-${type.toLowerCase().replace(/\s/g, '-')}`}>
+                        <RadioGroupItem value={type} id={type} />
+                        <Label htmlFor={type} className="text-gray-200">{type}</Label>
                       </div>
                     ))}
                   </RadioGroup>
                 </div>
-              </div>
-            )}
 
-            {/* Step 2: Body Type */}
-            {currentStep === 1 && (
-              <div data-testid="step-body-type">
-                <Label className="text-white text-lg mb-6 block">What's your body type?</Label>
-                <RadioGroup value={answers.bodyType} onValueChange={(value) => updateAnswer('bodyType', value)}>
-                  {['Apple', 'Pear', 'Hourglass', 'Rectangle', 'Inverted Triangle', 'Prefer not to specify'].map((type) => (
-                    <div key={type} className="flex items-center space-x-2" data-testid={`radio-body-type-${type.toLowerCase().replace(/\s/g, '-')}`}>
-                      <RadioGroupItem value={type} id={type} />
-                      <Label htmlFor={type} className="text-gray-200">{type}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-                <p className="text-gray-400 text-sm mt-4">
-                  This helps us recommend the most flattering silhouettes for you.
-                </p>
-              </div>
-            )}
-
-            {/* Step 3: Preferences */}
-            {currentStep === 2 && (
-              <div className="space-y-6" data-testid="step-preferences">
                 <div>
                   <Label className="text-white text-lg mb-4 block">What's your favorite color palette?</Label>
                   <RadioGroup value={answers.colorPreference} onValueChange={(value) => updateAnswer('colorPreference', value)}>
@@ -315,31 +289,19 @@ export default function StyleQuiz() {
                     ))}
                   </RadioGroup>
                 </div>
-
-                <div>
-                  <Label className="text-white text-lg mb-4 block">What's your primary style preference?</Label>
-                  <RadioGroup value={answers.stylePreference} onValueChange={(value) => updateAnswer('stylePreference', value)}>
-                    {['Casual & Comfortable', 'Professional & Polished', 'Feminine & Romantic', 'Sporty & Active', 'Vintage & Retro', 'Streetwear & Urban', 'Formal & Elegant', 'Artistic & Creative'].map((style) => (
-                      <div key={style} className="flex items-center space-x-2" data-testid={`radio-style-${style.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={style} id={style} />
-                        <Label htmlFor={style} className="text-gray-200">{style}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
               </div>
             )}
 
-            {/* Step 4: Lifestyle */}
-            {currentStep === 3 && (
-              <div className="space-y-6" data-testid="step-lifestyle">
+            {/* Step 3: Lifestyle & Budget */}
+            {currentStep === 2 && (
+              <div className="space-y-6" data-testid="step-lifestyle-budget">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">What's your work environment?</Label>
+                  <Label className="text-white text-lg mb-4 block">What's your primary lifestyle?</Label>
                   <RadioGroup 
                     value={answers.lifestyle.work} 
                     onValueChange={(value) => updateLifestyle('work', value)}
                   >
-                    {['Corporate/Office', 'Creative/Casual', 'Work from Home', 'Customer-Facing', 'Outdoor/Physical', 'Freelance/Flexible'].map((option) => (
+                    {['Corporate Professional', 'Creative Professional', 'Student', 'Stay-at-home Parent', 'Active/Outdoors', 'Social Butterfly'].map((option) => (
                       <div key={option} className="flex items-center space-x-2" data-testid={`radio-work-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
                         <RadioGroupItem value={option} id={option} />
                         <Label htmlFor={option} className="text-gray-200">{option}</Label>
@@ -347,15 +309,11 @@ export default function StyleQuiz() {
                     ))}
                   </RadioGroup>
                 </div>
-
                 <div>
-                  <Label className="text-white text-lg mb-4 block">How active is your lifestyle?</Label>
-                  <RadioGroup 
-                    value={answers.lifestyle.activity} 
-                    onValueChange={(value) => updateLifestyle('activity', value)}
-                  >
-                    {['Very Active (Daily workouts)', 'Moderately Active (Few times/week)', 'Occasionally Active', 'Prefer Low-Impact Activities', 'Mostly Sedentary'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-activity-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+                  <Label className="text-white text-lg mb-4 block">What's your typical clothing budget?</Label>
+                  <RadioGroup value={answers.budget} onValueChange={(value) => updateAnswer('budget', value)}>
+                    {['Under $50 per item', '$50-$100 per item', '$100-$200 per item', '$200-$500 per item', '$500+ per item'].map((option) => (
+                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-budget-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
                         <RadioGroupItem value={option} id={option} />
                         <Label htmlFor={option} className="text-gray-200">{option}</Label>
                       </div>
@@ -365,43 +323,36 @@ export default function StyleQuiz() {
               </div>
             )}
 
-            {/* Step 5: Budget & Occasions */}
-            {currentStep === 4 && (
-              <div className="space-y-6" data-testid="step-budget">
+            {/* Step 4: First Outfit Selection */}
+            {currentStep === 3 && (
+              <div className="space-y-6" data-testid="step-first-outfit">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">What's your typical budget for clothing?</Label>
-                  <RadioGroup value={answers.budget} onValueChange={(value) => updateAnswer('budget', value)}>
-                    {['Under $50 per item', '$50-$100 per item', '$100-$200 per item', '$200-$500 per item', '$500+ per item', 'Budget varies by item'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-budget-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option} className="text-gray-200">{option}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-
-                <div>
-                  <Label className="text-white text-lg mb-4 block">What occasion do you want your first outfit for?</Label>
+                  <Label className="text-white text-lg mb-4 block">Choose an occasion for your first AI-generated outfit</Label>
                   <RadioGroup value={answers.occasion} onValueChange={(value) => updateAnswer('occasion', value)}>
                     {[
-                      { value: 'work', label: 'Work/Professional' },
-                      { value: 'casual', label: 'Casual Daily Wear' },
-                      { value: 'date-night', label: 'Date Night' },
-                      { value: 'social-events', label: 'Social Events' },
-                      { value: 'travel', label: 'Travel' },
-                      { value: 'workout', label: 'Workout/Active' },
-                      { value: 'formal', label: 'Formal Events' },
-                      { value: 'weekend', label: 'Weekend Outings' }
+                      { value: 'work', label: 'Work/Professional', icon: '💼' },
+                      { value: 'casual', label: 'Casual Daily', icon: '👕' },
+                      { value: 'date-night', label: 'Date Night', icon: '💕' },
+                      { value: 'social-events', label: 'Social Events', icon: '🎉' },
+                      { value: 'travel', label: 'Travel', icon: '✈️' },
+                      { value: 'formal', label: 'Formal Events', icon: '🤵' },
+                      { value: 'weekend', label: 'Weekend', icon: '🌞' },
+                      { value: 'workout', label: 'Workout', icon: '💪' }
                     ].map((occasion) => (
-                      <div key={occasion.value} className="flex items-center space-x-2" data-testid={`radio-occasion-${occasion.value}`}>
+                      <div key={occasion.value} className="flex items-center space-x-3" data-testid={`radio-occasion-${occasion.value}`}>
                         <RadioGroupItem value={occasion.value} id={occasion.value} />
-                        <Label htmlFor={occasion.value} className="text-gray-200">{occasion.label}</Label>
+                        <Label htmlFor={occasion.value} className="text-gray-200 flex items-center">
+                          <span className="mr-2">{occasion.icon}</span>
+                          {occasion.label}
+                        </Label>
                       </div>
                     ))}
                   </RadioGroup>
-                  <p className="text-gray-400 text-sm mt-4">
-                    Don't worry - you can generate outfits for other occasions later!
-                  </p>
+                  <div className="mt-6 p-4 bg-purple-500/10 rounded-lg border border-purple-400/20">
+                    <p className="text-purple-200 text-sm">
+                      💡 <strong>Your first outfit will be generated automatically!</strong> After that, you can create outfits for any occasion from your dashboard.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
