@@ -5,7 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 export function FashionGallery() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // All 40 fashion images for the gallery
+  // Fashion images for the gallery (39 images)
   const galleryImages = [
     "/images/fashion/image1_1761657039970.jpg",
     "/images/fashion/image2_1761657039971.jpg",
@@ -42,7 +42,6 @@ export function FashionGallery() {
     "/images/fashion/image33_1761658331221.jpg",
     "/images/fashion/image34_1761658331221.jpg",
     "/images/fashion/image35_1761658331221.jpg",
-    "/images/fashion/image36_1761658331221.jpg",
     "/images/fashion/image37_1761658331222.jpg",
     "/images/fashion/image38_1761658331222.jpg",
     "/images/fashion/image39_1761658331222.jpg",
