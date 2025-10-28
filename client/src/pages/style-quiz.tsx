@@ -50,10 +50,11 @@ export default function StyleQuiz() {
     personality: {} as Record<string, string>,
     bodyType: "",
     colorPreference: "", // Changed to single selection
-    stylePreference: "", // Changed to single selection
+    stylePreference: [] as string[], // Multi-select for style preferences
+    clothingItems: [] as string[], // Multi-select for clothing items needing help
     lifestyle: {} as Record<string, string>,
     budget: "",
-    occasion: "", // Changed to single selection for initial outfit
+    occasions: [] as string[], // Multi-select for occasions
   });
 
   // Fetch existing style profile
@@ -65,19 +66,21 @@ export default function StyleQuiz() {
   // Pre-fill form with existing profile data
   useEffect(() => {
     if (existingProfile && !isEditing) {
-      // Parse arrays and get first element for single selections
+      // Parse arrays
       const colorPrefs = JSON.parse(existingProfile.colorPreferences || '[]');
       const stylePrefs = JSON.parse(existingProfile.stylePreferences || '[]');
       const occasions = JSON.parse(existingProfile.occasions || '[]');
+      const clothingItems = JSON.parse(existingProfile.clothingItems || '[]');
       
       setAnswers({
         personality: JSON.parse(existingProfile.personality || '{}'),
         bodyType: existingProfile.bodyType || "",
-        colorPreference: colorPrefs[0] || "", // Take first if array
-        stylePreference: stylePrefs[0] || "", // Take first if array  
+        colorPreference: colorPrefs[0] || "", // Single selection
+        stylePreference: stylePrefs, // Multi-select array
+        clothingItems: clothingItems, // Multi-select array
         lifestyle: JSON.parse(existingProfile.lifestyle || '{}'),
         budget: existingProfile.budget || "",
-        occasion: occasions[0] || "", // Take first if array
+        occasions: occasions, // Multi-select array
       });
       setIsEditing(true);
     }
@@ -88,10 +91,11 @@ export default function StyleQuiz() {
       personality: {},
       bodyType: "",
       colorPreference: "",
-      stylePreference: "",
+      stylePreference: [],
+      clothingItems: [],
       lifestyle: {},
       budget: "",
-      occasion: "",
+      occasions: [],
     });
     setCurrentStep(0);
     setIsEditing(false);
@@ -106,10 +110,10 @@ export default function StyleQuiz() {
       // First save the profile
       await apiRequest("POST", "/api/style-profile", profileData);
       
-      // If this is a new profile (not editing) and an occasion is selected, generate the first outfit
-      if (!isEditing && answers.occasion) {
+      // If this is a new profile (not editing) and occasions are selected, generate the first outfit
+      if (!isEditing && answers.occasions.length > 0) {
         await apiRequest("POST", "/api/generate-outfits", {
-          occasion: answers.occasion,
+          occasion: answers.occasions[0], // Use first selected occasion
           count: 1
         });
       }
@@ -123,7 +127,7 @@ export default function StyleQuiz() {
       } else {
         toast({
           title: "Profile Saved!",
-          description: answers.occasion ? "Generating your first outfit..." : "Your style profile is ready.",
+          description: answers.occasions.length > 0 ? "Generating your first outfit..." : "Your style profile is ready.",
         });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/style-profile"] });
@@ -175,15 +179,16 @@ export default function StyleQuiz() {
   };
 
   const handleSubmit = () => {
-    // Convert single selections to arrays for backward compatibility  
+    // Prepare profile data with multi-select arrays
     const profileData = {
       personality: JSON.stringify(answers.personality),
       bodyType: answers.bodyType,
       colorPreferences: JSON.stringify([answers.colorPreference].filter(Boolean)),
-      stylePreferences: JSON.stringify([answers.stylePreference].filter(Boolean)),
+      stylePreferences: JSON.stringify(answers.stylePreference),
+      clothingItems: JSON.stringify(answers.clothingItems),
       lifestyle: JSON.stringify(answers.lifestyle),
       budget: answers.budget,
-      occasions: JSON.stringify([answers.occasion].filter(Boolean)),
+      occasions: JSON.stringify(answers.occasions),
       completed: true,
     };
 
@@ -217,7 +222,19 @@ export default function StyleQuiz() {
     }));
   };
 
-  // Removed toggleArrayItem function since we're using single selections now
+  // Toggle multi-select array items (for checkboxes)
+  const toggleArrayItem = (field: 'stylePreference' | 'clothingItems' | 'occasions', value: string) => {
+    setAnswers(prev => {
+      const currentArray = prev[field];
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter(item => item !== value)
+        : [...currentArray, value];
+      return {
+        ...prev,
+        [field]: newArray,
+      };
+    });
+  };
 
   const progress = ((currentStep + 1) / QUIZ_STEPS.length) * 100;
   const currentStepData = QUIZ_STEPS[currentStep];
@@ -264,18 +281,35 @@ export default function StyleQuiz() {
             {currentStep === 0 && (
               <div className="space-y-6" data-testid="step-style">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">How would you describe your style personality?</Label>
-                  <RadioGroup 
-                    value={answers.stylePreference} 
-                    onValueChange={(value) => updateAnswer('stylePreference', value)}
-                  >
+                  <Label className="text-white text-lg mb-4 block">How would you describe your style personality? (Select all that apply)</Label>
+                  <div className="space-y-3">
                     {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option} className="text-gray-200">{option}</Label>
+                      <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+                        <Checkbox 
+                          id={option}
+                          checked={answers.stylePreference.includes(option)}
+                          onCheckedChange={() => toggleArrayItem('stylePreference', option)}
+                        />
+                        <Label htmlFor={option} className="text-gray-200 cursor-pointer">{option}</Label>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-white text-lg mb-4 block">Which items do you need help styling? (Select all that apply)</Label>
+                  <div className="space-y-3">
+                    {['👚 Tops', '👖 Bottoms', '👗 Dresses', '👞 Shoes', '👜 Accessories', '🧥 Outerwear', '💼 Full Outfits'].map((option) => (
+                      <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-clothing-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+                        <Checkbox 
+                          id={option}
+                          checked={answers.clothingItems.includes(option)}
+                          onCheckedChange={() => toggleArrayItem('clothingItems', option)}
+                        />
+                        <Label htmlFor={option} className="text-gray-200 cursor-pointer">{option}</Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -344,8 +378,8 @@ export default function StyleQuiz() {
             {currentStep === 3 && (
               <div className="space-y-6" data-testid="step-first-outfit">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">Choose an occasion for your first AI-generated outfit</Label>
-                  <RadioGroup value={answers.occasion} onValueChange={(value) => updateAnswer('occasion', value)}>
+                  <Label className="text-white text-lg mb-4 block">Choose occasions for your outfits (Select all that apply)</Label>
+                  <div className="space-y-3">
                     {[
                       { value: 'work', label: 'Work/Professional', icon: '💼' },
                       { value: 'casual', label: 'Casual Daily', icon: '👕' },
@@ -356,15 +390,19 @@ export default function StyleQuiz() {
                       { value: 'weekend', label: 'Weekend', icon: '🌞' },
                       { value: 'workout', label: 'Workout', icon: '💪' }
                     ].map((occasion) => (
-                      <div key={occasion.value} className="flex items-center space-x-3" data-testid={`radio-occasion-${occasion.value}`}>
-                        <RadioGroupItem value={occasion.value} id={occasion.value} />
-                        <Label htmlFor={occasion.value} className="text-gray-200 flex items-center">
+                      <div key={occasion.value} className="flex items-center space-x-3" data-testid={`checkbox-occasion-${occasion.value}`}>
+                        <Checkbox 
+                          id={occasion.value}
+                          checked={answers.occasions.includes(occasion.value)}
+                          onCheckedChange={() => toggleArrayItem('occasions', occasion.value)}
+                        />
+                        <Label htmlFor={occasion.value} className="text-gray-200 flex items-center cursor-pointer">
                           <span className="mr-2">{occasion.icon}</span>
                           {occasion.label}
                         </Label>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
                   <div className="mt-6 p-4 bg-purple-500/10 rounded-lg border border-purple-400/20">
                     <p className="text-purple-200 text-sm">
                       💡 <strong>Your first outfit will be generated automatically!</strong> After that, you can create outfits for any occasion from your dashboard.

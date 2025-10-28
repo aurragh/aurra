@@ -48,6 +48,7 @@ export const styleProfiles = pgTable("style_profiles", {
   bodyType: varchar("body_type"),
   colorPreferences: text("color_preferences"), // JSON array
   stylePreferences: text("style_preferences"), // JSON array
+  clothingItems: text("clothing_items"), // JSON array of clothing items needing help
   lifestyle: text("lifestyle"), // JSON object
   budget: varchar("budget"),
   occasions: text("occasions"), // JSON array
