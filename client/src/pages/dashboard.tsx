@@ -1,10 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +34,9 @@ import {
   Home,
   LogOut,
   User,
-  Plus
+  Plus,
+  X,
+  ZoomIn
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 
@@ -37,6 +44,7 @@ export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -389,13 +397,20 @@ export default function Dashboard() {
                       <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-outfit-${outfit.id}`}>
                         <CardContent className="p-0">
                           {outfit.imageUrl && (
-                            <div className="relative w-full h-48 mb-4">
+                            <div 
+                              className="relative w-full h-48 mb-4 cursor-pointer group"
+                              onClick={() => setLightboxImage({ url: outfit.imageUrl, name: outfit.name })}
+                              data-testid={`img-container-${outfit.id}`}
+                            >
                               <img 
                                 src={outfit.imageUrl} 
                                 alt={outfit.name}
                                 className="w-full h-full object-cover rounded-t-lg"
                                 data-testid={`img-outfit-${outfit.id}`}
                               />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center rounded-t-lg">
+                                <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
                             </div>
                           )}
                           <div className="p-6">
@@ -475,16 +490,22 @@ export default function Dashboard() {
                         <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-favorite-${outfit.id}`}>
                           <CardContent className="p-0">
                             {outfit.imageUrl && (
-                              <div className="relative w-full h-48 mb-4">
+                              <div 
+                                className="relative w-full h-48 mb-4 cursor-pointer group"
+                                onClick={() => setLightboxImage({ url: outfit.imageUrl, name: outfit.name })}
+                              >
                                 <img 
                                   src={outfit.imageUrl} 
                                   alt={outfit.name}
                                   className="w-full h-full object-cover rounded-t-lg"
                                 />
-                                <Badge className="absolute top-2 right-2 bg-red-600 text-white">
+                                <Badge className="absolute top-2 right-2 bg-red-600 text-white pointer-events-none">
                                   <Heart className="w-3 h-3 mr-1" />
                                   Favorite
                                 </Badge>
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center rounded-t-lg">
+                                  <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
                               </div>
                             )}
                             <div className="p-6">
@@ -522,6 +543,32 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      {/* Lightbox Modal */}
+      <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
+        <DialogContent className="max-w-4xl w-full bg-black/95 border-white/20 p-0" data-testid="dialog-lightbox">
+          <DialogTitle className="sr-only">{lightboxImage?.name || 'Outfit Image'}</DialogTitle>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 bg-black/50 text-white hover:bg-black/70"
+              onClick={() => setLightboxImage(null)}
+              data-testid="button-close-lightbox"
+            >
+              <X className="w-6 h-6" />
+            </Button>
+            {lightboxImage && (
+              <img 
+                src={lightboxImage.url} 
+                alt={lightboxImage.name}
+                className="w-full h-auto max-h-[85vh] object-contain"
+                data-testid="img-lightbox"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
