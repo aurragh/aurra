@@ -122,15 +122,15 @@ export async function generateOutfitImage(
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Portrait-style prompt avoiding fashion/editorial terminology to prevent split-screen layouts
-    const imagePrompt = `Full-body portrait of one adult standing in ${basicItems} for ${occasion}. Single subject only, centered in frame. Natural outdoor setting, soft natural lighting. NO split frame, NO collage, NO duplicate subject, NO before/after, NO comparison, NO montage. One person, single unified image, seamless composition.`;
+    // Ultra-simple prompt focusing on single professional model portrait
+    const imagePrompt = `Professional model portrait. One person standing, full body visible, ${basicItems}, ${occasion} setting. Natural outdoor location. Single photograph, one individual, no duplicates, seamless background.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: imagePrompt,
       n: 1,
-      size: "1024x1792",  // Vertical portrait ratio to discourage side-by-side layouts
-      quality: "hd",
+      size: "1024x1792",
+      quality: "standard",  // Testing if 'standard' quality reduces split-screen bias
       style: "natural"
     });
 
