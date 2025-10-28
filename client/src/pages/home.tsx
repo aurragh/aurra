@@ -1,22 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Sparkles, ShoppingBag, Star, TrendingUp, Award, Users } from "lucide-react";
-import { type StyleProfile, type UserPoints, type Outfit } from "@shared/schema";
-
-// Background images from public folder
-const fashionBg1 = "/images/fashion-bg1.jpg";
-const fashionBg2 = "/images/fashion-bg2.jpg";
-const fashionBg3 = "/images/fashion-bg3.jpg";
+import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 
 export default function Home() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   // Demo mode - bypass authentication check
   const isDemoMode = window.location.search.includes('demo=true');
@@ -36,246 +28,218 @@ export default function Home() {
     }
   }, [user, isLoading, toast, isDemoMode]);
 
-  const { data: styleProfile } = useQuery<StyleProfile>({
-    queryKey: ["/api/style-profile"],
-    enabled: !!user && !isDemoMode,
-  });
-
-  const { data: userPoints } = useQuery<UserPoints>({
-    queryKey: ["/api/user/points"],
-    enabled: !!user && !isDemoMode,
-  });
-
-  const { data: recentOutfits } = useQuery<Outfit[]>({
-    queryKey: ["/api/outfits"],
-    enabled: !!user && !isDemoMode,
-  });
-
-  // Demo data for when in demo mode
-  const demoUser = isDemoMode ? { firstName: 'Demo User', subscriptionStatus: 'free' } : null;
-  const demoUserPoints = isDemoMode ? { points: 150, level: 'Stylish', totalEarned: 350 } : null;
-  const demoOutfits = isDemoMode ? [] : null;
-
   if (isLoading && !isDemoMode) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-purple-950">
         <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" data-testid="loading-spinner" />
       </div>
     );
   }
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const testimonials = [
+    {
+      quote: "I finally feel confident walking into any room—Aurra just gets my style.",
+      author: "Kelsey R., Creative Strategist",
+      image: "/images/fashion-bg1.jpg"
+    },
+    {
+      quote: "Aurra transformed my wardrobe and gave me the confidence I needed.",
+      author: "Sarah M., Marketing Director",
+      image: "/images/fashion-bg2.jpg"
+    }
+  ];
+
+  const nextTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
   };
 
-  const needsStyleProfile = !styleProfile || !styleProfile.completed;
-  const currentUser = isDemoMode ? demoUser : user;
-  const currentUserPoints = isDemoMode ? demoUserPoints : userPoints;
-  const currentOutfits = isDemoMode ? demoOutfits : recentOutfits;
+  const prevTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background Images Layer */}
-      <div className="absolute inset-0 z-0">
-        <div className="relative w-full h-full">
-          {/* Fashion Background Images */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: `url(${fashionBg1})` }}
-          />
-          <div 
-            className="absolute top-0 right-0 w-1/2 h-full bg-cover bg-center opacity-25"
-            style={{ backgroundImage: `url(${fashionBg2})` }}
-          />
-          <div 
-            className="absolute bottom-0 left-0 w-1/2 h-2/3 bg-cover bg-center opacity-25"
-            style={{ backgroundImage: `url(${fashionBg3})` }}
-          />
-          
-          {/* Gradient Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-purple-900/85 to-slate-900/80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
-        </div>
-      </div>
-
-      {/* Content Layer */}
-      <div className="relative z-10">
+    <div className="min-h-screen bg-gradient-to-b from-purple-950 via-purple-900 to-black text-white">
       {/* Navigation */}
-      <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent" data-testid="heading-brand">
+            <h1 className="text-2xl font-bold text-white" data-testid="heading-brand">
               Aurra
             </h1>
-            
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="button-dashboard">
-                  Dashboard
-                </Button>
-              </Link>
-              <Button 
-                variant="outline" 
-                className="border-white/20 text-white hover:bg-white/10"
-                onClick={handleLogout}
-                data-testid="button-logout"
-              >
-                Logout
-              </Button>
-            </div>
+            <button className="text-white" data-testid="button-menu">
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6" data-testid="heading-welcome">
-            Welcome back, {currentUser?.firstName || 'Stylist'}!
-          </h1>
-          <p className="text-xl text-gray-300 mb-8" data-testid="text-welcome-subtitle">
-            Ready to discover your perfect style today?
-          </p>
-
-          {needsStyleProfile && (
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 max-w-2xl mx-auto mb-8" data-testid="card-style-profile-prompt">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-purple-400 mr-3" />
-                  <h3 className="text-2xl font-semibold text-white">Complete Your Style Profile</h3>
-                </div>
-                <p className="text-gray-300 mb-6">
-                  Take our AI-powered style quiz to get personalized outfit recommendations tailored just for you.
-                </p>
-                <Link href="/dashboard?quiz=true">
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                    data-testid="button-start-quiz"
-                  >
-                    Start Style Quiz
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-points">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm">Style Points</p>
-                  <p className="text-3xl font-bold text-white">{currentUserPoints?.points || 0}</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-purple-600/20 text-purple-200"
-                      data-testid="badge-level"
-                    >
-                      {currentUserPoints?.level || 'Beginner'}
-                    </Badge>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-400">Earned: {currentUserPoints?.totalEarned || 0}</span>
-                  </div>
-                </div>
-                <Award className="w-12 h-12 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-outfits">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm">Saved Outfits</p>
-                  <p className="text-3xl font-bold text-white">{currentOutfits?.length || 0}</p>
-                  <p className="text-purple-200 text-sm mt-2">Personal collection</p>
-                </div>
-                <ShoppingBag className="w-12 h-12 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-subscription">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm">Plan Status</p>
-                  <p className="text-2xl font-bold text-white capitalize">{currentUser?.subscriptionStatus || 'Free'}</p>
-                  <p className="text-purple-200 text-sm mt-2">
-                    {currentUser?.subscriptionStatus === 'free' ? 'Limited features' : 'All features unlocked'}
-                  </p>
-                </div>
-                <Star className={`w-12 h-12 ${currentUser?.subscriptionStatus === 'free' ? 'text-gray-400' : 'text-yellow-400'}`} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Actions */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center pt-16" data-testid="section-hero">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(/images/hero-main.jpg)` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/60 via-purple-900/40 to-black/80" />
+        
+        <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight" data-testid="heading-hero">
+            Discover style tailored effortlessly with Aurra AI—your personal fashion advisor for crafting stunning looks every day.
+          </h2>
           <Link href="/dashboard">
-            <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 hover:from-purple-600/30 hover:to-pink-600/30 transition-all cursor-pointer group" data-testid="card-action-generate">
-              <CardContent className="p-8 text-center">
-                <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-2xl font-semibold text-white mb-3">Generate Outfits</h3>
-                <p className="text-gray-300">
-                  {needsStyleProfile ? "Complete style quiz and get AI-powered outfit recommendations" : "Get new AI-powered outfit recommendations"}
-                </p>
-              </CardContent>
-            </Card>
+            <Button 
+              size="lg" 
+              className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-12 py-6 rounded-full font-semibold"
+              data-testid="button-get-styled"
+            >
+              Get Styled Now
+            </Button>
           </Link>
-
-          {currentUser?.subscriptionStatus === 'free' && (
-            <Link href="/subscribe">
-              <Card className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 backdrop-blur-sm border-yellow-400/30 hover:from-yellow-600/30 hover:to-orange-600/30 transition-all cursor-pointer group" data-testid="card-action-premium">
-                <CardContent className="p-8 text-center">
-                  <Star className="w-16 h-16 text-yellow-400 mx-auto mb-6 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-2xl font-semibold text-white mb-3">Upgrade to Premium</h3>
-                  <p className="text-gray-300">
-                    Unlimited outfit generation, advanced styling features, and priority support
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          )}
         </div>
+      </section>
 
-        {/* Recent Activity */}
-        {currentOutfits && currentOutfits.length > 0 && (
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-recent-outfits">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <ShoppingBag className="w-6 h-6 mr-2" />
-                Recent Outfits
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                {currentOutfits.slice(0, 3).map((outfit) => (
-                  <Card key={outfit.id} className="bg-white/5 border-white/10" data-testid={`card-recent-outfit-${outfit.id}`}>
-                    <CardContent className="p-4">
-                      <h4 className="text-white font-medium mb-2">{outfit.name}</h4>
-                      <p className="text-gray-300 text-sm mb-3 line-clamp-2">{outfit.description}</p>
-                      <Badge 
-                        variant="secondary" 
-                        className="bg-purple-600/20 text-purple-200"
-                        data-testid={`badge-occasion-${outfit.id}`}
-                      >
-                        {outfit.occasion}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+      {/* Revolutionizing Fashion Section */}
+      <section className="py-20 px-4" data-testid="section-revolution">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative rounded-3xl overflow-hidden mb-8">
+            <img 
+              src="/images/hero-fashion3.jpg" 
+              alt="Fashion"
+              className="w-full h-64 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          </div>
+          
+          <div className="text-center space-y-6">
+            <h2 className="text-4xl md:text-5xl font-bold" data-testid="heading-revolution">
+              Revolutionizing Fashion with AI
+            </h2>
+            <div className="space-y-3 text-lg text-gray-300">
+              <p data-testid="text-feature-1">Feel confident in every room.</p>
+              <p data-testid="text-feature-2">Never stress over what to wear to an event again.</p>
+              <p data-testid="text-feature-3">A fun and gamified fashion experience.</p>
+              <p data-testid="text-feature-4">Shopping for your next event made easy.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Personalized Fashion Solutions */}
+      <section className="py-20 px-4" data-testid="section-solutions">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12" data-testid="heading-solutions">
+            Personalized Fashion Solutions
+          </h2>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* AI-Personalized Styling */}
+            <div className="relative rounded-3xl overflow-hidden group" data-testid="card-ai-styling">
+              <img 
+                src="/images/fashion-bg3.jpg" 
+                alt="AI Styling"
+                className="w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex items-end">
+                <div className="p-8">
+                  <h3 className="text-2xl font-bold mb-2">AI-Personalized Styling</h3>
+                  <p className="text-gray-300">Tailored to your personality and preferences.</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      </div>
+            </div>
+
+            {/* Instant Shopping Access */}
+            <div className="relative rounded-3xl overflow-hidden group" data-testid="card-shopping">
+              <img 
+                src="/images/hero-fashion1.jpg" 
+                alt="Shopping Access"
+                className="w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex items-end">
+                <div className="p-8">
+                  <h3 className="text-2xl font-bold mb-2">Instant Shopping Access</h3>
+                  <p className="text-gray-300">No more endless scrolling.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Effortless and Impactful */}
+            <div className="relative rounded-3xl overflow-hidden group md:col-span-2" data-testid="card-effortless">
+              <img 
+                src="/images/hero-fashion2.jpg" 
+                alt="Effortless Styling"
+                className="w-full h-96 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex items-end">
+                <div className="p-8">
+                  <h3 className="text-3xl font-bold mb-2">Effortless and Impactful</h3>
+                  <p className="text-gray-300 text-lg">Your style, curated in seconds.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 bg-gradient-to-b from-black to-purple-950" data-testid="section-testimonials">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <p className="text-purple-300 mb-2" data-testid="label-testimonials">Testimonials</p>
+            <h2 className="text-4xl md:text-5xl font-bold" data-testid="heading-testimonials">
+              Hear from Our Satisfied Users
+            </h2>
+            <p className="text-gray-300 mt-4 text-lg" data-testid="text-testimonial-intro">
+              Aurra AI revolutionizes online shopping, delivering personalized styling and enhancing fashion experiences with remarkable efficiency and flair.
+            </p>
+          </div>
+
+          <div className="relative bg-purple-900/30 backdrop-blur-sm rounded-3xl p-8 md:p-12" data-testid="card-testimonial">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
+                <img 
+                  src={testimonials[currentTestimonial].image} 
+                  alt="Testimonial"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <p className="text-xl md:text-2xl mb-4 italic" data-testid="text-testimonial-quote">
+                  "{testimonials[currentTestimonial].quote}"
+                </p>
+                <p className="text-gray-400" data-testid="text-testimonial-author">
+                  — {testimonials[currentTestimonial].author}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 mt-8">
+              <button 
+                onClick={prevTestimonial}
+                className="w-12 h-12 rounded-full bg-white text-purple-900 flex items-center justify-center hover:bg-gray-200 transition"
+                data-testid="button-testimonial-prev"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button 
+                onClick={nextTestimonial}
+                className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition"
+                data-testid="button-testimonial-next"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-4 bg-black border-t border-white/10" data-testid="footer">
+        <div className="max-w-7xl mx-auto text-center">
+          <h3 className="text-2xl font-bold mb-4" data-testid="heading-footer-brand">Aurra</h3>
+          <p className="text-gray-400" data-testid="text-footer-tagline">
+            Made with <span className="text-purple-400">Replit</span>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
