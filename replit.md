@@ -9,8 +9,16 @@ The platform features a freemium model with basic free functionality and premium
 ## Recent Updates (Oct 28, 2025)
 
 - **Improved Dashboard UI**: Removed rotating backgrounds from dashboard for cleaner, focused interface
-- **Style Quiz Enhancements**: Added reset/edit functionality allowing users to modify their style profile at any time
-- **Optimized AI Generation**: Changed outfit generation from 3 images to 1 image per request for better performance and cost efficiency
+- **Style Quiz Enhancements**: 
+  - Added reset/edit functionality allowing users to modify their style profile at any time
+  - Implemented multi-select checkboxes for style personality, clothing items, and occasions
+  - Added new clothingItems field to track which specific items users need help styling
+- **Image Generation Improvements**:
+  - Changed outfit generation from 3 images to 1 image per request for better performance and cost efficiency
+  - Upgraded to DALL-E 3 HD quality (1024x1024) with natural style
+  - Updated prompts to generate single full-body shots (no split-screen or diptych layouts)
+  - Enhanced prompts with Pinterest-style aesthetic (natural outdoor settings, professional fashion photography)
+- **Zoomable Outfit Images**: Added lightbox modal for viewing outfit images in full-size with zoom capability
 - **Trash System Implementation**: Added soft delete functionality with 30-day retention period for outfit management
   - Outfit cards now have delete buttons for easy removal
   - Deleted outfits are moved to trash and can be restored within 30 days
@@ -45,13 +53,15 @@ Preferred communication style: Simple, everyday language.
 
 ### AI Integration
 - **Provider**: OpenAI API for generating personalized outfit recommendations
+- **Image Generation**: DALL-E 3 with HD quality (1024x1024), natural style, Pinterest-inspired aesthetic
+- **Image Style**: Single full-body fashion photographs with natural outdoor settings, professional quality
 - **Processing**: Style profile analysis and outfit generation based on user preferences, body type, and occasion
 - **Fallback**: Graceful degradation when AI services are unavailable
 
 ### Data Models
 - **Users**: Core user information with Stripe integration for subscription management
-- **Style Profiles**: Comprehensive user preferences including personality traits, body type, color preferences, and lifestyle factors
-- **Outfits**: AI-generated outfit recommendations with detailed item descriptions and shopping links
+- **Style Profiles**: Comprehensive user preferences including personality traits, body type, color preferences, stylePreferences (multi-select), clothingItems (multi-select), lifestyle factors, and occasions (multi-select)
+- **Outfits**: AI-generated outfit recommendations with HD quality images, detailed item descriptions, and shopping links
 - **Collections**: User-curated outfit collections with favoriting capabilities
 - **Points System**: Gamification through user points and achievements
 
