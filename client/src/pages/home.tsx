@@ -1,40 +1,10 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
-  const { toast } = useToast();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
-  // Demo mode - bypass authentication check
-  const isDemoMode = window.location.search.includes('demo=true');
-  
-  // Redirect to login if not authenticated (unless in demo mode)
-  useEffect(() => {
-    if (!isDemoMode && !isLoading && !user) {
-      toast({
-        title: "Unauthorized", 
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [user, isLoading, toast, isDemoMode]);
-
-  if (isLoading && !isDemoMode) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-purple-950">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" data-testid="loading-spinner" />
-      </div>
-    );
-  }
 
   const testimonials = [
     {
