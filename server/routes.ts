@@ -187,6 +187,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trash/deleted outfits routes
+  app.get('/api/outfits/trash', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const deletedOutfits = await storage.getUserDeletedOutfits(userId);
+      res.json(deletedOutfits);
+    } catch (error) {
+      console.error("Error fetching deleted outfits:", error);
+      res.status(500).json({ message: "Failed to fetch deleted outfits" });
+    }
+  });
+
+  app.post('/api/outfits/:id/restore', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const outfit = await storage.restoreOutfit(id);
+      res.json(outfit);
+    } catch (error) {
+      console.error("Error restoring outfit:", error);
+      res.status(500).json({ message: "Failed to restore outfit" });
+    }
+  });
+
+  app.delete('/api/outfits/:id/permanent', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.permanentlyDeleteOutfit(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error permanently deleting outfit:", error);
+      res.status(500).json({ message: "Failed to permanently delete outfit" });
+    }
+  });
+
   // Collection management routes
   app.get('/api/collections', isAuthenticated, async (req: any, res) => {
     try {

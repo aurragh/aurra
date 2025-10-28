@@ -22,7 +22,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Info,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 
@@ -149,6 +150,69 @@ export default function Dashboard() {
       toast({
         title: "Error",
         description: "Failed to save profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteOutfitMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/outfits/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Outfit Deleted",
+        description: "Outfit moved to trash. You can restore it within 30 days.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/outfits"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete outfit",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("PATCH", `/api/outfits/${id}/favorite`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Favorite Updated",
+        description: "Outfit favorite status changed.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/outfits"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update favorite",
         variant: "destructive",
       });
     },
@@ -732,16 +796,30 @@ export default function Dashboard() {
                               {outfit.occasion}
                             </Badge>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-white hover:bg-white/10"
-                            data-testid={`button-favorite-${outfit.id}`}
-                          >
-                            <Heart 
-                              className={`w-5 h-5 ${outfit.isFavorite ? 'fill-red-400 text-red-400' : 'text-gray-400'}`} 
-                            />
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white hover:bg-white/10"
+                              onClick={() => toggleFavoriteMutation.mutate(outfit.id)}
+                              disabled={toggleFavoriteMutation.isPending}
+                              data-testid={`button-favorite-${outfit.id}`}
+                            >
+                              <Heart 
+                                className={`w-5 h-5 ${outfit.isFavorite ? 'fill-red-400 text-red-400' : 'text-gray-400'}`} 
+                              />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white hover:bg-white/10"
+                              onClick={() => deleteOutfitMutation.mutate(outfit.id)}
+                              disabled={deleteOutfitMutation.isPending}
+                              data-testid={`button-delete-${outfit.id}`}
+                            >
+                              <Trash2 className="w-5 h-5 text-gray-400 hover:text-red-400" />
+                            </Button>
+                          </div>
                         </div>
                         
                         <p className="text-gray-300 text-sm mb-4 line-clamp-3">{outfit.description}</p>

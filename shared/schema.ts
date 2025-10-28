@@ -67,6 +67,7 @@ export const outfits = pgTable("outfits", {
   imageUrl: varchar("image_url"),
   isFavorite: boolean("is_favorite").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"), // For soft delete functionality
 });
 
 export const styleCollections = pgTable("style_collections", {

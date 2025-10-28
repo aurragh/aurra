@@ -15,7 +15,7 @@ import {
   type UserPoints,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull, isNotNull, and, lt, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (IMPORTANT: mandatory for Replit Auth)
@@ -29,9 +29,13 @@ export interface IStorage {
   
   // Outfit operations
   getUserOutfits(userId: string): Promise<Outfit[]>;
+  getUserDeletedOutfits(userId: string): Promise<Outfit[]>;
   createOutfit(outfit: InsertOutfit): Promise<Outfit>;
   updateOutfit(id: string, updates: Partial<InsertOutfit>): Promise<Outfit>;
-  deleteOutfit(id: string): Promise<void>;
+  deleteOutfit(id: string): Promise<void>; // Soft delete
+  permanentlyDeleteOutfit(id: string): Promise<void>; // Hard delete
+  restoreOutfit(id: string): Promise<Outfit>;
+  cleanupOldDeletedOutfits(): Promise<void>; // Remove outfits deleted over 30 days ago
   toggleFavoriteOutfit(id: string): Promise<Outfit>;
   
   // Collection operations
@@ -123,8 +127,22 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(outfits)
-      .where(eq(outfits.userId, userId))
+      .where(and(
+        eq(outfits.userId, userId),
+        isNull(outfits.deletedAt)
+      ))
       .orderBy(desc(outfits.createdAt));
+  }
+
+  async getUserDeletedOutfits(userId: string): Promise<Outfit[]> {
+    return await db
+      .select()
+      .from(outfits)
+      .where(and(
+        eq(outfits.userId, userId),
+        isNotNull(outfits.deletedAt)
+      ))
+      .orderBy(desc(outfits.deletedAt));
   }
 
   async createOutfit(outfit: InsertOutfit): Promise<Outfit> {
@@ -145,7 +163,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteOutfit(id: string): Promise<void> {
+    // Soft delete by setting deletedAt timestamp
+    await db
+      .update(outfits)
+      .set({ deletedAt: new Date() })
+      .where(eq(outfits.id, id));
+  }
+
+  async permanentlyDeleteOutfit(id: string): Promise<void> {
+    // Hard delete - actually remove from database
     await db.delete(outfits).where(eq(outfits.id, id));
+  }
+
+  async restoreOutfit(id: string): Promise<Outfit> {
+    // Restore soft deleted outfit by clearing deletedAt
+    const [restored] = await db
+      .update(outfits)
+      .set({ deletedAt: null })
+      .where(eq(outfits.id, id))
+      .returning();
+    return restored;
+  }
+
+  async cleanupOldDeletedOutfits(): Promise<void> {
+    // Delete outfits that were soft deleted over 30 days ago
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    await db
+      .delete(outfits)
+      .where(and(
+        isNotNull(outfits.deletedAt),
+        lt(outfits.deletedAt, thirtyDaysAgo)
+      ));
   }
 
   async toggleFavoriteOutfit(id: string): Promise<Outfit> {
