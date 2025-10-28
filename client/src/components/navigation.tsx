@@ -30,7 +30,6 @@ export default function Navigation({ onLogin, onSignup }: NavigationProps) {
   const navLinks = [
     { href: "features", label: "Features" },
     { href: "how-it-works", label: "How It Works" },
-    { href: "testimonials", label: "Testimonials" },
     { href: "pricing", label: "Pricing" },
   ];
 

@@ -34,8 +34,6 @@ export function RotatingBackground({ children, className = "" }: RotatingBackgro
     "/images/fashion/image34_1761658331221.jpg",
     "/images/fashion/image35_1761658331221.jpg",
     "/images/fashion/image36_1761658331221.jpg",
-    "/images/fashion/image37_1761658331222.jpg",
-    "/images/fashion/image38_1761658331222.jpg",
     "/images/fashion/image39_1761658331222.jpg",
     "/images/fashion/image40_1761658331222.jpeg"
   ];
