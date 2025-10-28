@@ -123,7 +123,20 @@ export async function generateOutfitImage(
     ).join(', ');
     
     // Centered model portrait with focus on outfit, minimal background
-    const imagePrompt = `Professional fashion model centered in frame, full body shot from head to toe, wearing ${basicItems} for ${occasion}. Model positioned center, fills most of frame, focus on outfit details. Simple clean background, minimal scenery, studio or minimal outdoor backdrop. Single person only, no duplicates, close framing, fashion photography.`;
+    // Randomly select model diversity to ensure global representation
+    const diversityOptions = [
+      'Western/American model',
+      'Western/American model', // 50% chance for Western
+      'Asian model',
+      'African model',
+      'Middle Eastern model',
+      'South Asian model',
+      'Latin American model',
+      'European model'
+    ];
+    const randomDiversity = diversityOptions[Math.floor(Math.random() * diversityOptions.length)];
+    
+    const imagePrompt = `Professional fashion ${randomDiversity} centered in frame, full body shot from head to toe, wearing ${basicItems} for ${occasion}. Model positioned center, fills most of frame, focus on outfit details. Simple clean background, minimal scenery, studio or minimal outdoor backdrop. Single person only, no duplicates, close framing, fashion photography.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
