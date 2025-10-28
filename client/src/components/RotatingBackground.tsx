@@ -8,21 +8,17 @@ interface RotatingBackgroundProps {
 export function RotatingBackground({ children, className = "" }: RotatingBackgroundProps) {
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
-  // Curated fashion images for rotation (excluding purple background studio shots)
+  // Curated fashion images for rotation (excluding studio shots with solid backgrounds)
   const backgroundImages = [
     "/images/fashion/image1_1761657039970.jpg",
     "/images/fashion/image2_1761657039971.jpg",
     "/images/fashion/image4_1761657039971.jpg",
-    "/images/fashion/image6_1761657039972.jpg",
     "/images/fashion/image7_1761657039972.jpg",
     "/images/fashion/image8_1761657039972.jpg",
     "/images/fashion/image9_1761657039967.jpg",
     "/images/fashion/image10_1761657039967.jpg",
-    "/images/fashion/image11_1761657039968.jpg",
     "/images/fashion/image13_1761657039968.jpg",
-    "/images/fashion/image16_1761657039969.jpg",
     "/images/fashion/image17_1761657039969.jpg",
-    "/images/fashion/image18_1761657039970.jpg",
     "/images/fashion/image20_1761657039970.jpg",
     "/images/fashion/image21_1761658331217.jpg",
     "/images/fashion/image22_1761658331218.jpg",
@@ -32,10 +28,8 @@ export function RotatingBackground({ children, className = "" }: RotatingBackgro
     "/images/fashion/image26_1761658331219.jpg",
     "/images/fashion/image27_1761658331219.jpg",
     "/images/fashion/image28_1761658331219.jpg",
-    "/images/fashion/image29_1761658331219.jpg",
     "/images/fashion/image30_1761658331220.jpg",
     "/images/fashion/image31_1761658331220.jpg",
-    "/images/fashion/image32_1761658331220.jpg",
     "/images/fashion/image33_1761658331221.jpg",
     "/images/fashion/image34_1761658331221.jpg",
     "/images/fashion/image35_1761658331221.jpg",
