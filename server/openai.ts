@@ -122,15 +122,15 @@ export async function generateOutfitImage(
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Ultra-simple prompt focusing on single professional model portrait
-    const imagePrompt = `Professional model portrait. One person standing, full body visible, ${basicItems}, ${occasion} setting. Natural outdoor location. Single photograph, one individual, no duplicates, seamless background.`;
+    // Centered model portrait with focus on outfit, minimal background
+    const imagePrompt = `Professional fashion model centered in frame, full body shot from head to toe, wearing ${basicItems} for ${occasion}. Model positioned center, fills most of frame, focus on outfit details. Simple clean background, minimal scenery, studio or minimal outdoor backdrop. Single person only, no duplicates, close framing, fashion photography.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: imagePrompt,
       n: 1,
       size: "1024x1792",
-      quality: "standard",  // Testing if 'standard' quality reduces split-screen bias
+      quality: "standard",
       style: "natural"
     });
 
@@ -144,14 +144,14 @@ export async function generateOutfitImage(
     if (error?.code === 'content_policy_violation') {
       try {
         console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `Full-body portrait of one person for ${occasion}, standing outdoors. Single subject, centered, natural lighting. No split screen, no duplicate, no comparison.`;
+        const fallbackPrompt = `One person centered, full body, ${occasion} outfit. Simple background, focus on clothing, no duplicates.`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
           prompt: fallbackPrompt,
           n: 1,
-          size: "1024x1792",  // Vertical ratio
-          quality: "hd",
+          size: "1024x1792",
+          quality: "standard",
           style: "natural"
         });
 
