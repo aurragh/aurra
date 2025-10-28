@@ -3,6 +3,7 @@ import HeroSection from "@/components/hero-section";
 import FeaturesSection from "@/components/features-section";
 import TestimonialsSection from "@/components/testimonials-section";
 import PricingSection from "@/components/pricing-section";
+import { FashionGallery } from "@/components/FashionGallery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ShoppingBag, ChartLine, Brain, Check, Star, Users, Shield } from "lucide-react";
@@ -68,6 +69,9 @@ export default function Landing() {
       <FeaturesSection />
       <TestimonialsSection />
       <PricingSection onSelectPlan={handleGetStarted} />
+      
+      {/* Fashion Inspiration Gallery */}
+      <FashionGallery />
       
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
