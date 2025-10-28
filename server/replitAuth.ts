@@ -108,7 +108,11 @@ export async function setupAuth(app: Express) {
   ) => {
     const user = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    try {
+      await upsertUser(tokens.claims());
+    } catch (error) {
+      console.warn("Failed to persist user to database, continuing with session-only auth:", error instanceof Error ? error.message : 'Unknown error');
+    }
     verified(null, user);
   };
 
