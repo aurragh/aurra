@@ -8,16 +8,48 @@ interface RotatingBackgroundProps {
 export function RotatingBackground({ children, className = "" }: RotatingBackgroundProps) {
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
-  // Fashion images for rotation - using actual available images
+  // All 40 fashion images for rotation
   const backgroundImages = [
-    "/images/fashion-bg1.jpg",
-    "/images/fashion-bg2.jpg",
-    "/images/fashion-bg3.jpg",
-    "/images/fashion-bg4.jpg",
-    "/images/hero-fashion1.jpg",
-    "/images/hero-fashion2.jpg",
-    "/images/hero-fashion3.jpg",
-    "/images/hero-main.jpg"
+    "/images/fashion/image1_1761657039970.jpg",
+    "/images/fashion/image2_1761657039971.jpg",
+    "/images/fashion/image3_1761657039971.jpg",
+    "/images/fashion/image4_1761657039971.jpg",
+    "/images/fashion/image5_1761657039971.jpg",
+    "/images/fashion/image6_1761657039972.jpg",
+    "/images/fashion/image7_1761657039972.jpg",
+    "/images/fashion/image8_1761657039972.jpg",
+    "/images/fashion/image9_1761657039967.jpg",
+    "/images/fashion/image10_1761657039967.jpg",
+    "/images/fashion/image11_1761657039968.jpg",
+    "/images/fashion/image12_1761657039968.jpg",
+    "/images/fashion/image13_1761657039968.jpg",
+    "/images/fashion/image14_1761657039969.jpg",
+    "/images/fashion/image15_1761657039969.jpg",
+    "/images/fashion/image16_1761657039969.jpg",
+    "/images/fashion/image17_1761657039969.jpg",
+    "/images/fashion/image18_1761657039970.jpg",
+    "/images/fashion/image19_1761657039970.jpg",
+    "/images/fashion/image20_1761657039970.jpg",
+    "/images/fashion/image21_1761658331217.jpg",
+    "/images/fashion/image22_1761658331218.jpg",
+    "/images/fashion/image23_1761658331218.jpg",
+    "/images/fashion/image24_1761658331218.jpg",
+    "/images/fashion/image25_1761658331218.jpg",
+    "/images/fashion/image26_1761658331219.jpg",
+    "/images/fashion/image27_1761658331219.jpg",
+    "/images/fashion/image28_1761658331219.jpg",
+    "/images/fashion/image29_1761658331219.jpg",
+    "/images/fashion/image30_1761658331220.jpg",
+    "/images/fashion/image31_1761658331220.jpg",
+    "/images/fashion/image32_1761658331220.jpg",
+    "/images/fashion/image33_1761658331221.jpg",
+    "/images/fashion/image34_1761658331221.jpg",
+    "/images/fashion/image35_1761658331221.jpg",
+    "/images/fashion/image36_1761658331221.jpg",
+    "/images/fashion/image37_1761658331222.jpg",
+    "/images/fashion/image38_1761658331222.jpg",
+    "/images/fashion/image39_1761658331222.jpg",
+    "/images/fashion/image40_1761658331222.jpeg"
   ];
 
   useEffect(() => {
