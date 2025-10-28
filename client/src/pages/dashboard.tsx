@@ -21,7 +21,8 @@ import {
   ShoppingBag,
   ArrowLeft,
   ArrowRight,
-  Info
+  Info,
+  RefreshCw
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 
@@ -582,8 +583,22 @@ export default function Dashboard() {
 
         {/* Stats Header - shown when quiz is completed */}
         {(quizCompleted || (!showQuiz && styleProfile?.completed)) && (
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
+          <div className="mb-8">
+            {/* Edit Profile Button */}
+            <div className="flex justify-end mb-6">
+              <Link href="/style-quiz">
+                <Button 
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10"
+                  data-testid="button-edit-profile"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Edit Style Profile
+                </Button>
+              </Link>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -625,6 +640,7 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
+            </div>
           </div>
         )}
 
@@ -654,7 +670,7 @@ export default function Dashboard() {
                     className={`cursor-pointer transition-all duration-200 hover:scale-105 bg-white/5 border-white/20 hover:border-purple-400 ${generateOutfitsMutation.isPending ? 'opacity-50 pointer-events-none' : ''}`}
                     onClick={() => {
                       if (!generateOutfitsMutation.isPending) {
-                        generateOutfitsMutation.mutate({ occasion: occasion.value, count: 3 });
+                        generateOutfitsMutation.mutate({ occasion: occasion.value, count: 1 });
                       }
                     }}
                     data-testid={`generate-more-${occasion.value}`}

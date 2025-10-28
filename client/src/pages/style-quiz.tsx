@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
-import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, RefreshCw } from "lucide-react";
 import { RotatingBackground } from "@/components/RotatingBackground";
+import { type StyleProfile } from "@shared/schema";
 
 const QUIZ_STEPS = [
   {
@@ -49,6 +50,7 @@ export default function StyleQuiz() {
   const [, setLocation] = useLocation();
   
   const [currentStep, setCurrentStep] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
   const [answers, setAnswers] = useState({
     personality: {} as Record<string, string>,
     bodyType: "",
@@ -59,13 +61,53 @@ export default function StyleQuiz() {
     occasions: [] as string[],
   });
 
+  // Fetch existing style profile
+  const { data: existingProfile } = useQuery<StyleProfile>({
+    queryKey: ["/api/style-profile"],
+    enabled: !!user,
+  });
+
+  // Pre-fill form with existing profile data
+  useEffect(() => {
+    if (existingProfile && !isEditing) {
+      setAnswers({
+        personality: JSON.parse(existingProfile.personality || '{}'),
+        bodyType: existingProfile.bodyType || "",
+        colorPreferences: JSON.parse(existingProfile.colorPreferences || '[]'),
+        stylePreferences: JSON.parse(existingProfile.stylePreferences || '[]'),
+        lifestyle: JSON.parse(existingProfile.lifestyle || '{}'),
+        budget: existingProfile.budget || "",
+        occasions: JSON.parse(existingProfile.occasions || '[]'),
+      });
+      setIsEditing(true);
+    }
+  }, [existingProfile, isEditing]);
+
+  const handleResetQuiz = () => {
+    setAnswers({
+      personality: {},
+      bodyType: "",
+      colorPreferences: [],
+      stylePreferences: [],
+      lifestyle: {},
+      budget: "",
+      occasions: [],
+    });
+    setCurrentStep(0);
+    setIsEditing(false);
+    toast({
+      title: "Quiz Reset",
+      description: "Start fresh with your style preferences!",
+    });
+  };
+
   const saveProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
       await apiRequest("POST", "/api/style-profile", profileData);
     },
     onSuccess: () => {
       toast({
-        title: "Style Profile Saved!",
+        title: isEditing ? "Style Profile Updated!" : "Style Profile Saved!",
         description: "Your personalized recommendations are ready.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/style-profile"] });
@@ -175,13 +217,26 @@ export default function StyleQuiz() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4" data-testid="heading-quiz-title">
-            Style Discovery Quiz
+            {isEditing ? "Edit Your Style Profile" : "Style Discovery Quiz"}
           </h1>
           <div className="flex items-center justify-center mb-6">
             <Sparkles className="w-6 h-6 text-purple-400 mr-2" />
             <span className="text-gray-300">Step {currentStep + 1} of {QUIZ_STEPS.length}</span>
           </div>
           <Progress value={progress} className="max-w-md mx-auto" data-testid="progress-quiz" />
+          
+          {/* Reset Button for users with existing profiles */}
+          {existingProfile && (
+            <Button 
+              variant="outline"
+              onClick={handleResetQuiz}
+              className="mt-4 border-white/20 text-white hover:bg-white/10"
+              data-testid="button-reset-quiz"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reset Quiz
+            </Button>
+          )}
         </div>
 
         <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-quiz-step">
