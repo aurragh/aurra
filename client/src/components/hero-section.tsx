@@ -8,7 +8,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ onGetStarted, onWatchDemo }: HeroSectionProps) {
   return (
-    <section className="hero-bg min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="max-w-4xl mx-auto">
