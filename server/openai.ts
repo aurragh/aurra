@@ -138,7 +138,7 @@ export async function generateOutfitImage(
     ];
     const randomDiversity = diversityOptions[Math.floor(Math.random() * diversityOptions.length)];
     
-    const imagePrompt = `${randomDiversity} standing alone, centered, full body visible head to toe, wearing ${basicItems} for ${occasion}. SINGLE person photograph only - absolutely no split screen, no side by side, no before after, no duplicate person, no comparison shots. Model fills frame, outfit is focus. Clean simple background. One individual person in entire image.`;
+    const imagePrompt = `Professional attractive ${randomDiversity}, high fashion runway model standing alone, centered, full body visible head to toe, wearing ${basicItems} for ${occasion}. Beautiful model with professional styling, elegant pose. SINGLE person photograph only - absolutely no split screen, no side by side, no before after, no duplicate person, no comparison shots. Model fills frame, outfit is focus. Clean simple background. One individual person in entire image. Magazine quality fashion photography.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
