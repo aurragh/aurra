@@ -103,14 +103,31 @@ export default function StyleQuiz() {
 
   const saveProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
+      // First save the profile
       await apiRequest("POST", "/api/style-profile", profileData);
+      
+      // If this is a new profile (not editing) and an occasion is selected, generate the first outfit
+      if (!isEditing && answers.occasion) {
+        await apiRequest("POST", "/api/generate-outfits", {
+          occasion: answers.occasion,
+          count: 1
+        });
+      }
     },
     onSuccess: () => {
-      toast({
-        title: isEditing ? "Style Profile Updated!" : "Style Profile Saved!",
-        description: "Your personalized recommendations are ready.",
-      });
+      if (isEditing) {
+        toast({
+          title: "Style Profile Updated!",
+          description: "Your preferences have been saved.",
+        });
+      } else {
+        toast({
+          title: "Profile Saved!",
+          description: answers.occasion ? "Generating your first outfit..." : "Your style profile is ready.",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/style-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outfits"] });
       setLocation("/dashboard");
     },
     onError: (error) => {
