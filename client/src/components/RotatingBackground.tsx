@@ -8,27 +8,21 @@ interface RotatingBackgroundProps {
 export function RotatingBackground({ children, className = "" }: RotatingBackgroundProps) {
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
-  // All 40 fashion images for rotation
+  // Curated fashion images for rotation (excluding purple background studio shots)
   const backgroundImages = [
     "/images/fashion/image1_1761657039970.jpg",
     "/images/fashion/image2_1761657039971.jpg",
-    "/images/fashion/image3_1761657039971.jpg",
     "/images/fashion/image4_1761657039971.jpg",
-    "/images/fashion/image5_1761657039971.jpg",
     "/images/fashion/image6_1761657039972.jpg",
     "/images/fashion/image7_1761657039972.jpg",
     "/images/fashion/image8_1761657039972.jpg",
     "/images/fashion/image9_1761657039967.jpg",
     "/images/fashion/image10_1761657039967.jpg",
     "/images/fashion/image11_1761657039968.jpg",
-    "/images/fashion/image12_1761657039968.jpg",
     "/images/fashion/image13_1761657039968.jpg",
-    "/images/fashion/image14_1761657039969.jpg",
-    "/images/fashion/image15_1761657039969.jpg",
     "/images/fashion/image16_1761657039969.jpg",
     "/images/fashion/image17_1761657039969.jpg",
     "/images/fashion/image18_1761657039970.jpg",
-    "/images/fashion/image19_1761657039970.jpg",
     "/images/fashion/image20_1761657039970.jpg",
     "/images/fashion/image21_1761658331217.jpg",
     "/images/fashion/image22_1761658331218.jpg",
