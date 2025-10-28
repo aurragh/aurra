@@ -122,15 +122,15 @@ export async function generateOutfitImage(
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Very simple, safe prompt
-    const imagePrompt = `Professional fashion outfit for ${occasion}. Clothing items: ${basicItems}. Clean studio photography, neutral background, well-lit, commercial style`;
+    // Pinterest-style fashion photography prompt: natural outdoor settings, professional quality
+    const imagePrompt = `High-end fashion editorial photograph. Complete outfit for ${occasion} featuring ${basicItems}. Natural outdoor setting with beautiful natural lighting, professional fashion photography style, realistic and elegant styling. Shot in a scenic outdoor location with soft daylight, similar to Pinterest fashion inspiration photos. Magazine quality, editorial style, authentic and sophisticated.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: imagePrompt,
       n: 1,
       size: "1024x1024",
-      quality: "standard",
+      quality: "hd",
       style: "natural"
     });
 
@@ -144,14 +144,14 @@ export async function generateOutfitImage(
     if (error?.code === 'content_policy_violation') {
       try {
         console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `${occasion} outfit, professional fashion photography, clean background`;
+        const fallbackPrompt = `Fashion editorial photograph for ${occasion}, outdoor natural setting, professional photography, elegant styling, magazine quality`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
           prompt: fallbackPrompt,
           n: 1,
           size: "1024x1024",
-          quality: "standard",
+          quality: "hd",
           style: "natural"
         });
 
