@@ -15,6 +15,7 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Architecture
 - **Framework**: React with TypeScript using Vite as the build tool
 - **Styling**: TailwindCSS with Shadcn/ui component library for consistent design
+- **Visual Design**: Rotating background images with smooth 5-second crossfade animation across all pages
 - **State Management**: TanStack Query for server state management and data fetching
 - **Routing**: Wouter for lightweight client-side routing
 - **Authentication**: Passport-based session authentication with Replit Auth integration
