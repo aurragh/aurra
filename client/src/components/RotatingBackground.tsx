@@ -11,7 +11,6 @@ export function RotatingBackground({ children, className = "" }: RotatingBackgro
   // Curated fashion images for rotation (excluding studio shots with solid backgrounds)
   const backgroundImages = [
     "/images/fashion/image1_1761657039970.jpg",
-    "/images/fashion/image2_1761657039971.jpg",
     "/images/fashion/image4_1761657039971.jpg",
     "/images/fashion/image7_1761657039972.jpg",
     "/images/fashion/image8_1761657039972.jpg",
@@ -19,14 +18,11 @@ export function RotatingBackground({ children, className = "" }: RotatingBackgro
     "/images/fashion/image10_1761657039967.jpg",
     "/images/fashion/image13_1761657039968.jpg",
     "/images/fashion/image17_1761657039969.jpg",
-    "/images/fashion/image20_1761657039970.jpg",
     "/images/fashion/image21_1761658331217.jpg",
     "/images/fashion/image22_1761658331218.jpg",
     "/images/fashion/image23_1761658331218.jpg",
-    "/images/fashion/image24_1761658331218.jpg",
     "/images/fashion/image25_1761658331218.jpg",
     "/images/fashion/image26_1761658331219.jpg",
-    "/images/fashion/image27_1761658331219.jpg",
     "/images/fashion/image28_1761658331219.jpg",
     "/images/fashion/image31_1761658331220.jpg",
     "/images/fashion/image33_1761658331221.jpg",
