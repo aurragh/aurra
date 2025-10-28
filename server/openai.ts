@@ -122,14 +122,14 @@ export async function generateOutfitImage(
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Pinterest-style fashion photography prompt: ONLY ONE PERSON, single shot
-    const imagePrompt = `A single person wearing a complete ${occasion} outfit with ${basicItems}. IMPORTANT: Show only ONE person in the entire image, NOT two people, NOT before/after, NOT side-by-side comparison. Full body view from head to toe in natural outdoor setting with soft lighting. Instagram fashion style, casual elegant pose, scenic background, professional photography. One unified photo showing the complete look.`;
+    // Portrait-style prompt avoiding fashion/editorial terminology to prevent split-screen layouts
+    const imagePrompt = `Full-body portrait of one adult standing in ${basicItems} for ${occasion}. Single subject only, centered in frame. Natural outdoor setting, soft natural lighting. NO split frame, NO collage, NO duplicate subject, NO before/after, NO comparison, NO montage. One person, single unified image, seamless composition.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: imagePrompt,
       n: 1,
-      size: "1024x1024",
+      size: "1024x1792",  // Vertical portrait ratio to discourage side-by-side layouts
       quality: "hd",
       style: "natural"
     });
@@ -144,13 +144,13 @@ export async function generateOutfitImage(
     if (error?.code === 'content_policy_violation') {
       try {
         console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `One person wearing ${occasion} outfit, full body view, outdoor setting. IMPORTANT: Only ONE person in the image, not two, not comparison, not before/after. Natural light, Instagram style photo.`;
+        const fallbackPrompt = `Full-body portrait of one person for ${occasion}, standing outdoors. Single subject, centered, natural lighting. No split screen, no duplicate, no comparison.`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
           prompt: fallbackPrompt,
           n: 1,
-          size: "1024x1024",
+          size: "1024x1792",  // Vertical ratio
           quality: "hd",
           style: "natural"
         });
