@@ -1,7 +1,6 @@
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import FeaturesSection from "@/components/features-section";
-import TestimonialsSection from "@/components/testimonials-section";
 import PricingSection from "@/components/pricing-section";
 import { FashionGallery } from "@/components/FashionGallery";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,7 +66,6 @@ export default function Landing() {
       </section>
 
       <FeaturesSection />
-      <TestimonialsSection />
       <PricingSection onSelectPlan={handleGetStarted} />
       
       {/* Fashion Inspiration Gallery */}
