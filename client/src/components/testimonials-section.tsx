@@ -8,7 +8,7 @@ const testimonials = [
     id: 1,
     name: "Kelsey R.",
     role: "Creative Strategist",
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b142?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face",
+    image: "/images/testimonial-kelsey.jpg",
     quote: "I finally feel confident walking into any room—Aurra just gets my style.",
     rating: 5
   },
@@ -16,7 +16,7 @@ const testimonials = [
     id: 2,
     name: "Marcus T.",
     role: "Business Executive", 
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face",
+    image: "/images/testimonial-marcus.jpg",
     quote: "Aurra transformed my wardrobe and saved me hours of shopping. The AI recommendations are spot-on!",
     rating: 5
   },
@@ -24,7 +24,7 @@ const testimonials = [
     id: 3,
     name: "Sarah L.",
     role: "Marketing Director",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face",
+    image: "/images/testimonial-sarah.jpg",
     quote: "The personalized recommendations are incredible. I've never felt more confident in my style choices.",
     rating: 5
   },
@@ -32,7 +32,7 @@ const testimonials = [
     id: 4,
     name: "David C.",
     role: "Software Engineer",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face",
+    image: "/images/testimonial-marcus.jpg",
     quote: "As someone who struggled with fashion, Aurra made styling effortless. I love my new wardrobe!",
     rating: 5
   },
@@ -40,7 +40,7 @@ const testimonials = [
     id: 5,
     name: "Emily W.",
     role: "Entrepreneur",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face",
+    image: "/images/testimonial-kelsey.jpg",
     quote: "The AI understands my style better than I do. Every recommendation is perfect for my lifestyle.",
     rating: 5
   },
@@ -48,7 +48,7 @@ const testimonials = [
     id: 6,
     name: "Alex M.",
     role: "Designer",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face",
+    image: "/images/testimonial-marcus.jpg",
     quote: "Aurra elevated my professional wardrobe. The style insights are incredibly valuable.",
     rating: 5
   }

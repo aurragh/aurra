@@ -11,12 +11,12 @@ export default function Home() {
     {
       quote: "I finally feel confident walking into any room—Aurra just gets my style.",
       author: "Kelsey R., Creative Strategist",
-      image: "/images/fashion-bg1.jpg"
+      image: "/images/testimonial-kelsey.jpg"
     },
     {
       quote: "Aurra transformed my wardrobe and gave me the confidence I needed.",
       author: "Sarah M., Marketing Director",
-      image: "/images/fashion-bg2.jpg"
+      image: "/images/testimonial-sarah.jpg"
     }
   ];
 
