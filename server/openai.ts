@@ -123,20 +123,22 @@ export async function generateOutfitImage(
     ).join(', ');
     
     // Centered model portrait with focus on outfit, minimal background
-    // Randomly select model diversity to ensure global representation
+    // Randomly select model diversity: 70% Western/American, 30% global
     const diversityOptions = [
       'Western/American model',
-      'Western/American model', // 50% chance for Western
+      'Western/American model',
+      'Western/American model',
+      'Western/American model',
+      'Western/American model',
+      'Western/American model',
+      'Western/American model', // 7 out of 10 = 70% Western
       'Asian model',
       'African model',
-      'Middle Eastern model',
-      'South Asian model',
-      'Latin American model',
-      'European model'
+      'South Asian model'
     ];
     const randomDiversity = diversityOptions[Math.floor(Math.random() * diversityOptions.length)];
     
-    const imagePrompt = `Professional fashion ${randomDiversity} centered in frame, full body shot from head to toe, wearing ${basicItems} for ${occasion}. Model positioned center, fills most of frame, focus on outfit details. Simple clean background, minimal scenery, studio or minimal outdoor backdrop. Single person only, no duplicates, close framing, fashion photography.`;
+    const imagePrompt = `${randomDiversity} standing alone, centered, full body visible head to toe, wearing ${basicItems} for ${occasion}. SINGLE person photograph only - absolutely no split screen, no side by side, no before after, no duplicate person, no comparison shots. Model fills frame, outfit is focus. Clean simple background. One individual person in entire image.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -157,7 +159,7 @@ export async function generateOutfitImage(
     if (error?.code === 'content_policy_violation') {
       try {
         console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `One person centered, full body, ${occasion} outfit. Simple background, focus on clothing, no duplicates.`;
+        const fallbackPrompt = `SINGLE person only, centered, full body, ${occasion} outfit. One individual, no duplicates, no split screen, simple background.`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
