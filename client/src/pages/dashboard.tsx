@@ -658,7 +658,7 @@ export default function Dashboard() {
           <div className="mb-8">
             {/* Edit Profile Button */}
             <div className="flex justify-end mb-6">
-              <Link href="/style-quiz">
+              <Link href="/quiz">
                 <Button 
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10"
