@@ -9,10 +9,10 @@ import { Link } from "wouter";
 import { Sparkles, ShoppingBag, Star, TrendingUp, Award, Users } from "lucide-react";
 import { type StyleProfile, type UserPoints, type Outfit } from "@shared/schema";
 
-// Import background images
-import fashionBg1 from "@assets/image10_1758963741792.jpg";
-import fashionBg2 from "@assets/image9_1758963749625.jpg";
-import fashionBg3 from "@assets/image39_1758963769570.jpg";
+// Background images from public folder
+const fashionBg1 = "/images/fashion-bg1.jpg";
+const fashionBg2 = "/images/fashion-bg2.jpg";
+const fashionBg3 = "/images/fashion-bg3.jpg";
 
 export default function Home() {
   const { user, isLoading } = useAuth();
