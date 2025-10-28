@@ -12,7 +12,6 @@ export function RotatingBackground({ children, className = "" }: RotatingBackgro
   const backgroundImages = [
     "/images/fashion/image1_1761657039970.jpg",
     "/images/fashion/image4_1761657039971.jpg",
-    "/images/fashion/image7_1761657039972.jpg",
     "/images/fashion/image8_1761657039972.jpg",
     "/images/fashion/image9_1761657039967.jpg",
     "/images/fashion/image10_1761657039967.jpg",
