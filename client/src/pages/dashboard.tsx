@@ -9,6 +9,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -23,7 +31,11 @@ import {
   ArrowRight,
   Info,
   RefreshCw,
-  Trash2
+  Trash2,
+  Menu,
+  Home,
+  LogOut,
+  User
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 
@@ -300,32 +312,51 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="button-back-home">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Home
-                </Button>
-              </Link>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent" data-testid="heading-dashboard">
-                Style Dashboard
+                Aurra AI
               </h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <Link href="/trash">
-                <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="button-view-trash">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Trash
-                </Button>
-              </Link>
-              <Button 
-                variant="outline" 
-                className="border-white/20 text-white hover:bg-white/10"
-                onClick={() => window.location.href = "/api/logout"}
-                data-testid="button-logout"
-              >
-                Logout
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="button-menu">
+                    <Menu className="w-5 h-5 mr-2" />
+                    Menu
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-gray-900 text-white border-gray-700">
+                  <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <Link href="/landing">
+                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-landing">
+                      <Home className="mr-2 h-4 w-4" />
+                      <span>View Landing Page</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/dashboard">
+                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-dashboard">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>My Dashboard</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/trash">
+                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-trash">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Trash</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem 
+                    onClick={() => window.location.href = "/api/logout"}
+                    className="hover:bg-gray-800 cursor-pointer text-red-400"
+                    data-testid="menu-item-logout"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
