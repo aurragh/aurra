@@ -6,6 +6,17 @@ Aurra AI is a personalized fashion recommendation platform that uses artificial 
 
 The platform features a freemium model with basic free functionality and premium subscription tiers, gamification elements through a points system, and social features for style collection sharing.
 
+## Recent Updates (Oct 28, 2025)
+
+- **Improved Dashboard UI**: Removed rotating backgrounds from dashboard for cleaner, focused interface
+- **Style Quiz Enhancements**: Added reset/edit functionality allowing users to modify their style profile at any time
+- **Optimized AI Generation**: Changed outfit generation from 3 images to 1 image per request for better performance and cost efficiency
+- **Trash System Implementation**: Added soft delete functionality with 30-day retention period for outfit management
+  - Outfit cards now have delete buttons for easy removal
+  - Deleted outfits are moved to trash and can be restored within 30 days
+  - Dedicated trash page for viewing and managing deleted items
+  - Automatic permanent deletion after 30 days
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
