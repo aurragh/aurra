@@ -92,51 +92,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate images for each outfit
       console.log('Generating images for outfits...');
-      const outfitsWithImages = await Promise.all(
+      const savedOutfits = await Promise.all(
         outfits.map(async (outfit, index) => {
-          console.log(`Generating image for outfit ${index + 1}: ${outfit.name}`);
+          console.log(`Processing outfit ${index + 1}: ${outfit.name}`);
           try {
-            const temporaryImageUrl = await generateOutfitImage(outfit, profile, occasion);
-            console.log(`Image generated for outfit ${index + 1}:`, temporaryImageUrl ? 'success' : 'failed');
+            // First, save the outfit to get the database ID
+            const outfitData = {
+              ...outfit,
+              imageUrl: null, // Initially save without image
+              userId,
+              occasion,
+            };
             
-            // Generate a unique ID for this outfit (will be used for the filename)
-            const outfitId = `${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`;
+            console.log(`Saving outfit ${index + 1} to database...`);
+            const savedOutfit = await storage.createOutfit(outfitData);
+            console.log(`Saved outfit ${index + 1} with ID: ${savedOutfit.id}`);
             
-            // Download and save the image locally
-            let localImageUrl = null;
-            if (temporaryImageUrl) {
-              console.log(`Downloading and saving image for outfit ${index + 1}...`);
-              localImageUrl = await downloadAndSaveImage(temporaryImageUrl, outfitId);
-              console.log(`Image saved locally for outfit ${index + 1}:`, localImageUrl ? 'success' : 'failed');
+            // Now generate and save the image using the actual outfit ID
+            try {
+              console.log(`Generating image for outfit ${index + 1}: ${outfit.name}`);
+              const temporaryImageUrl = await generateOutfitImage(outfit, profile, occasion);
+              console.log(`Image generated for outfit ${index + 1}:`, temporaryImageUrl ? 'success' : 'failed');
+              
+              if (temporaryImageUrl) {
+                console.log(`Downloading and saving image for outfit ${index + 1}...`);
+                const localImageUrl = await downloadAndSaveImage(temporaryImageUrl, savedOutfit.id);
+                console.log(`Image saved locally for outfit ${index + 1}:`, localImageUrl ? 'success' : 'failed');
+                
+                if (localImageUrl) {
+                  // Update the outfit with the image URL
+                  const updatedOutfit = await storage.updateOutfitImage(savedOutfit.id, localImageUrl);
+                  return updatedOutfit;
+                }
+              }
+            } catch (imageError) {
+              console.error(`Failed to generate/save image for outfit ${index + 1}:`, imageError);
+              // Continue with outfit saved but without image
             }
             
-            return {
-              ...outfit,
-              imageUrl: localImageUrl, // Use the local image URL
-              userId,
-              occasion,
-            };
-          } catch (error) {
-            console.error(`Failed to generate image for outfit ${index + 1}:`, error);
-            return {
-              ...outfit,
-              imageUrl: null, // Continue without image if generation fails
-              userId,
-              occasion,
-            };
-          }
-        })
-      );
-      
-      // Save generated outfits with images
-      console.log('Saving outfits to database...');
-      const savedOutfits = await Promise.all(
-        outfitsWithImages.map(async (outfit, index) => {
-          try {
-            console.log(`Saving outfit ${index + 1}: ${outfit.name}`);
-            const saved = await storage.createOutfit(outfit);
-            console.log(`Saved outfit ${index + 1} with ID: ${saved.id}`);
-            return saved;
+            return savedOutfit;
           } catch (error) {
             console.error(`Failed to save outfit ${index + 1}:`, error);
             throw error;
@@ -164,20 +158,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const outfits = await storage.getUserOutfits(userId);
       
-      // Check for expired image URLs and regenerate if needed
-      const outfitsWithRefreshedImages = await Promise.all(
-        outfits.map(async (outfit) => {
-          // Check if this is a local image or if it's expired
-          if (outfit.imageUrl && outfit.imageUrl.startsWith('/outfit-images/')) {
-            // Already using local storage, no need to update
-            return outfit;
-          } else if (outfit.imageUrl && isImageUrlExpired(outfit.imageUrl)) {
-            // Image URL is expired, need to regenerate
-            console.log(`Regenerating expired image for outfit: ${outfit.name}`);
+      // Asynchronously regenerate expired images in the background
+      // This won't block the response
+      outfits.forEach((outfit) => {
+        // Check if this is an expired DALL-E URL that needs regeneration
+        if (outfit.imageUrl && !outfit.imageUrl.startsWith('/outfit-images/') && isImageUrlExpired(outfit.imageUrl)) {
+          // Fire and forget - regenerate in background
+          (async () => {
+            console.log(`Background: Regenerating expired image for outfit: ${outfit.name}`);
             try {
               const profile = await storage.getStyleProfile(userId);
               if (profile && profile.completed) {
-                // Parse the items JSON and create the outfit object properly
                 const outfitData = {
                   items: outfit.items || '[]',
                   name: outfit.name || 'Outfit',
@@ -192,23 +183,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 if (temporaryImageUrl) {
                   const localImageUrl = await downloadAndSaveImage(temporaryImageUrl, outfit.id);
                   if (localImageUrl) {
-                    // Update the outfit with the new local image URL
                     await storage.updateOutfitImage(outfit.id, localImageUrl);
-                    return { ...outfit, imageUrl: localImageUrl };
+                    console.log(`Background: Successfully regenerated image for outfit ${outfit.id}`);
                   }
                 }
               }
             } catch (error) {
-              console.error(`Failed to regenerate image for outfit ${outfit.id}:`, error);
+              console.error(`Background: Failed to regenerate image for outfit ${outfit.id}:`, error);
             }
-            // If regeneration failed, return outfit without image
-            return { ...outfit, imageUrl: null };
-          }
-          return outfit;
-        })
-      );
+          })();
+        }
+      });
       
-      res.json(outfitsWithRefreshedImages);
+      // Return outfits immediately, even if some images are expired
+      // The client can show placeholders while images are being regenerated
+      res.json(outfits);
     } catch (error) {
       console.error("Error fetching outfits:", error);
       res.status(500).json({ message: "Failed to fetch outfits" });
