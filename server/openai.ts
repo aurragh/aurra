@@ -122,8 +122,8 @@ export async function generateOutfitImage(
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Pinterest-style fashion photography prompt: natural outdoor settings, professional quality
-    const imagePrompt = `High-end fashion editorial photograph. Complete outfit for ${occasion} featuring ${basicItems}. Natural outdoor setting with beautiful natural lighting, professional fashion photography style, realistic and elegant styling. Shot in a scenic outdoor location with soft daylight, similar to Pinterest fashion inspiration photos. Magazine quality, editorial style, authentic and sophisticated.`;
+    // Pinterest-style fashion photography prompt: single full-body shot, natural outdoor settings
+    const imagePrompt = `Single full-body fashion photograph showing one complete outfit for ${occasion} featuring ${basicItems}. One person, single unified composition, no split screen or multiple angles. Natural outdoor setting with beautiful natural lighting, professional fashion photography style, realistic and elegant. Shot in a scenic outdoor location with soft daylight, similar to Pinterest fashion inspiration photos. Clean single image, full-body view, magazine quality photography.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -144,7 +144,7 @@ export async function generateOutfitImage(
     if (error?.code === 'content_policy_violation') {
       try {
         console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `Fashion editorial photograph for ${occasion}, outdoor natural setting, professional photography, elegant styling, magazine quality`;
+        const fallbackPrompt = `Single full-body fashion photograph for ${occasion}. One person, single unified composition, no split screen. Outdoor natural setting, professional photography, elegant styling, clean single image, magazine quality`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
