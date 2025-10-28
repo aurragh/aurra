@@ -49,9 +49,9 @@ export default function StyleQuiz() {
   const [answers, setAnswers] = useState({
     personality: {} as Record<string, string>,
     bodyType: "",
-    colorPreference: "", // Changed to single selection
-    stylePreference: [] as string[], // Multi-select for style preferences
-    clothingItems: [] as string[], // Multi-select for clothing items needing help
+    colorPreference: "",
+    stylePreference: "", // Single selection for style preference
+    clothingItems: [] as string[], // Keep for backward compatibility with database
     lifestyle: {} as Record<string, string>,
     budget: "",
     occasions: [] as string[], // Multi-select for occasions
@@ -75,12 +75,12 @@ export default function StyleQuiz() {
       setAnswers({
         personality: JSON.parse(existingProfile.personality || '{}'),
         bodyType: existingProfile.bodyType || "",
-        colorPreference: colorPrefs[0] || "", // Single selection
-        stylePreference: stylePrefs, // Multi-select array
-        clothingItems: clothingItems, // Multi-select array
+        colorPreference: colorPrefs[0] || "",
+        stylePreference: stylePrefs[0] || "", // Single selection
+        clothingItems: clothingItems,
         lifestyle: JSON.parse(existingProfile.lifestyle || '{}'),
         budget: existingProfile.budget || "",
-        occasions: occasions, // Multi-select array
+        occasions: occasions,
       });
       setIsEditing(true);
     }
@@ -91,7 +91,7 @@ export default function StyleQuiz() {
       personality: {},
       bodyType: "",
       colorPreference: "",
-      stylePreference: [],
+      stylePreference: "",
       clothingItems: [],
       lifestyle: {},
       budget: "",
@@ -184,7 +184,7 @@ export default function StyleQuiz() {
       personality: JSON.stringify(answers.personality),
       bodyType: answers.bodyType,
       colorPreferences: JSON.stringify([answers.colorPreference].filter(Boolean)),
-      stylePreferences: JSON.stringify(answers.stylePreference),
+      stylePreferences: JSON.stringify([answers.stylePreference].filter(Boolean)),
       clothingItems: JSON.stringify(answers.clothingItems),
       lifestyle: JSON.stringify(answers.lifestyle),
       budget: answers.budget,
@@ -223,11 +223,11 @@ export default function StyleQuiz() {
   };
 
   // Toggle multi-select array items (for checkboxes)
-  const toggleArrayItem = (field: 'stylePreference' | 'clothingItems' | 'occasions', value: string) => {
+  const toggleArrayItem = (field: 'clothingItems' | 'occasions', value: string) => {
     setAnswers(prev => {
       const currentArray = prev[field];
       const newArray = currentArray.includes(value)
-        ? currentArray.filter(item => item !== value)
+        ? currentArray.filter((item: string) => item !== value)
         : [...currentArray, value];
       return {
         ...prev,
@@ -277,45 +277,19 @@ export default function StyleQuiz() {
             </p>
           </CardHeader>
           <CardContent className="p-8">
-            {/* Step 1: Style & Preference */}
+            {/* Step 1: Style Preference */}
             {currentStep === 0 && (
               <div className="space-y-6" data-testid="step-style">
                 <div>
-                  <Label className="text-white text-lg mb-4 block">How would you describe your style personality? (Select all that apply)</Label>
-                  <div className="space-y-3">
-                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => {
-                      const sanitizedId = `style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-                      return (
-                        <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-${sanitizedId}`}>
-                          <Checkbox 
-                            id={sanitizedId}
-                            checked={answers.stylePreference.includes(option)}
-                            onCheckedChange={() => toggleArrayItem('stylePreference', option)}
-                          />
-                          <Label htmlFor={sanitizedId} className="text-gray-200 cursor-pointer">{option}</Label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-white text-lg mb-4 block">Which items do you need help styling? (Select all that apply)</Label>
-                  <div className="space-y-3">
-                    {['👚 Tops', '👖 Bottoms', '👗 Dresses', '👞 Shoes', '👜 Accessories', '🧥 Outerwear', '💼 Full Outfits'].map((option) => {
-                      const sanitizedId = `clothing-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-                      return (
-                        <div key={option} className="flex items-center space-x-2" data-testid={`checkbox-${sanitizedId}`}>
-                          <Checkbox 
-                            id={sanitizedId}
-                            checked={answers.clothingItems.includes(option)}
-                            onCheckedChange={() => toggleArrayItem('clothingItems', option)}
-                          />
-                          <Label htmlFor={sanitizedId} className="text-gray-200 cursor-pointer">{option}</Label>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <Label className="text-white text-lg mb-4 block">How would you describe your style personality?</Label>
+                  <RadioGroup value={answers.stylePreference} onValueChange={(value) => updateAnswer('stylePreference', value)}>
+                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => (
+                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+                        <RadioGroupItem value={option} id={option} />
+                        <Label htmlFor={option} className="text-gray-200 cursor-pointer">{option}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
               </div>
             )}
