@@ -311,14 +311,22 @@ export default function Dashboard() {
               </h1>
             </div>
             
-            <Button 
-              variant="outline" 
-              className="border-white/20 text-white hover:bg-white/10"
-              onClick={() => window.location.href = "/api/logout"}
-              data-testid="button-logout"
-            >
-              Logout
-            </Button>
+            <div className="flex items-center space-x-4">
+              <Link href="/trash">
+                <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="button-view-trash">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Trash
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white/10"
+                onClick={() => window.location.href = "/api/logout"}
+                data-testid="button-logout"
+              >
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </nav>

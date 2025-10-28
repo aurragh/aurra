@@ -10,6 +10,7 @@ import StyleQuiz from "@/pages/style-quiz";
 import Dashboard from "@/pages/dashboard";
 import Subscribe from "@/pages/subscribe";
 import AdminDashboard from "@/pages/admin";
+import Trash from "@/pages/trash";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/quiz" component={StyleQuiz} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/trash" component={Trash} />
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/admin" component={AdminDashboard} />
         </>
