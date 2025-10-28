@@ -4,7 +4,13 @@ import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage } from "./openai";
+import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema } from "@shared/schema";
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Stripe configuration - will work without payment features if not configured
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -12,6 +18,9 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 }) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static files from public directory (for outfit images)
+  app.use('/outfit-images', (await import('express')).default.static(path.join(__dirname, '..', 'public', 'outfit-images')));
+
   // Auth middleware
   await setupAuth(app);
 
@@ -87,11 +96,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         outfits.map(async (outfit, index) => {
           console.log(`Generating image for outfit ${index + 1}: ${outfit.name}`);
           try {
-            const imageUrl = await generateOutfitImage(outfit, profile, occasion);
-            console.log(`Image generated for outfit ${index + 1}:`, imageUrl ? 'success' : 'failed');
+            const temporaryImageUrl = await generateOutfitImage(outfit, profile, occasion);
+            console.log(`Image generated for outfit ${index + 1}:`, temporaryImageUrl ? 'success' : 'failed');
+            
+            // Generate a unique ID for this outfit (will be used for the filename)
+            const outfitId = `${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`;
+            
+            // Download and save the image locally
+            let localImageUrl = null;
+            if (temporaryImageUrl) {
+              console.log(`Downloading and saving image for outfit ${index + 1}...`);
+              localImageUrl = await downloadAndSaveImage(temporaryImageUrl, outfitId);
+              console.log(`Image saved locally for outfit ${index + 1}:`, localImageUrl ? 'success' : 'failed');
+            }
+            
             return {
               ...outfit,
-              imageUrl,
+              imageUrl: localImageUrl, // Use the local image URL
               userId,
               occasion,
             };
@@ -142,7 +163,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const outfits = await storage.getUserOutfits(userId);
-      res.json(outfits);
+      
+      // Check for expired image URLs and regenerate if needed
+      const outfitsWithRefreshedImages = await Promise.all(
+        outfits.map(async (outfit) => {
+          // Check if this is a local image or if it's expired
+          if (outfit.imageUrl && outfit.imageUrl.startsWith('/outfit-images/')) {
+            // Already using local storage, no need to update
+            return outfit;
+          } else if (outfit.imageUrl && isImageUrlExpired(outfit.imageUrl)) {
+            // Image URL is expired, need to regenerate
+            console.log(`Regenerating expired image for outfit: ${outfit.name}`);
+            try {
+              const profile = await storage.getStyleProfile(userId);
+              if (profile && profile.completed) {
+                // Parse the items JSON and create the outfit object properly
+                const outfitData = {
+                  items: outfit.items || '[]',
+                  name: outfit.name || 'Outfit',
+                  description: outfit.description || ''
+                };
+                const temporaryImageUrl = await generateOutfitImage(
+                  outfitData,
+                  profile,
+                  outfit.occasion || 'casual'
+                );
+                
+                if (temporaryImageUrl) {
+                  const localImageUrl = await downloadAndSaveImage(temporaryImageUrl, outfit.id);
+                  if (localImageUrl) {
+                    // Update the outfit with the new local image URL
+                    await storage.updateOutfitImage(outfit.id, localImageUrl);
+                    return { ...outfit, imageUrl: localImageUrl };
+                  }
+                }
+              }
+            } catch (error) {
+              console.error(`Failed to regenerate image for outfit ${outfit.id}:`, error);
+            }
+            // If regeneration failed, return outfit without image
+            return { ...outfit, imageUrl: null };
+          }
+          return outfit;
+        })
+      );
+      
+      res.json(outfitsWithRefreshedImages);
     } catch (error) {
       console.error("Error fetching outfits:", error);
       res.status(500).json({ message: "Failed to fetch outfits" });

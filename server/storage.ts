@@ -32,6 +32,7 @@ export interface IStorage {
   getUserDeletedOutfits(userId: string): Promise<Outfit[]>;
   createOutfit(outfit: InsertOutfit): Promise<Outfit>;
   updateOutfit(id: string, updates: Partial<InsertOutfit>): Promise<Outfit>;
+  updateOutfitImage(id: string, imageUrl: string): Promise<Outfit>;
   deleteOutfit(id: string): Promise<void>; // Soft delete
   permanentlyDeleteOutfit(id: string): Promise<void>; // Hard delete
   restoreOutfit(id: string): Promise<Outfit>;
@@ -157,6 +158,15 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(outfits)
       .set(updates)
+      .where(eq(outfits.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateOutfitImage(id: string, imageUrl: string): Promise<Outfit> {
+    const [updated] = await db
+      .update(outfits)
+      .set({ imageUrl })
       .where(eq(outfits.id, id))
       .returning();
     return updated;
