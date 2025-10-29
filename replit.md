@@ -15,7 +15,8 @@ The platform features a freemium model with basic free functionality and premium
   - Professional studio setup with visible photography equipment (softbox umbrella, tripod, light stands)
   - Upgraded to HD quality for sharp, detailed images
   - Includes ALL outfit items including accessories (shoes, bags, etc.)
-  - Prompt: "Professional studio product photography of [all items] arranged as if worn, ghost mannequin style, white studio background with photography equipment visible"
+  - SINGLE outfit composition only - explicitly prevents multiple outfit variations or collection layouts
+  - Prompt: "SINGLE outfit composition ONLY: [all items] arranged as if worn, ghost mannequin style, ONE complete look centered in frame, white studio background with photography equipment visible - NOT multiple outfits, NOT variations, NOT side-by-side display, NOT collection layout"
 
 ## Previous Updates (Oct 28, 2025)
 
@@ -61,12 +62,13 @@ Preferred communication style: Simple, everyday language.
 - **Provider**: OpenAI API for generating personalized outfit recommendations
 - **Image Generation**: DALL-E 3 with HD quality (1024x1024 square format)
 - **Image Style**: Ghost mannequin / invisible model style - professional studio product photography
+  - SINGLE outfit composition centered in frame (not multiple variations or collection layouts)
   - Clothes arranged as if worn on an invisible body/form
   - White studio backgrounds with visible photography equipment (softbox, tripod, lights)
   - Includes complete outfits with all accessories (shoes, bags, jewelry, etc.)
   - Sharp focus and high detail rendering
+  - ONE complete look only - explicitly prevents lookbook/variation displays
   - Focuses on outfit composition rather than models
-  - Eliminates issues with multiple people/split-screen layouts
 - **Processing**: Style profile analysis and outfit generation based on user preferences, body type, and occasion
 - **Fallback**: Graceful degradation when AI services are unavailable
 - **Future Enhancement**: Ready to integrate Stable Diffusion via Replicate API for even better image quality and control
