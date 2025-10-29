@@ -4,6 +4,7 @@ import {
   outfits,
   styleCollections,
   userPoints,
+  shoppingAnalytics,
   type User,
   type UpsertUser,
   type StyleProfile,
@@ -13,6 +14,8 @@ import {
   type StyleCollection,
   type InsertCollection,
   type UserPoints,
+  type ShoppingAnalytics,
+  type InsertShoppingAnalytics,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, lt, sql } from "drizzle-orm";
@@ -30,6 +33,7 @@ export interface IStorage {
   // Outfit operations
   getUserOutfits(userId: string): Promise<Outfit[]>;
   getUserDeletedOutfits(userId: string): Promise<Outfit[]>;
+  getOutfit(id: string, userId: string): Promise<Outfit | undefined>;
   createOutfit(outfit: InsertOutfit): Promise<Outfit>;
   updateOutfit(id: string, updates: Partial<InsertOutfit>): Promise<Outfit>;
   updateOutfitImage(id: string, imageUrl: string): Promise<Outfit>;
@@ -49,6 +53,9 @@ export interface IStorage {
   getUserPoints(userId: string): Promise<UserPoints | undefined>;
   updateUserPoints(userId: string, pointsToAdd: number): Promise<UserPoints>;
   initializeUserPoints(userId: string): Promise<UserPoints>;
+  
+  // Shopping analytics operations
+  trackShoppingClick(analytics: InsertShoppingAnalytics): Promise<ShoppingAnalytics>;
   
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -144,6 +151,17 @@ export class DatabaseStorage implements IStorage {
         isNotNull(outfits.deletedAt)
       ))
       .orderBy(desc(outfits.deletedAt));
+  }
+
+  async getOutfit(id: string, userId: string): Promise<Outfit | undefined> {
+    const [outfit] = await db
+      .select()
+      .from(outfits)
+      .where(and(
+        eq(outfits.id, id),
+        eq(outfits.userId, userId)
+      ));
+    return outfit;
   }
 
   async createOutfit(outfit: InsertOutfit): Promise<Outfit> {
@@ -295,6 +313,15 @@ export class DatabaseStorage implements IStorage {
         totalEarned: 100,
         level: "Beginner",
       })
+      .returning();
+    return created;
+  }
+
+  // Shopping analytics operations
+  async trackShoppingClick(analytics: InsertShoppingAnalytics): Promise<ShoppingAnalytics> {
+    const [created] = await db
+      .insert(shoppingAnalytics)
+      .values(analytics)
       .returning();
     return created;
   }

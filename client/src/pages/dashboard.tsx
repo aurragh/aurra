@@ -40,12 +40,14 @@ import {
   ZoomIn
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
+import { ShoppingModal } from "@/components/ShoppingModal";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
+  const [shoppingModalOutfitId, setShoppingModalOutfitId] = useState<string | null>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -463,13 +465,13 @@ export default function Dashboard() {
                               ))}
                             </div>
                             
-                            {outfit.shoppingLinks && JSON.parse(outfit.shoppingLinks).length > 0 && (
+                            {outfit.imageUrl && (
                               <div className="mt-4 pt-4 border-t border-white/10">
                                 <Button 
                                   variant="outline" 
                                   size="sm"
                                   className="w-full border-purple-400/30 text-purple-200 hover:bg-purple-600/20"
-                                  onClick={() => window.open(JSON.parse(outfit.shoppingLinks)[0].url, '_blank')}
+                                  onClick={() => setShoppingModalOutfitId(outfit.id)}
                                   data-testid={`button-shop-${outfit.id}`}
                                 >
                                   <ShoppingBag className="w-4 h-4 mr-2" />
@@ -571,6 +573,15 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Shopping Modal */}
+      {shoppingModalOutfitId && (
+        <ShoppingModal
+          outfitId={shoppingModalOutfitId}
+          open={!!shoppingModalOutfitId}
+          onOpenChange={(open) => !open && setShoppingModalOutfitId(null)}
+        />
+      )}
     </div>
   );
 }

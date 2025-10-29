@@ -91,6 +91,15 @@ export const userPoints = pgTable("user_points", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const shoppingAnalytics = pgTable("shopping_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  outfitId: varchar("outfit_id").notNull(),
+  itemName: varchar("item_name").notNull(),
+  searchQuery: text("search_query"),
+  clickedAt: timestamp("clicked_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   styleProfile: one(styleProfiles, {
@@ -133,6 +142,17 @@ export const pointsRelations = relations(userPoints, ({ one }) => ({
   }),
 }));
 
+export const shoppingAnalyticsRelations = relations(shoppingAnalytics, ({ one }) => ({
+  user: one(users, {
+    fields: [shoppingAnalytics.userId],
+    references: [users.id],
+  }),
+  outfit: one(outfits, {
+    fields: [shoppingAnalytics.outfitId],
+    references: [outfits.id],
+  }),
+}));
+
 // Insert schemas
 export const insertStyleProfileSchema = createInsertSchema(styleProfiles).omit({
   id: true,
@@ -150,6 +170,11 @@ export const insertCollectionSchema = createInsertSchema(styleCollections).omit(
   createdAt: true,
 });
 
+export const insertShoppingAnalyticsSchema = createInsertSchema(shoppingAnalytics).omit({
+  id: true,
+  clickedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -160,3 +185,5 @@ export type InsertOutfit = z.infer<typeof insertOutfitSchema>;
 export type StyleCollection = typeof styleCollections.$inferSelect;
 export type InsertCollection = z.infer<typeof insertCollectionSchema>;
 export type UserPoints = typeof userPoints.$inferSelect;
+export type ShoppingAnalytics = typeof shoppingAnalytics.$inferSelect;
+export type InsertShoppingAnalytics = z.infer<typeof insertShoppingAnalyticsSchema>;

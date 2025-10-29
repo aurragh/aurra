@@ -3,9 +3,9 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage } from "./openai";
+import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromImage } from "./openai";
 import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
-import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema } from "@shared/schema";
+import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema } from "@shared/schema";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -191,7 +191,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const outfitData = {
                   items: outfit.items || '[]',
                   name: outfit.name || 'Outfit',
-                  description: outfit.description || ''
+                  description: outfit.description || '',
+                  aiRecommendation: outfit.aiRecommendation || ''
                 };
                 const temporaryImageUrl = await generateOutfitImage(
                   outfitData,
@@ -403,6 +404,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Stripe subscription error:", error);
       res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
+  // Shopping assistant routes
+  app.post('/api/outfits/:id/shopping', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const outfitId = req.params.id;
+      
+      // Get the outfit to access its image URL
+      const outfit = await storage.getOutfit(outfitId, userId);
+      if (!outfit) {
+        return res.status(404).json({ message: "Outfit not found" });
+      }
+      
+      if (!outfit.imageUrl) {
+        return res.status(400).json({ message: "Outfit has no image to analyze" });
+      }
+      
+      // Extract shopping items using GPT-4 Vision
+      const items = await extractShoppingItemsFromImage(outfit.imageUrl);
+      
+      // Generate Google Shopping URLs for each item
+      const shoppingItems = items.map(item => ({
+        name: item.name,
+        description: item.description,
+        category: item.category,
+        shoppingLinks: [
+          {
+            store: "Google Shopping",
+            url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.searchQuery)}`
+          }
+        ]
+      }));
+      
+      res.json({ items: shoppingItems });
+    } catch (error) {
+      console.error("Error extracting shopping items:", error);
+      res.status(500).json({ message: "Failed to extract shopping items" });
+    }
+  });
+
+  app.post('/api/analytics/shopping-click', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const analyticsData = insertShoppingAnalyticsSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      await storage.trackShoppingClick(analyticsData);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error tracking shopping click:", error);
+      
+      // Return 400 for validation errors, 500 for other errors
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+      
+      res.status(500).json({ message: "Failed to track shopping click" });
     }
   });
 

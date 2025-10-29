@@ -225,3 +225,65 @@ Respond with insightful, actionable advice in a friendly, expert tone.`;
     return "Complete your style profile to receive personalized fashion insights and recommendations.";
   }
 }
+
+export interface ShoppingItem {
+  name: string;
+  description: string;
+  category: string;
+  searchQuery: string;
+}
+
+export async function extractShoppingItemsFromImage(imageUrl: string): Promise<ShoppingItem[]> {
+  try {
+    console.log(`Extracting shopping items from image: ${imageUrl}`);
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a fashion shopping assistant that analyzes outfit images and identifies individual clothing and accessory items for shopping. Extract each distinct fashion item with detailed descriptions."
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze this outfit image and identify each distinct clothing and accessory item. For each item, provide:
+1. A clear name (e.g., "White Linen Shirt", "Brown Leather Ankle Boots")
+2. A detailed description (style, material, key features)
+3. The category (e.g., "Top", "Bottom", "Shoes", "Accessories")
+4. A search query optimized for Google Shopping (e.g., "buy white linen button-down shirt women")
+
+Focus on items that are clearly visible and identifiable. Return a JSON object with an "items" array.`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1000,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      console.error("No content in GPT-4 Vision response");
+      return [];
+    }
+
+    const parsed = JSON.parse(content);
+    const items = parsed.items || [];
+    
+    console.log(`Extracted ${items.length} shopping items from image`);
+    return items;
+
+  } catch (error) {
+    console.error("GPT-4 Vision extraction error:", error);
+    return [];
+  }
+}
