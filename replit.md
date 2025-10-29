@@ -6,18 +6,22 @@ Aurra AI is a personalized fashion recommendation platform that uses artificial 
 
 The platform features a freemium model with basic free functionality and premium subscription tiers, gamification elements through a points system, and social features for style collection sharing.
 
-## Recent Updates (Oct 28, 2025)
+## Recent Updates (Oct 29, 2025)
+
+- **Ghost Mannequin Image Style**: Completely redesigned outfit image generation
+  - Switched from model-based photos to professional ghost mannequin/invisible model style
+  - Uses e-commerce product photography approach (clothes arranged as if worn on invisible form)
+  - Eliminates split-screen/collage/multiple-person issues that occurred with model-based prompts
+  - Clean white studio backgrounds for professional, retailer-quality presentation
+  - Prompt: "Professional product photography of [items] arranged as if worn, ghost mannequin style, floating outfit display"
+
+## Previous Updates (Oct 28, 2025)
 
 - **Improved Dashboard UI**: Removed rotating backgrounds from dashboard for cleaner, focused interface
 - **Style Quiz Enhancements**: 
-  - Added reset/edit functionality allowing users to modify their style profile at any time
-  - Implemented multi-select checkboxes for style personality, clothing items, and occasions
-  - Added new clothingItems field to track which specific items users need help styling
-- **Image Generation Improvements**:
-  - Changed outfit generation from 3 images to 1 image per request for better performance and cost efficiency
-  - Upgraded to DALL-E 3 HD quality (1024x1024) with natural style
-  - Updated prompts to generate single full-body shots (no split-screen or diptych layouts)
-  - Enhanced prompts with Pinterest-style aesthetic (natural outdoor settings, professional fashion photography)
+  - Changed style personality to single-select (radio buttons) instead of multi-select
+  - Removed "Which items do you need help styling?" question completely
+  - Simplified quiz flow for better user experience
 - **Zoomable Outfit Images**: Added lightbox modal for viewing outfit images in full-size with zoom capability
 - **Trash System Implementation**: Added soft delete functionality with 30-day retention period for outfit management
   - Outfit cards now have delete buttons for easy removal
@@ -53,10 +57,15 @@ Preferred communication style: Simple, everyday language.
 
 ### AI Integration
 - **Provider**: OpenAI API for generating personalized outfit recommendations
-- **Image Generation**: DALL-E 3 with HD quality (1024x1024), natural style, Pinterest-inspired aesthetic
-- **Image Style**: Single full-body fashion photographs with natural outdoor settings, professional quality
+- **Image Generation**: DALL-E 3 with standard quality (1024x1024 square format)
+- **Image Style**: Ghost mannequin / invisible model style - professional e-commerce product photography
+  - Clothes arranged as if worn on an invisible body/form
+  - Clean white studio backgrounds
+  - Focuses on outfit composition rather than models
+  - Eliminates issues with multiple people/split-screen layouts
 - **Processing**: Style profile analysis and outfit generation based on user preferences, body type, and occasion
 - **Fallback**: Graceful degradation when AI services are unavailable
+- **Future Enhancement**: Ready to integrate Stable Diffusion via Replicate API for even better image quality and control
 
 ### Data Models
 - **Users**: Core user information with Stripe integration for subscription management
