@@ -118,8 +118,8 @@ async function generateWithDallE(
   const itemsDesc = basicItems || 'stylish outfit';
   
   try {
-    // Ghost mannequin style with studio photography setup
-    const imagePrompt = `Professional studio product photography of ${itemsDesc} arranged as if worn, ghost mannequin style, floating outfit display for ${occasion}, white studio background with photography equipment visible (softbox umbrella, tripod, light stand), professional fashion photography setup, sharp focus, high detail`;
+    // Ghost mannequin style with studio photography setup - SINGLE outfit ONLY
+    const imagePrompt = `SINGLE outfit composition ONLY: ${itemsDesc} arranged as if worn on invisible form, ghost mannequin style, ONE complete look centered in frame for ${occasion}, white studio background with photography equipment visible (softbox umbrella, tripod, light stands), professional product shot, sharp focus, high detail - NOT multiple outfits, NOT variations, NOT side-by-side display, NOT collection layout`;
 
     console.log(`DALL-E Image Prompt: ${imagePrompt}`);
 
@@ -140,7 +140,7 @@ async function generateWithDallE(
     // Fallback to even simpler prompt
     if (error?.code === 'content_policy_violation') {
       try {
-        const fallbackPrompt = `Product photo of ${itemsDesc} arranged as outfit, ghost mannequin, studio background with equipment`;
+        const fallbackPrompt = `SINGLE outfit: ${itemsDesc} on invisible form, ghost mannequin centered, studio background, ONE composition only`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
