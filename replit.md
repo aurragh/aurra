@@ -12,8 +12,10 @@ The platform features a freemium model with basic free functionality and premium
   - Switched from model-based photos to professional ghost mannequin/invisible model style
   - Uses e-commerce product photography approach (clothes arranged as if worn on invisible form)
   - Eliminates split-screen/collage/multiple-person issues that occurred with model-based prompts
-  - Clean white studio backgrounds for professional, retailer-quality presentation
-  - Prompt: "Professional product photography of [items] arranged as if worn, ghost mannequin style, floating outfit display"
+  - Professional studio setup with visible photography equipment (softbox umbrella, tripod, light stands)
+  - Upgraded to HD quality for sharp, detailed images
+  - Includes ALL outfit items including accessories (shoes, bags, etc.)
+  - Prompt: "Professional studio product photography of [all items] arranged as if worn, ghost mannequin style, white studio background with photography equipment visible"
 
 ## Previous Updates (Oct 28, 2025)
 
@@ -57,10 +59,12 @@ Preferred communication style: Simple, everyday language.
 
 ### AI Integration
 - **Provider**: OpenAI API for generating personalized outfit recommendations
-- **Image Generation**: DALL-E 3 with standard quality (1024x1024 square format)
-- **Image Style**: Ghost mannequin / invisible model style - professional e-commerce product photography
+- **Image Generation**: DALL-E 3 with HD quality (1024x1024 square format)
+- **Image Style**: Ghost mannequin / invisible model style - professional studio product photography
   - Clothes arranged as if worn on an invisible body/form
-  - Clean white studio backgrounds
+  - White studio backgrounds with visible photography equipment (softbox, tripod, lights)
+  - Includes complete outfits with all accessories (shoes, bags, jewelry, etc.)
+  - Sharp focus and high detail rendering
   - Focuses on outfit composition rather than models
   - Eliminates issues with multiple people/split-screen layouts
 - **Processing**: Style profile analysis and outfit generation based on user preferences, body type, and occasion
@@ -70,7 +74,7 @@ Preferred communication style: Simple, everyday language.
 ### Data Models
 - **Users**: Core user information with Stripe integration for subscription management
 - **Style Profiles**: Comprehensive user preferences including personality traits, body type, color preferences, stylePreferences (multi-select), clothingItems (multi-select), lifestyle factors, and occasions (multi-select)
-- **Outfits**: AI-generated outfit recommendations with ghost mannequin style images (1024x1024), detailed item descriptions, and shopping links
+- **Outfits**: AI-generated outfit recommendations with HD ghost mannequin style images (1024x1024), complete with accessories, detailed item descriptions, and shopping links
 - **Collections**: User-curated outfit collections with favoriting capabilities
 - **Points System**: Gamification through user points and achievements
 
