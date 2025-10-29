@@ -112,15 +112,16 @@ Focus on current fashion trends, body-flattering silhouettes, and practical styl
 // Helper function to generate outfit images - structured for easy provider swapping
 async function generateWithDallE(
   basicItems: string,
-  occasion: string,
-  randomDiversity: string
+  occasion: string
 ): Promise<string | null> {
+  // Ensure we have items description
+  const itemsDesc = basicItems || 'stylish outfit';
+  
   try {
-    // Ensure we have items description
-    const itemsDesc = basicItems || 'stylish outfit';
-    
-    // Concise prompt with explicit single-person instructions
-    const imagePrompt = `Full body portrait of one ${randomDiversity} wearing ${itemsDesc} for ${occasion}, centered, single person only, no split screen, no collage, professional fashion photo`;
+    // Ghost mannequin style - e-commerce product photography
+    const imagePrompt = `Professional product photography of ${itemsDesc} arranged as if worn, ghost mannequin style, floating outfit display for ${occasion}, clean white studio background, e-commerce quality, single complete outfit, fashion photography`;
+
+    console.log(`DALL-E Image Prompt: ${imagePrompt}`);
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -139,7 +140,7 @@ async function generateWithDallE(
     // Fallback to even simpler prompt
     if (error?.code === 'content_policy_violation') {
       try {
-        const fallbackPrompt = `One person wearing ${occasion} outfit, full body, simple background`;
+        const fallbackPrompt = `Product photo of ${itemsDesc} arranged as outfit, ghost mannequin, white background`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
@@ -172,28 +173,13 @@ export async function generateOutfitImage(
   try {
     const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
     
-    // Create simplified description for the outfit image
+    // Create detailed description for the outfit image (ghost mannequin style)
     const basicItems = items.slice(0, 3).map(item => 
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
-    // Randomly select model diversity: 70% Western/American, 30% global
-    const diversityOptions = [
-      'Western model',
-      'American model',
-      'Western model',
-      'American model',
-      'Western model',
-      'American model',
-      'Western model', // 7 out of 10 = 70% Western
-      'Asian model',
-      'African model',
-      'South Asian model'
-    ];
-    const randomDiversity = diversityOptions[Math.floor(Math.random() * diversityOptions.length)];
-    
-    // Use DALL-E for now (will add Replicate option when API token is available)
-    return await generateWithDallE(basicItems, occasion, randomDiversity);
+    // Use DALL-E ghost mannequin style (will add Replicate option when API token is available)
+    return await generateWithDallE(basicItems, occasion);
 
   } catch (error: any) {
     console.error("Image generation error:", error);
