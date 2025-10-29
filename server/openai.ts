@@ -109,42 +109,24 @@ Focus on current fashion trends, body-flattering silhouettes, and practical styl
   }
 }
 
-export async function generateOutfitImage(
-  outfit: GeneratedOutfit,
-  profile: StyleProfile,
-  occasion: string
+// Helper function to generate outfit images - structured for easy provider swapping
+async function generateWithDallE(
+  basicItems: string,
+  occasion: string,
+  randomDiversity: string
 ): Promise<string | null> {
   try {
-    const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
+    // Ensure we have items description
+    const itemsDesc = basicItems || 'stylish outfit';
     
-    // Create a safe, simple description for the outfit image
-    const basicItems = items.slice(0, 3).map(item => 
-      `${item.color} ${item.category.toLowerCase()}`
-    ).join(', ');
-    
-    // Centered model portrait with focus on outfit, minimal background
-    // Randomly select model diversity: 70% Western/American, 30% global
-    const diversityOptions = [
-      'Western/American model',
-      'Western/American model',
-      'Western/American model',
-      'Western/American model',
-      'Western/American model',
-      'Western/American model',
-      'Western/American model', // 7 out of 10 = 70% Western
-      'Asian model',
-      'African model',
-      'South Asian model'
-    ];
-    const randomDiversity = diversityOptions[Math.floor(Math.random() * diversityOptions.length)];
-    
-    const imagePrompt = `Professional attractive ${randomDiversity}, high fashion runway model standing alone, centered, full body visible head to toe, wearing ${basicItems} for ${occasion}. Beautiful model with professional styling, elegant pose. SINGLE person photograph only - absolutely no split screen, no side by side, no before after, no duplicate person, no comparison shots. Model fills frame, outfit is focus. Clean simple background. One individual person in entire image. Magazine quality fashion photography.`;
+    // Concise prompt with explicit single-person instructions
+    const imagePrompt = `Full body portrait of one ${randomDiversity} wearing ${itemsDesc} for ${occasion}, centered, single person only, no split screen, no collage, professional fashion photo`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: imagePrompt,
       n: 1,
-      size: "1024x1792",
+      size: "1024x1024",
       quality: "standard",
       style: "natural"
     });
@@ -153,30 +135,68 @@ export async function generateOutfitImage(
 
   } catch (error: any) {
     console.error("DALL-E API error:", error);
-    console.error("Error details:", JSON.stringify(error, null, 2));
     
-    // If it's a safety system error, try with an even more basic prompt
+    // Fallback to even simpler prompt
     if (error?.code === 'content_policy_violation') {
       try {
-        console.log("Retrying with basic prompt due to safety violation...");
-        const fallbackPrompt = `SINGLE person only, centered, full body, ${occasion} outfit. One individual, no duplicates, no split screen, simple background.`;
+        const fallbackPrompt = `One person wearing ${occasion} outfit, full body, simple background`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
           prompt: fallbackPrompt,
           n: 1,
-          size: "1024x1792",
+          size: "1024x1024",
           quality: "standard",
           style: "natural"
         });
 
         return retryResponse.data?.[0]?.url || null;
       } catch (retryError) {
-        console.error("Retry also failed:", retryError);
+        console.error("DALL-E retry failed:", retryError);
         return null;
       }
     }
     
+    return null;
+  }
+}
+
+// Future: Add Replicate/Stable Diffusion function here
+// async function generateWithReplicate(...) { ... }
+
+export async function generateOutfitImage(
+  outfit: GeneratedOutfit,
+  profile: StyleProfile,
+  occasion: string
+): Promise<string | null> {
+  try {
+    const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
+    
+    // Create simplified description for the outfit image
+    const basicItems = items.slice(0, 3).map(item => 
+      `${item.color} ${item.category.toLowerCase()}`
+    ).join(', ');
+    
+    // Randomly select model diversity: 70% Western/American, 30% global
+    const diversityOptions = [
+      'Western model',
+      'American model',
+      'Western model',
+      'American model',
+      'Western model',
+      'American model',
+      'Western model', // 7 out of 10 = 70% Western
+      'Asian model',
+      'African model',
+      'South Asian model'
+    ];
+    const randomDiversity = diversityOptions[Math.floor(Math.random() * diversityOptions.length)];
+    
+    // Use DALL-E for now (will add Replicate option when API token is available)
+    return await generateWithDallE(basicItems, occasion, randomDiversity);
+
+  } catch (error: any) {
+    console.error("Image generation error:", error);
     return null;
   }
 }
