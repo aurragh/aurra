@@ -1,0 +1,68 @@
+Got it ✅ — you’ve built an **AI-powered fashion stylist** web app where:
+
+* The user fills a quiz → gets an **AI-generated outfit image**.
+* Now you want to let them **shop the outfit** — ideally by detecting items (e.g., “white blazer,” “denim jeans,” “brown boots”) in the image and linking them to **buyable products online** using Google Vision or a similar API.
+
+That’s a great idea — it bridges *AI styling → shopping conversion*.
+
+Here’s a **prompt** you can use (for your backend or AI logic) to power this step, whether you’re using OpenAI, Gemini, DeepSeek, or similar LLMs — along with Google Vision API results:
+
+---
+
+### 🧠 AI Prompt: Fashion Outfit → Shoppable Links
+
+**Prompt:**
+
+> You are a smart fashion shopping assistant integrated into an AI stylist app.
+> Given a user’s generated outfit image and detected items (from Google Vision or any image recognition API), identify each distinct fashion item and provide shoppable links for similar or identical products from top e-commerce sites.
+>
+> **Input:**
+>
+> 1. User’s outfit image description or detected labels (from Vision API).
+> 2. Optional user preferences (gender, price range, preferred stores, style tags, color preferences).
+>
+> **Goal:**
+>
+> * Extract and describe each clothing/accessory item (e.g., “White linen shirt,” “High-waist denim jeans,” “Brown leather ankle boots”).
+> * For each item, find 2–3 visually and stylistically similar options from online stores (Amazon, Zara, H&M, ASOS, Myntra, etc.) using product search APIs or Google Shopping search URLs.
+> * Return the output in JSON with these fields:
+>
+> ```json
+> {
+>   "items": [
+>     {
+>       "name": "White Linen Shirt",
+>       "description": "Light, breathable, casual summer shirt.",
+>       "shopping_links": [
+>         {"store": "Zara", "url": "https://www.zara.com/..."},
+>         {"store": "H&M", "url": "https://www.hm.com/..."},
+>         {"store": "Amazon", "url": "https://www.amazon.com/..."}
+>       ]
+>     },
+>     ...
+>   ]
+> }
+> ```
+>
+> * Keep all links relevant and avoid duplicates.
+> * Prefer products available in the user’s country or region.
+> * If no perfect match is found, suggest a similar item and clearly mention it.
+
+**Output format:** JSON or HTML cards ready to render in the UI.
+**Tone:** Professional, stylistic, and helpful — as if a personal shopper curated it.
+
+---
+
+### 🧩 Optional Integration Flow
+
+1. **Step 1:** Use Google Vision → `labelAnnotations` or `localizedObjectAnnotations` → extract clothing item names.
+2. **Step 2:** Feed those item names into this LLM prompt.
+3. **Step 3:** Generate shopping links using:
+
+   * Google Shopping Search (`https://www.google.com/search?q=buy+<item>`), or
+   * Affiliate APIs (Amazon Product Advertising, Rakuten, etc.).
+4. **Step 4:** Display clickable cards with price + buy buttons.
+
+---
+
+Would you like me to **adapt this prompt** for a specific API flow — e.g., Google Vision + OpenAI/DeepSeek + shopping link generator — so you can directly plug it into your backend?
