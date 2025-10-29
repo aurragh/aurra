@@ -118,8 +118,8 @@ async function generateWithDallE(
   const itemsDesc = basicItems || 'stylish outfit';
   
   try {
-    // Ghost mannequin style - e-commerce product photography
-    const imagePrompt = `Professional product photography of ${itemsDesc} arranged as if worn, ghost mannequin style, floating outfit display for ${occasion}, clean white studio background, e-commerce quality, single complete outfit, fashion photography`;
+    // Ghost mannequin style with studio photography setup
+    const imagePrompt = `Professional studio product photography of ${itemsDesc} arranged as if worn, ghost mannequin style, floating outfit display for ${occasion}, white studio background with photography equipment visible (softbox umbrella, tripod, light stand), professional fashion photography setup, sharp focus, high detail`;
 
     console.log(`DALL-E Image Prompt: ${imagePrompt}`);
 
@@ -128,7 +128,7 @@ async function generateWithDallE(
       prompt: imagePrompt,
       n: 1,
       size: "1024x1024",
-      quality: "standard",
+      quality: "hd",
       style: "natural"
     });
 
@@ -140,14 +140,14 @@ async function generateWithDallE(
     // Fallback to even simpler prompt
     if (error?.code === 'content_policy_violation') {
       try {
-        const fallbackPrompt = `Product photo of ${itemsDesc} arranged as outfit, ghost mannequin, white background`;
+        const fallbackPrompt = `Product photo of ${itemsDesc} arranged as outfit, ghost mannequin, studio background with equipment`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",
           prompt: fallbackPrompt,
           n: 1,
           size: "1024x1024",
-          quality: "standard",
+          quality: "hd",
           style: "natural"
         });
 
@@ -173,13 +173,13 @@ export async function generateOutfitImage(
   try {
     const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
     
-    // Create detailed description for the outfit image (ghost mannequin style)
-    const basicItems = items.slice(0, 3).map(item => 
+    // Include ALL outfit items including accessories (not just first 3)
+    const allItems = items.map(item => 
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
     
     // Use DALL-E ghost mannequin style (will add Replicate option when API token is available)
-    return await generateWithDallE(basicItems, occasion);
+    return await generateWithDallE(allItems, occasion);
 
   } catch (error: any) {
     console.error("Image generation error:", error);
