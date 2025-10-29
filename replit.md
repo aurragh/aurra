@@ -8,6 +8,16 @@ The platform features a freemium model with basic free functionality and premium
 
 ## Recent Updates (Oct 29, 2025)
 
+- **Shopping Assistant Feature**: AI-powered shopping link generation for outfit items
+  - Uses GPT-4 Vision to analyze outfit images and identify individual clothing/accessory items
+  - Extracts each item with detailed descriptions (name, category, style, material)
+  - Generates Google Shopping search URLs for each identified item
+  - "Shop This Look" button on all outfit cards (when image is present)
+  - Shopping modal displays all extracted items with dedicated shopping buttons
+  - Click analytics tracking to understand user shopping behavior and preferences
+  - Free for all users (freemium MVP approach to validate demand)
+  - Future enhancement: Upgrade to affiliate APIs (Amazon, Zara, H&M) once traffic validates demand
+
 - **Ghost Mannequin Image Style**: Completely redesigned outfit image generation
   - Switched from model-based photos to professional ghost mannequin/invisible model style
   - Uses e-commerce product photography approach (clothes arranged as if worn on invisible form)
@@ -69,6 +79,11 @@ Preferred communication style: Simple, everyday language.
   - Sharp focus and high detail rendering
   - ONE complete look only - explicitly prevents lookbook/variation displays
   - Focuses on outfit composition rather than models
+- **Vision Analysis**: GPT-4 Vision (GPT-4o) for shopping assistant functionality
+  - Analyzes outfit images to identify individual clothing and accessory items
+  - Extracts structured data: item name, description, category, and optimized search queries
+  - On-demand extraction (only when user clicks "Shop This Look" to optimize API costs)
+  - Returns JSON-formatted results for reliable parsing
 - **Processing**: Style profile analysis and outfit generation based on user preferences, body type, and occasion
 - **Fallback**: Graceful degradation when AI services are unavailable
 - **Future Enhancement**: Ready to integrate Stable Diffusion via Replicate API for even better image quality and control
@@ -79,6 +94,7 @@ Preferred communication style: Simple, everyday language.
 - **Outfits**: AI-generated outfit recommendations with HD ghost mannequin style images (1024x1024), complete with accessories, detailed item descriptions, and shopping links
 - **Collections**: User-curated outfit collections with favoriting capabilities
 - **Points System**: Gamification through user points and achievements
+- **Shopping Analytics**: Click tracking for shopping link interactions (outfit_id, item_name, search_query, timestamp) to understand user shopping behavior and optimize future integrations
 
 ## External Dependencies
 
