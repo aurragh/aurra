@@ -70,7 +70,7 @@ Preferred communication style: Simple, everyday language.
 ### Data Models
 - **Users**: Core user information with Stripe integration for subscription management
 - **Style Profiles**: Comprehensive user preferences including personality traits, body type, color preferences, stylePreferences (multi-select), clothingItems (multi-select), lifestyle factors, and occasions (multi-select)
-- **Outfits**: AI-generated outfit recommendations with HD quality images, detailed item descriptions, and shopping links
+- **Outfits**: AI-generated outfit recommendations with ghost mannequin style images (1024x1024), detailed item descriptions, and shopping links
 - **Collections**: User-curated outfit collections with favoriting capabilities
 - **Points System**: Gamification through user points and achievements
 
