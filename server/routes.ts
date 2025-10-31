@@ -139,8 +139,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log(`Image saved locally for outfit ${index + 1}:`, localImageUrl ? 'success' : 'failed');
                 
                 if (localImageUrl) {
-                  // Update the outfit with the image URL
-                  const updatedOutfit = await storage.updateOutfitImage(savedOutfit.id, localImageUrl);
+                  // Update the outfit with both the local path and original DALL-E URL
+                  const updatedOutfit = await storage.updateOutfitImage(savedOutfit.id, localImageUrl, temporaryImageUrl);
                   return updatedOutfit;
                 }
               }
