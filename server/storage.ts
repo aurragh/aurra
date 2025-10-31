@@ -36,7 +36,7 @@ export interface IStorage {
   getOutfit(id: string, userId: string): Promise<Outfit | undefined>;
   createOutfit(outfit: InsertOutfit): Promise<Outfit>;
   updateOutfit(id: string, updates: Partial<InsertOutfit>): Promise<Outfit>;
-  updateOutfitImage(id: string, imageUrl: string): Promise<Outfit>;
+  updateOutfitImage(id: string, imageUrl: string, dalleUrl?: string): Promise<Outfit>;
   deleteOutfit(id: string): Promise<void>; // Soft delete
   permanentlyDeleteOutfit(id: string): Promise<void>; // Hard delete
   restoreOutfit(id: string): Promise<Outfit>;
@@ -181,10 +181,14 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateOutfitImage(id: string, imageUrl: string): Promise<Outfit> {
+  async updateOutfitImage(id: string, imageUrl: string, dalleUrl?: string): Promise<Outfit> {
+    const updateData: any = { imageUrl };
+    if (dalleUrl) {
+      updateData.dalleUrl = dalleUrl;
+    }
     const [updated] = await db
       .update(outfits)
-      .set({ imageUrl })
+      .set(updateData)
       .where(eq(outfits.id, id))
       .returning();
     return updated;

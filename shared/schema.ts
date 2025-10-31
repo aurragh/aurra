@@ -65,7 +65,8 @@ export const outfits = pgTable("outfits", {
   occasion: varchar("occasion"),
   items: text("items"), // JSON array of clothing items
   aiRecommendation: text("ai_recommendation"), // AI analysis and reasoning
-  imageUrl: varchar("image_url"),
+  imageUrl: varchar("image_url"), // Local path for displaying images
+  dalleUrl: varchar("dalle_url"), // Original DALL-E URL for GPT-4 Vision
   isFavorite: boolean("is_favorite").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   deletedAt: timestamp("deleted_at"), // For soft delete functionality
