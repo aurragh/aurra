@@ -419,12 +419,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Outfit not found" });
       }
       
-      if (!outfit.imageUrl) {
+      // Use DALL-E URL for GPT-4 Vision (publicly accessible), fallback to local path
+      const imageUrlForAnalysis = outfit.dalleUrl || outfit.imageUrl;
+      
+      if (!imageUrlForAnalysis) {
         return res.status(400).json({ message: "Outfit has no image to analyze" });
       }
       
       // Extract shopping items using GPT-4 Vision
-      const items = await extractShoppingItemsFromImage(outfit.imageUrl);
+      const items = await extractShoppingItemsFromImage(imageUrlForAnalysis);
       
       // Generate Google Shopping URLs for each item
       const shoppingItems = items.map(item => ({
