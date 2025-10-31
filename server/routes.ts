@@ -419,15 +419,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Outfit not found" });
       }
       
-      // Use DALL-E URL for GPT-4 Vision (publicly accessible), fallback to local path
-      const imageUrlForAnalysis = outfit.dalleUrl || outfit.imageUrl;
-      
-      if (!imageUrlForAnalysis) {
+      if (!outfit.imageUrl) {
         return res.status(400).json({ message: "Outfit has no image to analyze" });
       }
       
-      // Extract shopping items using GPT-4 Vision
-      const items = await extractShoppingItemsFromImage(imageUrlForAnalysis);
+      // Construct public URL for GPT-4 Vision to access the image
+      // Images are served via Express static middleware and publicly accessible
+      const replitDomain = process.env.REPLIT_DOMAINS?.split(',')[0] || process.env.REPL_SLUG + '.repl.co';
+      const publicImageUrl = `https://${replitDomain}${outfit.imageUrl}`;
+      
+      console.log(`Shopping assistant analyzing image: ${publicImageUrl}`);
+      
+      // Extract shopping items using GPT-4 Vision with public URL
+      const items = await extractShoppingItemsFromImage(publicImageUrl);
       
       // Generate Google Shopping URLs for each item
       const shoppingItems = items.map(item => ({
