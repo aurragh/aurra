@@ -423,10 +423,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Outfit has no image to analyze" });
       }
       
-      // Construct public URL for GPT-4 Vision to access the image
-      // Images are served via Express static middleware and publicly accessible
-      const replitDomain = process.env.REPLIT_DOMAINS?.split(',')[0] || process.env.REPL_SLUG + '.repl.co';
-      const publicImageUrl = `https://${replitDomain}${outfit.imageUrl}`;
+      // Construct public URL for GPT-4 Vision
+      let publicImageUrl: string;
+      
+      if (outfit.imageUrl.startsWith('http://') || outfit.imageUrl.startsWith('https://')) {
+        // Already an absolute URL (legacy DALL-E URLs)
+        publicImageUrl = outfit.imageUrl;
+      } else {
+        // Relative path - construct full URL using request host
+        const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+        const host = req.get('host') || 'localhost:5000';
+        publicImageUrl = `${protocol}://${host}${outfit.imageUrl}`;
+      }
       
       console.log(`Shopping assistant analyzing image: ${publicImageUrl}`);
       
