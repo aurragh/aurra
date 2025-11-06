@@ -5,9 +5,8 @@ import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
-import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
-import { pool } from "./db";
+import MemoryStore from "memorystore";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -23,41 +22,16 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
-async function checkDatabaseConnection(): Promise<boolean> {
-  try {
-    await pool.query('SELECT 1');
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
 export async function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   
-  let sessionStore;
-  const dbAvailable = await checkDatabaseConnection();
+  // Use memory store for sessions (SQLite can't be used for concurrent session access)
+  const MemStore = MemoryStore(session);
+  const sessionStore = new MemStore({
+    checkPeriod: sessionTtl,
+  });
   
-  if (dbAvailable) {
-    try {
-      // Try to use PostgreSQL store
-      const pgStore = connectPg(session);
-      sessionStore = new pgStore({
-        conString: process.env.DATABASE_URL,
-        createTableIfMissing: false,
-        ttl: sessionTtl,
-        tableName: "sessions",
-        errorLog: () => {}, // Suppress error logs to prevent spam
-      });
-      console.log("Using PostgreSQL session store");
-    } catch (error) {
-      console.warn("PostgreSQL session store creation failed, using memory store.");
-      sessionStore = undefined;
-    }
-  } else {
-    console.warn("Database unavailable, using memory store. Database features will be limited.");
-    sessionStore = undefined;
-  }
+  console.log("Using memory session store");
   
   return session({
     secret: process.env.SESSION_SECRET!,

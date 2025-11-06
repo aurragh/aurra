@@ -1,6 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeSQLite } from "./init-sqlite";
+
+// Initialize SQLite database with schema
+initializeSQLite();
 
 const app = express();
 app.use(express.json());
