@@ -53,18 +53,27 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/60 via-purple-900/40 to-black/80" />
         
         <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight" data-testid="heading-hero">
-            Discover style tailored effortlessly with Aurra AI—your personal fashion advisor for crafting stunning looks every day.
+          <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 drop-shadow-lg" data-testid="heading-hero">
+            Aurra
+          </h1>
+          <h2 className="text-2xl md:text-3xl font-light text-white mb-8 leading-tight">
+            Decide what to wear when presence matters.
           </h2>
-          <Link href="/dashboard">
+          <p className="text-lg text-white/80 mb-10 leading-relaxed">
+            Aurra helps users decide — not browse — by optimizing for presence, authority, and intent.
+          </p>
+          <Link href="/quiz">
             <Button 
               size="lg" 
-              className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-12 py-6 rounded-full font-semibold"
+              className="bg-white text-purple-900 hover:bg-white/90 text-lg px-12 py-6 rounded-full font-semibold shadow-xl transition-all hover:scale-105 active:scale-95"
               data-testid="button-get-styled"
             >
-              Get Styled Now
+              Start Decision Process
             </Button>
           </Link>
+          <div className="mt-12 text-white/60 text-sm italic">
+            Not a stylist. Not a trend engine. A thinking partner for what to wear when it matters.
+          </div>
         </div>
       </section>
 

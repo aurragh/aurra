@@ -93,81 +93,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate-outfits', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { occasion, count = 3 } = req.body;
+      const { occasion } = req.body;
       
-      console.log(`Generating outfits for user ${userId}, occasion: ${occasion}, count: ${count}`);
+      console.log(`Generating Aurra recommendation for user ${userId}, occasion: ${occasion}`);
       
       const profile = await storage.getStyleProfile(userId);
-      console.log('Retrieved style profile:', profile ? 'found' : 'not found', profile ? `completed: ${profile.completed}` : '');
       
       if (!profile || !profile.completed) {
-        console.log('Style profile incomplete, returning 400');
         return res.status(400).json({ message: "Complete your style profile first" });
       }
 
-      console.log('Calling generateOutfitRecommendations...');
-      const outfits = await generateOutfitRecommendations(profile, occasion, count);
-      console.log(`Generated ${outfits.length} outfits from OpenAI:`, outfits.map(o => o.name));
+      // Aurra always gives ONE primary direction as per spec
+      const recommendations = await generateOutfitRecommendations(profile, occasion, 1);
+      const recommendation = recommendations[0];
       
-      // Generate images for each outfit
-      console.log('Generating images for outfits...');
-      const savedOutfits = await Promise.all(
-        outfits.map(async (outfit, index) => {
-          console.log(`Processing outfit ${index + 1}: ${outfit.name}`);
-          try {
-            // First, save the outfit to get the database ID
-            const outfitData = {
-              ...outfit,
-              imageUrl: null, // Initially save without image
-              userId,
-              occasion,
-            };
-            
-            console.log(`Saving outfit ${index + 1} to database...`);
-            const savedOutfit = await storage.createOutfit(outfitData);
-            console.log(`Saved outfit ${index + 1} with ID: ${savedOutfit.id}`);
-            
-            // Now generate and save the image using the actual outfit ID
-            try {
-              console.log(`Generating image for outfit ${index + 1}: ${outfit.name}`);
-              const temporaryImageUrl = await generateOutfitImage(outfit, profile, occasion);
-              console.log(`Image generated for outfit ${index + 1}:`, temporaryImageUrl ? 'success' : 'failed');
-              
-              if (temporaryImageUrl) {
-                console.log(`Downloading and saving image for outfit ${index + 1}...`);
-                const localImageUrl = await downloadAndSaveImage(temporaryImageUrl, savedOutfit.id);
-                console.log(`Image saved locally for outfit ${index + 1}:`, localImageUrl ? 'success' : 'failed');
-                
-                if (localImageUrl) {
-                  // Update the outfit with both the local path and original DALL-E URL
-                  const updatedOutfit = await storage.updateOutfitImage(savedOutfit.id, localImageUrl, temporaryImageUrl);
-                  return updatedOutfit;
-                }
-              }
-            } catch (imageError) {
-              console.error(`Failed to generate/save image for outfit ${index + 1}:`, imageError);
-              // Continue with outfit saved but without image
-            }
-            
-            return savedOutfit;
-          } catch (error) {
-            console.error(`Failed to save outfit ${index + 1}:`, error);
-            throw error;
+      // Save the recommendation as an "outfit" for persistence
+      const savedOutfit = await storage.createOutfit({
+        name: recommendation.name,
+        description: recommendation.description,
+        items: recommendation.items,
+        aiRecommendation: recommendation.aiRecommendation,
+        primaryRecommendation: recommendation.primary,
+        backupRecommendation: recommendation.backup,
+        avoidRecommendation: recommendation.avoid,
+        whyRecommendation: recommendation.why,
+        userId,
+        occasion,
+        imageUrl: null
+      });
+
+      // Generate image based on primary direction
+      try {
+        const temporaryImageUrl = await generateOutfitImage(recommendation, profile, occasion);
+        if (temporaryImageUrl) {
+          const localImageUrl = await downloadAndSaveImage(temporaryImageUrl, savedOutfit.id);
+          if (localImageUrl) {
+            await storage.updateOutfitImage(savedOutfit.id, localImageUrl, temporaryImageUrl);
           }
-        })
-      );
+        }
+      } catch (imageError) {
+        console.error("Image generation failed:", imageError);
+      }
 
-      // Award points for generating outfits
-      console.log('Awarding points to user...');
+      const finalOutfit = await storage.getOutfit(savedOutfit.id, userId);
+      res.json([finalOutfit]); // Return as array for frontend compatibility
+
+      // Award points
       await storage.updateUserPoints(userId, 50);
-      console.log(`Successfully generated and saved ${savedOutfits.length} outfits`);
-
-      res.json(savedOutfits);
-      console.log('Response sent successfully');
     } catch (error) {
-      console.error("Error generating outfits:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-      res.status(500).json({ message: "Failed to generate outfits" });
+      console.error("Aurra generation error:", error);
+      res.status(500).json({ message: "Failed to generate recommendation" });
     }
   });
 

@@ -57,6 +57,10 @@ export const outfits = sqliteTable("outfits", {
   occasion: text("occasion"),
   items: text("items"), // JSON array of clothing items
   aiRecommendation: text("ai_recommendation"), // AI analysis and reasoning
+  primaryRecommendation: text("primary_recommendation"),
+  backupRecommendation: text("backup_recommendation"),
+  avoidRecommendation: text("avoid_recommendation"),
+  whyRecommendation: text("why_recommendation"),
   imageUrl: text("image_url"), // Local path for displaying images
   dalleUrl: text("dalle_url"), // Original DALL-E URL for GPT-4 Vision
   isFavorite: integer("is_favorite", { mode: "boolean" }).default(false),

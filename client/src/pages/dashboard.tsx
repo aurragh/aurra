@@ -456,6 +456,33 @@ export default function Dashboard() {
                             
                             <p className="text-gray-300 text-sm mb-4 line-clamp-2">{outfit.description}</p>
                             
+                            <div className="space-y-4 mb-4">
+                              {outfit.primaryRecommendation && (
+                                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                                  <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">Primary</p>
+                                  <p className="text-sm text-white">{outfit.primaryRecommendation}</p>
+                                </div>
+                              )}
+                              {outfit.backupRecommendation && (
+                                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Backup</p>
+                                  <p className="text-sm text-gray-300">{outfit.backupRecommendation}</p>
+                                </div>
+                              )}
+                              {outfit.avoidRecommendation && (
+                                <div className="bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                                  <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Avoid</p>
+                                  <p className="text-sm text-red-200">{outfit.avoidRecommendation}</p>
+                                </div>
+                              )}
+                              {outfit.whyRecommendation && (
+                                <div className="p-3">
+                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Why</p>
+                                  <p className="text-sm text-gray-400 italic">{outfit.whyRecommendation}</p>
+                                </div>
+                              )}
+                            </div>
+                            
                             <div className="space-y-2">
                               <p className="text-gray-400 text-xs font-medium">Items:</p>
                               {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (

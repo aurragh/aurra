@@ -17,24 +17,24 @@ import { type StyleProfile } from "@shared/schema";
 
 const QUIZ_STEPS = [
   {
-    id: "style",
-    title: "Your Style",
-    description: "Tell us about your fashion personality",
+    id: "frame",
+    title: "Decisions shape presence.",
+    description: "Aurra helps you choose. Not a stylist. Not a trend engine. A thinking partner for what to wear when it matters.",
   },
   {
-    id: "bodyType",
-    title: "Body & Colors",
-    description: "Help us find your perfect fit and palette",
+    id: "intent",
+    title: "Why Are You Here?",
+    description: "When do you usually need help deciding what to wear?",
   },
   {
-    id: "lifestyle",
-    title: "Lifestyle & Budget",
-    description: "Match your wardrobe to your life",
+    id: "presence",
+    title: "Presence Goals",
+    description: "What is the primary intent when you walk into a room?",
   },
   {
-    id: "firstOutfit",
-    title: "First Outfit",
-    description: "Choose what to generate first",
+    id: "firstDecision",
+    title: "First Decision",
+    description: "What are you choosing for right now?",
   },
 ];
 
@@ -277,120 +277,91 @@ export default function StyleQuiz() {
             </p>
           </CardHeader>
           <CardContent className="p-8">
-            {/* Step 1: Style Preference */}
+            {/* Step 1: Frame Screen */}
             {currentStep === 0 && (
-              <div className="space-y-6" data-testid="step-style">
-                <div>
-                  <Label className="text-white text-lg mb-4 block">How would you describe your style personality?</Label>
-                  <RadioGroup value={answers.stylePreference} onValueChange={(value) => updateAnswer('stylePreference', value)}>
-                    {['Classic & Timeless', 'Trendy & Fashion-Forward', 'Bohemian & Free-Spirited', 'Minimalist & Clean', 'Edgy & Bold', 'Casual & Comfortable', 'Professional & Polished', 'Artistic & Creative'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-style-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option} className="text-gray-200 cursor-pointer">{option}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
+              <div className="text-center space-y-6 py-8">
+                <p className="text-xl text-white/90">
+                  Decisions shape presence. Aurra helps you choose.
+                </p>
+                <p className="text-gray-400">
+                  Not a stylist. Not a trend engine. A thinking partner for what to wear when it matters.
+                </p>
               </div>
             )}
 
-            {/* Step 2: Body Type & Colors */}
+            {/* Step 2: Why Are You Here? */}
             {currentStep === 1 && (
-              <div className="space-y-6" data-testid="step-body-colors">
-                <div>
-                  <Label className="text-white text-lg mb-4 block">What's your body type?</Label>
-                  <RadioGroup value={answers.bodyType} onValueChange={(value) => updateAnswer('bodyType', value)}>
-                    {['Apple', 'Pear', 'Hourglass', 'Rectangle', 'Inverted Triangle', 'Prefer not to specify'].map((type) => (
-                      <div key={type} className="flex items-center space-x-2" data-testid={`radio-body-type-${type.toLowerCase().replace(/\s/g, '-')}`}>
-                        <RadioGroupItem value={type} id={type} />
-                        <Label htmlFor={type} className="text-gray-200">{type}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-
-                <div>
-                  <Label className="text-white text-lg mb-4 block">What's your favorite color palette?</Label>
-                  <RadioGroup value={answers.colorPreference} onValueChange={(value) => updateAnswer('colorPreference', value)}>
-                    {['Neutral (Black, White, Gray)', 'Earth Tones (Brown, Beige, Tan)', 'Classic (Navy, White, Khaki)', 'Bold & Bright (Red, Yellow, Orange)', 'Cool Tones (Blue, Green, Purple)', 'Soft & Pastel (Pink, Lavender, Mint)'].map((color) => (
-                      <div key={color} className="flex items-center space-x-2" data-testid={`radio-color-${color.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={color} id={color} />
-                        <Label htmlFor={color} className="text-gray-200">{color}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+              <div className="space-y-6">
+                <Label className="text-white text-lg mb-4 block">When do you usually need help deciding what to wear?</Label>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    "High-stakes meetings or rooms",
+                    "Public appearances or speaking",
+                    "Events where I don't want to disappear",
+                    "Travel / unfamiliar environments",
+                    "Daily leadership presence",
+                    "I just want fewer wrong decisions"
+                  ].map((option) => (
+                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+                      <Checkbox 
+                        id={option}
+                        checked={answers.occasions.includes(option)}
+                        onCheckedChange={() => toggleArrayItem('occasions', option)}
+                      />
+                      <Label htmlFor={option} className="text-gray-200 cursor-pointer flex-1">{option}</Label>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Step 3: Lifestyle & Budget */}
+            {/* Step 3: Presence Goals */}
             {currentStep === 2 && (
-              <div className="space-y-6" data-testid="step-lifestyle-budget">
-                <div>
-                  <Label className="text-white text-lg mb-4 block">What's your primary lifestyle?</Label>
-                  <RadioGroup 
-                    value={answers.lifestyle.work} 
-                    onValueChange={(value) => updateLifestyle('work', value)}
-                  >
-                    {['Corporate Professional', 'Creative Professional', 'Student', 'Stay-at-home Parent', 'Active/Outdoors', 'Social Butterfly'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-work-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option} className="text-gray-200">{option}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-                <div>
-                  <Label className="text-white text-lg mb-4 block">What's your typical clothing budget?</Label>
-                  <RadioGroup value={answers.budget} onValueChange={(value) => updateAnswer('budget', value)}>
-                    {['Under $50 per item', '$50-$100 per item', '$100-$200 per item', '$200-$500 per item', '$500+ per item'].map((option) => (
-                      <div key={option} className="flex items-center space-x-2" data-testid={`radio-budget-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option} className="text-gray-200">{option}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
+              <div className="space-y-6">
+                <Label className="text-white text-lg mb-4 block">What is the primary intent when you walk into a room?</Label>
+                <RadioGroup value={answers.stylePreference} onValueChange={(value) => updateAnswer('stylePreference', value)}>
+                  {[
+                    "To command and lead",
+                    "To be remembered with clarity",
+                    "To build trust and connection",
+                    "To signal restraint and focus",
+                    "To disappear into the work"
+                  ].map((option) => (
+                    <div key={option} className="flex items-center space-x-2 p-3 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+                      <RadioGroupItem value={option} id={option} />
+                      <Label htmlFor={option} className="text-gray-200 cursor-pointer flex-1">{option}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
               </div>
             )}
 
-            {/* Step 4: First Outfit Selection */}
+            {/* Step 4: First Decision */}
             {currentStep === 3 && (
-              <div className="space-y-6" data-testid="step-first-outfit">
-                <div>
-                  <Label className="text-white text-lg mb-4 block">Choose occasions for your outfits (Select all that apply)</Label>
-                  <div className="space-y-3">
-                    {[
-                      { value: 'work', label: 'Work/Professional', icon: '💼' },
-                      { value: 'casual', label: 'Casual Daily', icon: '👕' },
-                      { value: 'date-night', label: 'Date Night', icon: '💕' },
-                      { value: 'social-events', label: 'Social Events', icon: '🎉' },
-                      { value: 'travel', label: 'Travel', icon: '✈️' },
-                      { value: 'formal', label: 'Formal Events', icon: '🤵' },
-                      { value: 'weekend', label: 'Weekend', icon: '🌞' },
-                      { value: 'workout', label: 'Workout', icon: '💪' }
-                    ].map((occasion) => {
-                      const sanitizedId = `occasion-${occasion.value}`;
-                      return (
-                        <div key={occasion.value} className="flex items-center space-x-3" data-testid={`checkbox-${sanitizedId}`}>
-                          <Checkbox 
-                            id={sanitizedId}
-                            checked={answers.occasions.includes(occasion.value)}
-                            onCheckedChange={() => toggleArrayItem('occasions', occasion.value)}
-                          />
-                          <Label htmlFor={sanitizedId} className="text-gray-200 flex items-center cursor-pointer">
-                            <span className="mr-2">{occasion.icon}</span>
-                            {occasion.label}
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-6 p-4 bg-purple-500/10 rounded-lg border border-purple-400/20">
-                    <p className="text-purple-200 text-sm">
-                      💡 <strong>Your first outfit will be generated automatically!</strong> After that, you can create outfits for any occasion from your dashboard.
-                    </p>
-                  </div>
+              <div className="space-y-6">
+                <Label className="text-white text-lg mb-4 block">What are you choosing for right now?</Label>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    "A room with power (High-stakes meeting)",
+                    "A stage or podium (Public speaking)",
+                    "A first impression (Key meeting)",
+                    "Travel (High visibility / unknown)",
+                    "Daily leadership (The routine that matters)"
+                  ].map((option) => (
+                    <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+                      <Checkbox 
+                        id={option}
+                        checked={answers.occasions.includes(option)}
+                        onCheckedChange={() => toggleArrayItem('occasions', option)}
+                      />
+                      <Label htmlFor={option} className="text-gray-200 cursor-pointer flex-1">{option}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 p-4 bg-purple-500/10 rounded-lg border border-purple-400/20">
+                  <p className="text-purple-200 text-sm">
+                    💡 <strong>Aurra will provide your first decision immediately.</strong>
+                  </p>
                 </div>
               </div>
             )}

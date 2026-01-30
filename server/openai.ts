@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { StyleProfile } from "@shared/schema";
+import { aurraSystemPrompt } from "./aurraSystemPrompt";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "default_key"
@@ -15,16 +16,21 @@ interface OutfitItem {
 }
 
 interface GeneratedOutfit {
+  primary: string;
+  backup: string;
+  avoid: string;
+  why: string;
+  // Legacy compatibility for frontend mapping
   name: string;
   description: string;
-  items: string; // JSON string of OutfitItem[]
+  items: string;
   aiRecommendation: string;
 }
 
 export async function generateOutfitRecommendations(
   profile: StyleProfile,
   occasion: string,
-  count: number = 3
+  count: number = 1
 ): Promise<GeneratedOutfit[]> {
   try {
     const personality = profile.personality ? JSON.parse(profile.personality) : {};
@@ -32,8 +38,7 @@ export async function generateOutfitRecommendations(
     const stylePrefs = profile.stylePreferences ? JSON.parse(profile.stylePreferences) : [];
     const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
 
-    const prompt = `As a professional fashion stylist AI, create ${count} complete outfit recommendations for a ${occasion} occasion.
-
+    const userPrompt = `
 User Profile:
 - Body Type: ${profile.bodyType}
 - Budget: ${profile.budget}
@@ -42,69 +47,50 @@ User Profile:
 - Personality Traits: ${Object.entries(personality).map(([k, v]) => `${k}: ${v}`).join(', ')}
 - Lifestyle: ${Object.entries(lifestyle).map(([k, v]) => `${k}: ${v}`).join(', ')}
 
-For each outfit, provide:
-1. A creative name for the outfit
-2. A compelling description explaining why this outfit works
-3. Complete list of clothing items with specific details
-4. AI reasoning for the recommendations
+Occasion/Input: ${occasion}
+`;
 
-Respond with a JSON object containing an array of outfits. Each outfit should have:
-- name: string
-- description: string  
-- items: array of objects with {category, description, color, style, brand_suggestions?, price_range?}
-- reasoning: string explaining the AI's decision process
-
-Focus on current fashion trends, body-flattering silhouettes, and practical styling advice.`;
-
-    // Use the most reliable OpenAI model for outfit generation
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: "You are an expert fashion stylist AI with deep knowledge of current trends, body types, and personal styling. Always respond with valid JSON."
+          content: aurraSystemPrompt
         },
         {
           role: "user",
-          content: prompt
+          content: userPrompt
         }
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 2000,
+      max_completion_tokens: 1000,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{"outfits": []}');
-    const outfits = result.outfits || [];
-
-    return outfits.map((outfit: any) => ({
-      name: outfit.name || `${occasion} Look`,
-      description: outfit.description || "A stylish outfit recommendation.",
-      items: JSON.stringify(outfit.items || []),
-      aiRecommendation: outfit.reasoning || "AI-curated styling recommendation.",
-    }));
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Map Aurra structure to existing Outfit schema for compatibility
+    return [{
+      primary: result.primary || "",
+      backup: result.backup || "",
+      avoid: result.avoid || "",
+      why: result.why || "",
+      name: "Aurra Recommendation",
+      description: result.primary || "",
+      items: JSON.stringify([{ category: "Recommendation", description: result.primary, color: "N/A", style: "N/A" }]),
+      aiRecommendation: `WHY: ${result.why || ""}\n\nBACKUP: ${result.backup || ""}\n\nAVOID: ${result.avoid || ""}`
+    }];
 
   } catch (error) {
-    console.error("OpenAI API error:", error);
-    console.error("Error details:", JSON.stringify(error, null, 2));
-    // Fallback outfit recommendation
+    console.error("Aurra AI error:", error);
     return [{
-      name: `Classic ${occasion} Look`,
-      description: `A timeless and elegant outfit perfect for ${occasion}.`,
-      items: JSON.stringify([
-        {
-          category: "Top",
-          description: "Classic button-down shirt",
-          color: "White",
-          style: "Tailored fit"
-        },
-        {
-          category: "Bottom", 
-          description: "Well-fitted trousers",
-          color: "Navy",
-          style: "Straight leg"
-        }
-      ]),
-      aiRecommendation: "This classic combination offers versatility and timeless appeal, suitable for various body types and occasions."
+      primary: "Default recommendation",
+      backup: "Default backup",
+      avoid: "Default avoid",
+      why: "Error processing request",
+      name: "Aurra Recommendation",
+      description: "Default recommendation",
+      items: JSON.stringify([]),
+      aiRecommendation: "Error processing request"
     }];
   }
 }
@@ -161,9 +147,6 @@ async function generateWithDallE(
     return null;
   }
 }
-
-// Future: Add Replicate/Stable Diffusion function here
-// async function generateWithReplicate(...) { ... }
 
 export async function generateOutfitImage(
   outfit: GeneratedOutfit,
