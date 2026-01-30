@@ -167,7 +167,15 @@ export class DatabaseStorage implements IStorage {
   async createOutfit(outfit: InsertOutfit): Promise<Outfit> {
     const [created] = await db
       .insert(outfits)
-      .values(outfit)
+      .values({
+        ...outfit,
+        isFavorite: outfit.isFavorite ?? false,
+        dalleUrl: outfit.dalleUrl ?? null,
+        primaryRecommendation: outfit.primaryRecommendation ?? null,
+        backupRecommendation: outfit.backupRecommendation ?? null,
+        avoidRecommendation: outfit.avoidRecommendation ?? null,
+        whyRecommendation: outfit.whyRecommendation ?? null
+      })
       .returning();
     return created;
   }
