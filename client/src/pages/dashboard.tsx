@@ -200,8 +200,8 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent" data-testid="heading-dashboard">
-                Aurra AI
+              <h1 className="text-2xl font-bold text-white" data-testid="heading-dashboard">
+                Aurra
               </h1>
             </div>
             
@@ -254,34 +254,32 @@ export default function Dashboard() {
         {/* Welcome Message */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white mb-2" data-testid="heading-welcome">
-            Welcome to Your Style Dashboard
+            Decision History
           </h2>
           <p className="text-gray-300">
-            {user?.email && `Logged in as ${user.email}`}
+            {user?.email && `Authenticated as ${user.email}`}
           </p>
         </div>
 
         {/* If no profile, show CTA to complete quiz */}
         {needsProfile ? (
-          <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm border-purple-400/30 mb-8" data-testid="card-complete-profile">
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-complete-profile">
             <CardHeader className="text-center">
-              <CardTitle className="text-white text-2xl flex items-center justify-center">
-                <Sparkles className="w-8 h-8 mr-3 text-purple-400" />
-                Create Your Style Profile
+              <CardTitle className="text-white text-2xl">
+                Ready to decide?
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-gray-300 mb-6">
-                Complete our quick style quiz to get personalized outfit recommendations tailored just for you!
+                Start the decision process to get grounded recommendations for your next room.
               </p>
               <Link href="/quiz">
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                  className="bg-white text-purple-900 hover:bg-white/90"
                   data-testid="button-style-quiz"
                 >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Start Style Quiz
+                  Start Decision Process
                 </Button>
               </Link>
             </CardContent>
@@ -338,29 +336,25 @@ export default function Dashboard() {
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-generate-more">
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
-                  <Sparkles className="w-6 h-6 mr-2 text-purple-400" />
-                  Generate New Outfits
+                  <Plus className="w-6 h-6 mr-2 text-purple-400" />
+                  New Decision Request
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 mb-4">Choose an occasion to generate a personalized outfit</p>
+                <p className="text-gray-300 mb-4">What are you choosing for right now?</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { value: 'work', label: 'Work', icon: '💼' },
-                    { value: 'casual', label: 'Casual', icon: '👕' },
-                    { value: 'date-night', label: 'Date Night', icon: '💕' },
-                    { value: 'social-events', label: 'Social', icon: '🎉' },
-                    { value: 'travel', label: 'Travel', icon: '✈️' },
-                    { value: 'formal', label: 'Formal', icon: '🤵' },
-                    { value: 'weekend', label: 'Weekend', icon: '🌞' },
-                    { value: 'workout', label: 'Workout', icon: '💪' },
+                    { value: 'meeting', label: 'High-Stakes Meeting', icon: '⚖️' },
+                    { value: 'speaking', label: 'Public Speaking', icon: '🎤' },
+                    { value: 'leadership', label: 'Daily Leadership', icon: '🏛️' },
+                    { value: 'travel', label: 'Visibility Travel', icon: '🌐' }
                   ].map((occasion) => (
                     <Card 
                       key={occasion.value}
-                      className={`cursor-pointer transition-all duration-200 hover:scale-105 bg-white/5 border-white/20 hover:border-purple-400 ${generateOutfitsMutation.isPending ? 'opacity-50 pointer-events-none' : ''}`}
+                      className={`cursor-pointer transition-all duration-200 hover:scale-105 bg-white/5 border-white/10 hover:border-purple-400 ${generateOutfitsMutation.isPending ? 'opacity-50 pointer-events-none' : ''}`}
                       onClick={() => {
                         if (!generateOutfitsMutation.isPending) {
-                          generateOutfitsMutation.mutate({ occasion: occasion.value, count: 1 });
+                          generateOutfitsMutation.mutate({ occasion: occasion.label, count: 1 });
                         }
                       }}
                       data-testid={`generate-more-${occasion.value}`}
@@ -375,8 +369,8 @@ export default function Dashboard() {
                 
                 {generateOutfitsMutation.isPending && (
                   <div className="text-center mt-6">
-                    <div className="animate-spin w-6 h-6 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-2" />
-                    <p className="text-purple-200 text-sm">Generating your personalized outfit...</p>
+                    <div className="animate-spin w-6 h-6 border-4 border-purple-600 border-t-transparent mx-auto mb-2" />
+                    <p className="text-purple-200 text-sm">Processing decision...</p>
                   </div>
                 )}
               </CardContent>
@@ -387,10 +381,10 @@ export default function Dashboard() {
               <Tabs defaultValue="outfits" className="space-y-6">
                 <TabsList className="bg-white/10 border-white/20" data-testid="tabs-dashboard">
                   <TabsTrigger value="outfits" className="data-[state=active]:bg-purple-600">
-                    All Outfits
+                    All Decisions
                   </TabsTrigger>
                   <TabsTrigger value="favorites" className="data-[state=active]:bg-purple-600">
-                    Favorites
+                    Saved Recommendations
                   </TabsTrigger>
                 </TabsList>
 

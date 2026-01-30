@@ -109,8 +109,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Save the recommendation as an "outfit" for persistence
       const savedOutfit = await storage.createOutfit({
-        name: recommendation.name,
-        description: recommendation.description,
+        name: "Aurra Recommendation",
+        description: recommendation.primary || "",
         items: recommendation.items,
         aiRecommendation: recommendation.aiRecommendation,
         primaryRecommendation: recommendation.primary,
