@@ -107,6 +107,41 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
+  app.get("/api/test-login", async (req, res) => {
+    if (app.get("env") !== "development") {
+      return res.status(403).send("Forbidden");
+    }
+    
+    const testUser = {
+      id: "test-user-id",
+      email: "test@example.com",
+      firstName: "Test",
+      lastName: "User",
+      profileImageUrl: "https://via.placeholder.com/150",
+      claims: {
+        sub: "test-user-id",
+        email: "test@example.com",
+        first_name: "Test",
+        last_name: "User",
+        profile_image_url: "https://via.placeholder.com/150",
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      access_token: "test-access-token",
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    };
+
+    try {
+      await upsertUser(testUser.claims);
+      req.login(testUser, (err) => {
+        if (err) return res.status(500).send(err.message);
+        res.redirect("/");
+      });
+    } catch (error) {
+      console.error("Test login error:", error);
+      res.status(500).send("Failed to create test user");
+    }
+  });
+
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",

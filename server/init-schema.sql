@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS IDX_session_expire ON sessions(expire);
 
 CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  id TEXT PRIMARY KEY,
   email TEXT UNIQUE,
   first_name TEXT,
   last_name TEXT,

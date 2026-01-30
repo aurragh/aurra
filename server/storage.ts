@@ -78,7 +78,7 @@ export class DatabaseStorage implements IStorage {
         target: users.id,
         set: {
           ...userData,
-          updatedAt: new Date(),
+          updatedAt: sql`CURRENT_TIMESTAMP`,
         },
       })
       .returning();
@@ -92,7 +92,7 @@ export class DatabaseStorage implements IStorage {
         stripeCustomerId,
         stripeSubscriptionId,
         subscriptionStatus: "premium",
-        updatedAt: new Date(),
+        updatedAt: sql`CURRENT_TIMESTAMP`,
       })
       .where(eq(users.id, userId))
       .returning();
@@ -116,7 +116,7 @@ export class DatabaseStorage implements IStorage {
         .update(styleProfiles)
         .set({
           ...profile,
-          updatedAt: new Date(),
+          updatedAt: sql`CURRENT_TIMESTAMP`,
         })
         .where(eq(styleProfiles.userId, profile.userId))
         .returning();
@@ -198,7 +198,7 @@ export class DatabaseStorage implements IStorage {
     // Soft delete by setting deletedAt timestamp
     await db
       .update(outfits)
-      .set({ deletedAt: new Date() })
+      .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(outfits.id, id));
   }
 
@@ -219,14 +219,11 @@ export class DatabaseStorage implements IStorage {
 
   async cleanupOldDeletedOutfits(): Promise<void> {
     // Delete outfits that were soft deleted over 30 days ago
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
     await db
       .delete(outfits)
       .where(and(
         isNotNull(outfits.deletedAt),
-        lt(outfits.deletedAt, thirtyDaysAgo)
+        sql`datetime(${outfits.deletedAt}) < datetime('now', '-30 days')`
       ));
   }
 
@@ -298,7 +295,7 @@ export class DatabaseStorage implements IStorage {
           points: newPoints,
           totalEarned: newTotal,
           level: newLevel,
-          updatedAt: new Date(),
+          updatedAt: sql`CURRENT_TIMESTAMP`,
         })
         .where(eq(userPoints.userId, userId))
         .returning();

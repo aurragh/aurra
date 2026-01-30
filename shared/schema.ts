@@ -1,104 +1,96 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
-  jsonb,
-  pgTable,
-  timestamp,
-  varchar,
+  sqliteTable,
   text,
   integer,
-  boolean,
-  decimal,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const sessions = pgTable(
+export const sessions = sqliteTable(
   "sessions",
   {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+    sid: text("sid").primaryKey(),
+    sess: text("sess").notNull(),
+    expire: text("expire").notNull(),
+  }
 );
 
 // User storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  stripeCustomerId: varchar("stripe_customer_id"),
-  stripeSubscriptionId: varchar("stripe_subscription_id"),
-  subscriptionStatus: varchar("subscription_status").default("free"), // free, premium, pro
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").unique(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  profileImageUrl: text("profile_image_url"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionStatus: text("subscription_status").default("free"), // free, premium, pro
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const styleProfiles = pgTable("style_profiles", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+export const styleProfiles = sqliteTable("style_profiles", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
+  userId: text("user_id").notNull(),
   personality: text("personality"), // JSON string of personality traits
-  bodyType: varchar("body_type"),
+  bodyType: text("body_type"),
   colorPreferences: text("color_preferences"), // JSON array
   stylePreferences: text("style_preferences"), // JSON array
   clothingItems: text("clothing_items"), // JSON array of clothing items needing help
   lifestyle: text("lifestyle"), // JSON object
-  budget: varchar("budget"),
+  budget: text("budget"),
   occasions: text("occasions"), // JSON array
-  completed: boolean("completed").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  completed: integer("completed", { mode: "boolean" }).default(false),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const outfits = pgTable("outfits", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  name: varchar("name").notNull(),
+export const outfits = sqliteTable("outfits", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
   description: text("description"),
-  occasion: varchar("occasion"),
+  occasion: text("occasion"),
   items: text("items"), // JSON array of clothing items
   aiRecommendation: text("ai_recommendation"), // AI analysis and reasoning
-  imageUrl: varchar("image_url"), // Local path for displaying images
-  dalleUrl: varchar("dalle_url"), // Original DALL-E URL for GPT-4 Vision
-  isFavorite: boolean("is_favorite").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"), // For soft delete functionality
+  imageUrl: text("image_url"), // Local path for displaying images
+  dalleUrl: text("dalle_url"), // Original DALL-E URL for GPT-4 Vision
+  isFavorite: integer("is_favorite", { mode: "boolean" }).default(false),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  deletedAt: text("deleted_at"), // For soft delete functionality
 });
 
-export const styleCollections = pgTable("style_collections", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  name: varchar("name").notNull(),
+export const styleCollections = sqliteTable("style_collections", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
   description: text("description"),
   outfitIds: text("outfit_ids"), // JSON array of outfit IDs
-  isPublic: boolean("is_public").default(false),
-  nftMinted: boolean("nft_minted").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  isPublic: integer("is_public", { mode: "boolean" }).default(false),
+  nftMinted: integer("nft_minted", { mode: "boolean" }).default(false),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const userPoints = pgTable("user_points", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+export const userPoints = sqliteTable("user_points", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
+  userId: text("user_id").notNull(),
   points: integer("points").default(0),
-  level: varchar("level").default("Beginner"), // Beginner, Intermediate, Advanced, Expert
+  level: text("level").default("Beginner"), // Beginner, Intermediate, Advanced, Expert
   totalEarned: integer("total_earned").default(0),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const shoppingAnalytics = pgTable("shopping_analytics", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  outfitId: varchar("outfit_id").notNull(),
-  itemName: varchar("item_name").notNull(),
+export const shoppingAnalytics = sqliteTable("shopping_analytics", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
+  userId: text("user_id").notNull(),
+  outfitId: text("outfit_id").notNull(),
+  itemName: text("item_name").notNull(),
   searchQuery: text("search_query"),
-  clickedAt: timestamp("clicked_at").defaultNow(),
+  clickedAt: text("clicked_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Relations
