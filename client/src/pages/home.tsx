@@ -91,13 +91,13 @@ export default function Home() {
           
           <div className="text-center space-y-6">
             <h2 className="text-4xl md:text-5xl font-bold" data-testid="heading-revolution">
-              Revolutionizing Fashion with AI
+              Presence Over Performance
             </h2>
             <div className="space-y-3 text-lg text-gray-300">
-              <p data-testid="text-feature-1">Feel confident in every room.</p>
-              <p data-testid="text-feature-2">Never stress over what to wear to an event again.</p>
-              <p data-testid="text-feature-3">A fun and gamified fashion experience.</p>
-              <p data-testid="text-feature-4">Shopping for your next event made easy.</p>
+              <p data-testid="text-feature-1">Command every room you walk into.</p>
+              <p data-testid="text-feature-2">Decide with clarity, not confusion.</p>
+              <p data-testid="text-feature-3">One primary direction. One backup. One avoid.</p>
+              <p data-testid="text-feature-4">Grounded recommendations, not endless options.</p>
             </div>
           </div>
         </div>

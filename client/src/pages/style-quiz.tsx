@@ -360,7 +360,7 @@ export default function StyleQuiz() {
                 </div>
                 <div className="mt-6 p-4 bg-purple-500/10 rounded-lg border border-purple-400/20">
                   <p className="text-purple-200 text-sm">
-                    💡 <strong>Aurra will provide your first decision immediately.</strong>
+                    <strong>Aurra will provide your first decision immediately.</strong>
                   </p>
                 </div>
               </div>
