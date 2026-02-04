@@ -167,7 +167,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   items: outfit.items || '[]',
                   name: outfit.name || 'Outfit',
                   description: outfit.description || '',
-                  aiRecommendation: outfit.aiRecommendation || ''
+                  aiRecommendation: outfit.aiRecommendation || '',
+                  primary: outfit.primaryRecommendation || '',
+                  backup: outfit.backupRecommendation || '',
+                  avoid: outfit.avoidRecommendation || '',
+                  why: outfit.whyRecommendation || ''
                 };
                 const temporaryImageUrl = await generateOutfitImage(
                   outfitData,
@@ -414,20 +418,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Shopping assistant analyzing image: ${publicImageUrl}`);
       
       // Extract shopping items using GPT-4 Vision with public URL
-      const items = await extractShoppingItemsFromImage(publicImageUrl);
+      const itemsRaw = await extractShoppingItemsFromImage(publicImageUrl);
       
-      // Generate Google Shopping URLs for each item
-      const shoppingItems = items.map(item => ({
-        name: item.name,
-        description: item.description,
-        category: item.category,
-        shoppingLinks: [
-          {
-            store: "Google Shopping",
-            url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.searchQuery)}`
-          }
-        ]
-      }));
+      // Defensive guard: ensure items is always an array
+      const items = Array.isArray(itemsRaw) ? itemsRaw : [];
+      
+      // Generate Google Shopping URLs for each item with proper null checking
+      const shoppingItems = items
+        .filter(item => item && item.name) // Filter out invalid items
+        .map(item => ({
+          name: item.name || "Fashion Item",
+          description: item.description || "Stylish fashion piece",
+          category: item.category || "Clothing",
+          shoppingLinks: [
+            {
+              store: "Google Shopping",
+              url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.searchQuery || item.name || "fashion item")}`
+            }
+          ]
+        }));
       
       res.json({ items: shoppingItems });
     } catch (error) {
