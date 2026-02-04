@@ -469,8 +469,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes - protected by admin check
+  const ADMIN_EMAILS = [
+    "writersure369@gmail.com",
+    "novacreates888@gmail.com"
+  ];
+  
   const isAdmin = (req: any, res: any, next: any) => {
-    if (!req.user || req.user.claims.email !== "writersure369@gmail.com") {
+    if (!req.user || !ADMIN_EMAILS.includes(req.user.claims.email)) {
       return res.status(403).json({ message: "Admin access required" });
     }
     next();
