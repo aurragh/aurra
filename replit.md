@@ -8,12 +8,28 @@ The platform features a freemium model with basic free functionality and premium
 
 ## Recent Updates (Feb 4, 2026)
 
-- **Improved Image Quality**: Enhanced outfit image generation for cleaner, more professional results
-  - Removed distracting studio equipment (tripods, softboxes, light stands) from backgrounds
-  - Now uses PURE WHITE seamless background with no props or distractions
-  - Clean minimal aesthetic optimized for e-commerce quality
-  - HD quality (1024x1024) - the highest resolution available from DALL-E 3
-  - Prompt: "Professional fashion product photography: [items] displayed on invisible mannequin form, ghost mannequin style. PURE WHITE seamless background, no props, no equipment, no distractions. Single centered outfit composition. Ultra sharp focus, high-end e-commerce quality, clean minimal aesthetic."
+- **Enhanced Aurra Voice & Intelligence**: Updated system prompt with complete spec compliance
+  - Added "What Aurra NEVER Does" list (endless options, body type comments, AI jargon)
+  - Added "What Aurra ALWAYS Does" list (anchors in presence, names what to avoid)
+  - Added 3 sample outputs to guide AI tone precisely
+  - Expanded language examples (Hold, Control, Read the room, Grounded, Restraint)
+
+- **PayPal Payment Integration**: Added upgrade subscription flow
+  - Premium ($9.99/mo) and Pro ($24.99/mo) plans available
+  - PayPal checkout button integration
+  - Test mode for instant upgrade activation
+  - Upgrade page accessible from dashboard menu
+
+- **Master Admin Access**: Added admin privileges for testing
+  - Admin emails: writersure369@gmail.com, novacreates888@gmail.com
+  - Full access to admin dashboard and all features
+
+- **Improved Image Quality v2**: Flat lay style for complete outfit visualization
+  - Portrait orientation (1024x1792) for full top-to-bottom display
+  - Flat lay arrangement: top garment at top, bottom in middle, shoes at bottom
+  - High-end fashion catalog aesthetic with crisp shadows
+  - Pure white background, no models or mannequins
+  - Professional product photography quality
 
 - **Shopping Feature Fix**: Resolved "undefined" display issue in shopping modal
   - Added proper null checking for all item properties (name, description, category, searchQuery)

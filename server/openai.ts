@@ -128,8 +128,14 @@ async function generateWithDallE(
   const itemsDesc = basicItems || 'stylish outfit';
   
   try {
-    // Clean minimal ghost mannequin style - SINGLE outfit, pure white background
-    const imagePrompt = `Professional fashion product photography: ${itemsDesc} displayed on invisible mannequin form, ghost mannequin style for ${occasion}. PURE WHITE seamless background, no props, no equipment, no distractions. Single centered outfit composition. Ultra sharp focus, high-end e-commerce quality, clean minimal aesthetic. ONE complete look only.`;
+    // Full-body outfit visualization - complete head-to-toe look
+    const imagePrompt = `Professional fashion photography: COMPLETE OUTFIT from head to toe displayed as a flat lay arrangement on pure white background. Items: ${itemsDesc} for ${occasion}. 
+
+COMPOSITION: Vertically arranged flat lay showing the full outfit - top garment at top, bottom garment in middle, shoes at bottom, accessories positioned naturally around. Each item clearly visible and separated.
+
+STYLE: High-end fashion catalog aesthetic. Crisp shadows, studio lighting, editorial quality. Pure white (#FFFFFF) seamless background. No models, no mannequins, no hangers.
+
+QUALITY: Ultra sharp focus, professional product photography, luxury fashion brand quality. Clean, minimal, sophisticated.`;
 
     console.log(`DALL-E Image Prompt: ${imagePrompt}`);
 
@@ -137,7 +143,7 @@ async function generateWithDallE(
       model: "dall-e-3",
       prompt: imagePrompt,
       n: 1,
-      size: "1024x1024",
+      size: "1024x1792", // Portrait orientation for full outfit display
       quality: "hd",
       style: "natural"
     });
@@ -147,10 +153,10 @@ async function generateWithDallE(
   } catch (error: any) {
     console.error("DALL-E API error:", error);
     
-    // Fallback to even simpler prompt
-    if (error?.code === 'content_policy_violation') {
+    // Fallback to simpler prompt with standard size
+    if (error?.code === 'content_policy_violation' || error?.code === 'invalid_size') {
       try {
-        const fallbackPrompt = `Fashion product photo: ${itemsDesc} on invisible mannequin, pure white background, centered, clean minimal style`;
+        const fallbackPrompt = `Fashion flat lay: ${itemsDesc} arranged vertically on white background, top to bottom layout, catalog style, professional product photography`;
         
         const retryResponse = await openai.images.generate({
           model: "dall-e-3",

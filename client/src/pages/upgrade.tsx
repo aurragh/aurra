@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link, useLocation } from "wouter";
 import { Check, Crown, Sparkles, ArrowLeft, Zap } from "lucide-react";
@@ -117,6 +117,35 @@ export default function Upgrade() {
   };
 
   const currentSubscription = (user as any)?.subscriptionStatus || "free";
+  const initialSubscriptionRef = useRef(currentSubscription);
+
+  // Poll for subscription changes after showing payment form
+  useEffect(() => {
+    if (!showPayment) return;
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch("/api/auth/user", { credentials: "include" });
+        if (response.ok) {
+          const userData = await response.json();
+          const newStatus = userData?.subscriptionStatus || "free";
+          if (newStatus !== initialSubscriptionRef.current && newStatus !== "free") {
+            clearInterval(pollInterval);
+            toast({
+              title: "Payment Successful",
+              description: `Your ${newStatus} subscription is now active.`,
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+            setLocation("/dashboard");
+          }
+        }
+      } catch (e) {
+        // Ignore polling errors
+      }
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
+  }, [showPayment, toast, setLocation]);
 
   if (isLoading) {
     return (

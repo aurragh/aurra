@@ -520,8 +520,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await createPaypalOrder(req, res);
   });
 
-  app.post("/paypal/order/:orderID/capture", async (req, res) => {
-    await capturePaypalOrder(req, res);
+  app.post("/paypal/order/:orderID/capture", async (req: any, res) => {
+    try {
+      // First capture the PayPal order
+      const captureResult = await new Promise<any>((resolve, reject) => {
+        const mockRes = {
+          status: (code: number) => ({
+            json: (data: any) => {
+              if (code >= 400) reject(data);
+              else resolve({ statusCode: code, data });
+            }
+          }),
+          json: (data: any) => resolve({ statusCode: 200, data })
+        };
+        capturePaypalOrder(req, mockRes as any);
+      });
+
+      // If capture was successful and user is authenticated, upgrade their subscription
+      if (captureResult.data?.status === "COMPLETED" && req.user?.claims?.sub) {
+        const userId = req.user.claims.sub;
+        const amount = captureResult.data?.purchase_units?.[0]?.amount?.value;
+        const plan = parseFloat(amount || "0") > 15 ? "pro" : "premium";
+        
+        await storage.updateUserSubscription(userId, plan);
+        console.log(`User ${userId} upgraded to ${plan} after successful PayPal payment`);
+      }
+
+      res.status(captureResult.statusCode).json(captureResult.data);
+    } catch (error) {
+      console.error("PayPal capture error:", error);
+      res.status(500).json({ error: "Failed to capture order" });
+    }
   });
 
   // Upgrade subscription endpoint
