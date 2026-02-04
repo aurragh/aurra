@@ -8,6 +8,15 @@ The platform features a freemium model with basic free functionality and premium
 
 ## Recent Updates (Feb 4, 2026)
 
+- **Points Redemption System**: Users can now redeem earned points for rewards
+  - Free Outfit Credit (50 pts): Generates an outfit without earning points (prevents double benefit)
+  - 24-Hour Premium Trial (100 pts): Activates premium features for 24 hours
+  - $2 Discount Code (200 pts): Generates a unique code for upgrade discount
+  - New users receive 100 welcome bonus points automatically
+  - Dashboard "Rewards" tab displays points balance, active rewards, and transaction history
+  - Discount codes are validated server-side and consumed upon upgrade
+  - Free outfit credits are automatically used when generating outfits
+
 - **Enhanced Aurra Voice & Intelligence**: Updated system prompt with complete spec compliance
   - Added "What Aurra NEVER Does" list (endless options, body type comments, AI jargon)
   - Added "What Aurra ALWAYS Does" list (anchors in presence, names what to avoid)
