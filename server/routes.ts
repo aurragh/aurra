@@ -569,6 +569,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Points redemption routes
+  app.get('/api/points', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let points = await storage.getUserPoints(userId);
+      
+      // Initialize points if not exists
+      if (!points) {
+        points = await storage.initializeUserPoints(userId);
+      }
+      
+      const transactions = await storage.getPointTransactions(userId);
+      const activeTrial = await storage.getActivePremiumTrial(userId);
+      const activeDiscount = await storage.getActiveDiscountCode(userId);
+      
+      res.json({
+        points: points.points ?? 0,
+        level: points.level ?? 'Beginner',
+        totalEarned: points.totalEarned ?? 0,
+        transactions,
+        activeTrial: activeTrial ? { expiresAt: activeTrial.expiresAt } : null,
+        activeDiscount: activeDiscount ? { code: activeDiscount.code, discountAmount: activeDiscount.discountAmount } : null,
+      });
+    } catch (error) {
+      console.error("Error fetching points:", error);
+      res.status(500).json({ message: "Failed to fetch points" });
+    }
+  });
+
+  app.post('/api/points/redeem/outfit', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.redeemPointsForOutfit(userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error redeeming points for outfit:", error);
+      res.status(500).json({ message: "Failed to redeem points" });
+    }
+  });
+
+  app.post('/api/points/redeem/premium-trial', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.redeemPointsForPremiumTrial(userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error redeeming points for premium trial:", error);
+      res.status(500).json({ message: "Failed to redeem points" });
+    }
+  });
+
+  app.post('/api/points/redeem/discount', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.redeemPointsForDiscount(userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error redeeming points for discount:", error);
+      res.status(500).json({ message: "Failed to redeem points" });
+    }
+  });
+
+  app.post('/api/discount/apply', isAuthenticated, async (req: any, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ success: false, message: "Discount code required" });
+      }
+      const result = await storage.useDiscountCode(code);
+      if (result.success) {
+        res.json({ success: true, discountAmount: result.discountAmount / 100 }); // Convert cents to dollars
+      } else {
+        res.json({ success: false, message: "Invalid or expired discount code" });
+      }
+    } catch (error) {
+      console.error("Error applying discount:", error);
+      res.status(500).json({ message: "Failed to apply discount" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

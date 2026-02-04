@@ -5,6 +5,9 @@ import {
   styleCollections,
   userPoints,
   shoppingAnalytics,
+  pointTransactions,
+  discountCodes,
+  premiumTrials,
   type User,
   type UpsertUser,
   type StyleProfile,
@@ -16,6 +19,9 @@ import {
   type UserPoints,
   type ShoppingAnalytics,
   type InsertShoppingAnalytics,
+  type PointTransaction,
+  type DiscountCode,
+  type PremiumTrial,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, lt, sql } from "drizzle-orm";
@@ -54,6 +60,16 @@ export interface IStorage {
   getUserPoints(userId: string): Promise<UserPoints | undefined>;
   updateUserPoints(userId: string, pointsToAdd: number): Promise<UserPoints>;
   initializeUserPoints(userId: string): Promise<UserPoints>;
+  
+  // Point redemption operations
+  createPointTransaction(userId: string, type: string, action: string, points: number, description: string): Promise<PointTransaction>;
+  getPointTransactions(userId: string): Promise<PointTransaction[]>;
+  redeemPointsForOutfit(userId: string): Promise<{ success: boolean; message: string }>;
+  redeemPointsForPremiumTrial(userId: string): Promise<{ success: boolean; message: string; expiresAt?: Date }>;
+  redeemPointsForDiscount(userId: string): Promise<{ success: boolean; message: string; code?: string }>;
+  getActivePremiumTrial(userId: string): Promise<PremiumTrial | undefined>;
+  getActiveDiscountCode(userId: string): Promise<DiscountCode | undefined>;
+  useDiscountCode(code: string): Promise<{ success: boolean; discountAmount: number }>;
   
   // Shopping analytics operations
   trackShoppingClick(analytics: InsertShoppingAnalytics): Promise<ShoppingAnalytics>;
@@ -346,6 +362,158 @@ export class DatabaseStorage implements IStorage {
       .values(analytics)
       .returning();
     return created;
+  }
+
+  // Point redemption operations
+  async createPointTransaction(userId: string, type: string, action: string, points: number, description: string): Promise<PointTransaction> {
+    const [transaction] = await db
+      .insert(pointTransactions)
+      .values({ userId, type, action, points, description })
+      .returning();
+    return transaction;
+  }
+
+  async getPointTransactions(userId: string): Promise<PointTransaction[]> {
+    return await db
+      .select()
+      .from(pointTransactions)
+      .where(eq(pointTransactions.userId, userId))
+      .orderBy(desc(pointTransactions.createdAt));
+  }
+
+  async redeemPointsForOutfit(userId: string): Promise<{ success: boolean; message: string }> {
+    const COST = 50;
+    const userPts = await this.getUserPoints(userId);
+    
+    if (!userPts || (userPts.points ?? 0) < COST) {
+      return { success: false, message: `You need ${COST} points to redeem a free outfit. You have ${userPts?.points ?? 0} points.` };
+    }
+
+    // Deduct points
+    await db
+      .update(userPoints)
+      .set({ points: (userPts.points ?? 0) - COST, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(userPoints.userId, userId));
+
+    // Record transaction
+    await this.createPointTransaction(userId, 'redeem', 'free_outfit', -COST, 'Redeemed for 1 free outfit generation');
+
+    return { success: true, message: 'Successfully redeemed 50 points for a free outfit generation!' };
+  }
+
+  async redeemPointsForPremiumTrial(userId: string): Promise<{ success: boolean; message: string; expiresAt?: Date }> {
+    const COST = 100;
+    const userPts = await this.getUserPoints(userId);
+    
+    if (!userPts || (userPts.points ?? 0) < COST) {
+      return { success: false, message: `You need ${COST} points for a 24-hour premium trial. You have ${userPts?.points ?? 0} points.` };
+    }
+
+    // Check if already has active trial
+    const activeTrial = await this.getActivePremiumTrial(userId);
+    if (activeTrial) {
+      return { success: false, message: 'You already have an active premium trial.' };
+    }
+
+    // Deduct points
+    await db
+      .update(userPoints)
+      .set({ points: (userPts.points ?? 0) - COST, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(userPoints.userId, userId));
+
+    // Create premium trial (24 hours)
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await db
+      .insert(premiumTrials)
+      .values({ userId, expiresAt });
+
+    // Record transaction
+    await this.createPointTransaction(userId, 'redeem', 'premium_trial', -COST, 'Redeemed for 24-hour premium trial');
+
+    return { success: true, message: 'Successfully unlocked premium features for 24 hours!', expiresAt };
+  }
+
+  async redeemPointsForDiscount(userId: string): Promise<{ success: boolean; message: string; code?: string }> {
+    const COST = 200;
+    const DISCOUNT_CENTS = 200; // $2 off
+    const userPts = await this.getUserPoints(userId);
+    
+    if (!userPts || (userPts.points ?? 0) < COST) {
+      return { success: false, message: `You need ${COST} points for a $2 discount. You have ${userPts?.points ?? 0} points.` };
+    }
+
+    // Check if already has unused discount code
+    const existingCode = await this.getActiveDiscountCode(userId);
+    if (existingCode) {
+      return { success: false, message: `You already have an unused discount code: ${existingCode.code}` };
+    }
+
+    // Deduct points
+    await db
+      .update(userPoints)
+      .set({ points: (userPts.points ?? 0) - COST, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(userPoints.userId, userId));
+
+    // Generate unique code
+    const code = `AURRA${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    await db
+      .insert(discountCodes)
+      .values({ userId, code, discountAmount: DISCOUNT_CENTS, expiresAt });
+
+    // Record transaction
+    await this.createPointTransaction(userId, 'redeem', 'discount_code', -COST, `Redeemed for $2 discount code: ${code}`);
+
+    return { success: true, message: `Successfully generated discount code: ${code} ($2 off)`, code };
+  }
+
+  async getActivePremiumTrial(userId: string): Promise<PremiumTrial | undefined> {
+    const [trial] = await db
+      .select()
+      .from(premiumTrials)
+      .where(and(
+        eq(premiumTrials.userId, userId),
+        sql`${premiumTrials.expiresAt} > NOW()`
+      ));
+    return trial;
+  }
+
+  async getActiveDiscountCode(userId: string): Promise<DiscountCode | undefined> {
+    const [code] = await db
+      .select()
+      .from(discountCodes)
+      .where(and(
+        eq(discountCodes.userId, userId),
+        eq(discountCodes.used, false),
+        sql`${discountCodes.expiresAt} > NOW()`
+      ));
+    return code;
+  }
+
+  async useDiscountCode(code: string): Promise<{ success: boolean; discountAmount: number }> {
+    const [discountCode] = await db
+      .select()
+      .from(discountCodes)
+      .where(and(
+        eq(discountCodes.code, code),
+        eq(discountCodes.used, false)
+      ));
+
+    if (!discountCode) {
+      return { success: false, discountAmount: 0 };
+    }
+
+    if (discountCode.expiresAt && new Date(discountCode.expiresAt) < new Date()) {
+      return { success: false, discountAmount: 0 };
+    }
+
+    await db
+      .update(discountCodes)
+      .set({ used: true })
+      .where(eq(discountCodes.code, code));
+
+    return { success: true, discountAmount: discountCode.discountAmount };
   }
 
   // Admin operations

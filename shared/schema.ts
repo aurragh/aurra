@@ -102,6 +102,33 @@ export const shoppingAnalytics = pgTable("shopping_analytics", {
   clickedAt: timestamp("clicked_at").defaultNow(),
 });
 
+export const pointTransactions = pgTable("point_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: varchar("type").notNull(), // 'earn' or 'redeem'
+  action: varchar("action").notNull(), // 'quiz_complete', 'outfit_generated', 'free_outfit', 'premium_trial', 'discount_code'
+  points: integer("points").notNull(), // positive for earn, negative for redeem
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const discountCodes = pgTable("discount_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  code: varchar("code").notNull().unique(),
+  discountAmount: integer("discount_amount").notNull(), // in cents
+  used: boolean("used").default(false),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const premiumTrials = pgTable("premium_trials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   styleProfile: one(styleProfiles, {
@@ -155,6 +182,27 @@ export const shoppingAnalyticsRelations = relations(shoppingAnalytics, ({ one })
   }),
 }));
 
+export const pointTransactionsRelations = relations(pointTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [pointTransactions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const discountCodesRelations = relations(discountCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [discountCodes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const premiumTrialsRelations = relations(premiumTrials, ({ one }) => ({
+  user: one(users, {
+    fields: [premiumTrials.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertStyleProfileSchema = createInsertSchema(styleProfiles).omit({
   id: true,
@@ -189,3 +237,6 @@ export type InsertCollection = z.infer<typeof insertCollectionSchema>;
 export type UserPoints = typeof userPoints.$inferSelect;
 export type ShoppingAnalytics = typeof shoppingAnalytics.$inferSelect;
 export type InsertShoppingAnalytics = z.infer<typeof insertShoppingAnalyticsSchema>;
+export type PointTransaction = typeof pointTransactions.$inferSelect;
+export type DiscountCode = typeof discountCodes.$inferSelect;
+export type PremiumTrial = typeof premiumTrials.$inferSelect;
