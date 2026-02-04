@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 import { ShoppingModal } from "@/components/ShoppingModal";
+import { PointsRedemption } from "@/components/PointsRedemption";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -392,6 +393,9 @@ export default function Dashboard() {
                   <TabsTrigger value="favorites" className="data-[state=active]:bg-purple-600">
                     Saved Recommendations
                   </TabsTrigger>
+                  <TabsTrigger value="rewards" className="data-[state=active]:bg-purple-600">
+                    Rewards
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="outfits" data-testid="tab-content-outfits">
@@ -560,15 +564,24 @@ export default function Dashboard() {
                     </div>
                   )}
                 </TabsContent>
+
+                <TabsContent value="rewards" data-testid="tab-content-rewards">
+                  <div className="max-w-md mx-auto">
+                    <PointsRedemption />
+                  </div>
+                </TabsContent>
               </Tabs>
             ) : (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="text-center py-12">
-                  <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-300 mb-2">No outfits generated yet</p>
-                  <p className="text-gray-400 text-sm">Click on an occasion above to generate your first personalized outfit!</p>
-                </CardContent>
-              </Card>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="text-center py-12">
+                    <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-300 mb-2">No outfits generated yet</p>
+                    <p className="text-gray-400 text-sm">Click on an occasion above to generate your first personalized outfit!</p>
+                  </CardContent>
+                </Card>
+                <PointsRedemption />
+              </div>
             )}
           </>
         )}
