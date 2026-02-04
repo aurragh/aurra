@@ -4,11 +4,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link, useLocation } from "wouter";
-import { Check, Crown, Sparkles, ArrowLeft, Zap } from "lucide-react";
+import { Check, Crown, Sparkles, ArrowLeft, Zap, Ticket, X } from "lucide-react";
 import { RotatingBackground } from "@/components/RotatingBackground";
 import PayPalButton from "@/components/PayPalButton";
 
@@ -63,6 +64,27 @@ export default function Upgrade() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number } | null>(null);
+
+  // Fetch points data to check for available discount codes
+  const { data: pointsData } = useQuery<{
+    activeDiscount: { code: string; discountAmount: number } | null;
+  }>({
+    queryKey: ["/api/points"],
+  });
+
+  // Auto-apply discount code from points redemption
+  useEffect(() => {
+    if (pointsData?.activeDiscount && !appliedDiscount) {
+      // discountAmount is stored in cents, convert to dollars
+      setAppliedDiscount({
+        code: pointsData.activeDiscount.code,
+        amount: pointsData.activeDiscount.discountAmount / 100,
+      });
+      setDiscountCode(pointsData.activeDiscount.code);
+    }
+  }, [pointsData, appliedDiscount]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -78,8 +100,8 @@ export default function Upgrade() {
   }, [user, isLoading, toast]);
 
   const upgradeMutation = useMutation({
-    mutationFn: async (plan: string) => {
-      const response = await apiRequest("POST", "/api/upgrade", { plan });
+    mutationFn: async ({ plan, discountCode }: { plan: string; discountCode?: string }) => {
+      const response = await apiRequest("POST", "/api/upgrade", { plan, discountCode });
       return response.json();
     },
     onSuccess: () => {
@@ -187,16 +209,58 @@ export default function Upgrade() {
                   Complete Your Upgrade
                 </CardTitle>
                 <CardDescription className="text-gray-300">
-                  {selectedPlan === "premium" ? "Premium - $9.99/month" : "Pro - $24.99/month"}
+                  {(() => {
+                    const basePrice = selectedPlan === "premium" ? 9.99 : 24.99;
+                    const discountedPrice = appliedDiscount 
+                      ? Math.max(0, basePrice - appliedDiscount.amount).toFixed(2)
+                      : basePrice.toFixed(2);
+                    
+                    if (appliedDiscount) {
+                      return (
+                        <span className="flex items-center gap-2">
+                          <span className="line-through text-gray-500">${basePrice.toFixed(2)}/month</span>
+                          <span className="text-green-400 font-bold">${discountedPrice}/month</span>
+                        </span>
+                      );
+                    }
+                    return `${selectedPlan === "premium" ? "Premium" : "Pro"} - $${basePrice.toFixed(2)}/month`;
+                  })()}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {appliedDiscount && (
+                  <div className="flex items-center justify-between p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Ticket className="w-4 h-4 text-green-400" />
+                      <span className="text-green-300 text-sm">
+                        Discount code applied: <span className="font-mono font-bold">{appliedDiscount.code}</span>
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-green-400 hover:text-white h-6 w-6 p-0"
+                      onClick={() => {
+                        setAppliedDiscount(null);
+                        setDiscountCode("");
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+
                 <div className="bg-white/5 p-4 rounded-lg">
                   <p className="text-gray-300 text-sm mb-4">
                     Complete your payment with PayPal to unlock all features.
                   </p>
                   <PayPalButton 
-                    amount={selectedPlan === "premium" ? "9.99" : "24.99"}
+                    amount={(() => {
+                      const basePrice = selectedPlan === "premium" ? 9.99 : 24.99;
+                      return appliedDiscount 
+                        ? Math.max(0, basePrice - appliedDiscount.amount).toFixed(2)
+                        : basePrice.toFixed(2);
+                    })()}
                     currency="USD"
                     intent="CAPTURE"
                   />
@@ -221,7 +285,10 @@ export default function Upgrade() {
                   </p>
                   <Button 
                     className="w-full bg-purple-600 hover:bg-purple-700"
-                    onClick={() => upgradeMutation.mutate(selectedPlan)}
+                    onClick={() => upgradeMutation.mutate({ 
+                      plan: selectedPlan, 
+                      discountCode: appliedDiscount?.code 
+                    })}
                     disabled={upgradeMutation.isPending}
                   >
                     {upgradeMutation.isPending ? "Activating..." : "Activate Premium (Test Mode)"}

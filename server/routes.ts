@@ -104,6 +104,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Complete your style profile first" });
       }
 
+      // Check for free outfit credits first
+      const usedCredit = await storage.useFreeOutfitCredit(userId);
+      if (usedCredit) {
+        console.log(`User ${userId} is using a free outfit credit`);
+      }
+
       // Aurra always gives ONE primary direction as per spec
       const recommendations = await generateOutfitRecommendations(profile, occasion, 1);
       const recommendation = recommendations[0];
@@ -139,8 +145,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalOutfit = await storage.getOutfit(savedOutfit.id, userId);
       res.json([finalOutfit]); // Return as array for frontend compatibility
 
-      // Award points
-      await storage.updateUserPoints(userId, 50);
+      // Award points only if not using a free credit (avoid double benefit)
+      if (!usedCredit) {
+        await storage.updateUserPoints(userId, 50);
+      }
     } catch (error) {
       console.error("Aurra generation error:", error);
       res.status(500).json({ message: "Failed to generate recommendation" });
@@ -557,7 +565,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/upgrade', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { plan } = req.body;
+      const { plan, discountCode } = req.body;
+      
+      // If discount code provided, validate it belongs to user and consume it
+      if (discountCode) {
+        // First verify the code belongs to this user
+        const userActiveDiscount = await storage.getActiveDiscountCode(userId);
+        if (!userActiveDiscount || userActiveDiscount.code !== discountCode) {
+          return res.status(400).json({ 
+            message: "Invalid discount code. This code doesn't belong to your account or has already been used." 
+          });
+        }
+        
+        // Consume the discount code
+        const discountResult = await storage.useDiscountCode(discountCode);
+        if (!discountResult.success) {
+          return res.status(400).json({ 
+            message: "Failed to apply discount code. It may have already been used." 
+          });
+        }
+        console.log(`Discount code ${discountCode} applied for user ${userId}: $${(discountResult.discountAmount / 100).toFixed(2)} off`);
+      }
       
       // Update user subscription status
       await storage.updateUserSubscription(userId, plan || 'premium');

@@ -142,7 +142,7 @@ export function PointsRedemption() {
               </span>
             </div>
             <p className="text-amber-400/70 text-xs mt-1">
-              Generate outfits without using your monthly limit
+              Bonus outfit generations (used automatically)
             </p>
           </div>
         )}
