@@ -27,6 +27,28 @@ interface GeneratedOutfit {
   aiRecommendation: string;
 }
 
+// Helper function to make API call and parse JSON response
+async function makeAurraAPICall(userPrompt: string): Promise<any> {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: aurraSystemPrompt
+      },
+      {
+        role: "user",
+        content: userPrompt
+      }
+    ],
+    response_format: { type: "json_object" },
+    max_completion_tokens: 1000,
+  });
+
+  const content = response.choices[0].message.content || '{}';
+  return JSON.parse(content);
+}
+
 export async function generateOutfitRecommendations(
   profile: StyleProfile,
   occasion: string,
@@ -50,23 +72,25 @@ User Profile:
 Occasion/Input: ${occasion}
 `;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: aurraSystemPrompt
-        },
-        {
-          role: "user",
-          content: userPrompt
-        }
-      ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 1000,
-    });
+    let result: any;
+    
+    // Guardrail: If JSON parsing fails, retry once automatically (per spec Doc 1, Section 6)
+    try {
+      result = await makeAurraAPICall(userPrompt);
+    } catch (parseError: any) {
+      // Only retry on JSON parsing errors, not all API errors
+      if (parseError instanceof SyntaxError || parseError.message?.includes('JSON')) {
+        console.log("Aurra: JSON parsing failed, retrying once...");
+        result = await makeAurraAPICall(userPrompt);
+      } else {
+        throw parseError;
+      }
+    }
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    // Log if required fields are missing (don't retry, just use fallbacks)
+    if (!result.primary || !result.backup || !result.avoid) {
+      console.log("Aurra: Some required fields missing, using fallbacks for empty fields");
+    }
     
     // Map Aurra structure to existing Outfit schema for compatibility
     return [{
