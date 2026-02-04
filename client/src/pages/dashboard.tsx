@@ -234,6 +234,12 @@ export default function Dashboard() {
                       <span>View Trash</span>
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/upgrade">
+                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer text-yellow-400" data-testid="menu-item-upgrade">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      <span>Upgrade Plan</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem 
                     onClick={() => window.location.href = "/api/logout"}

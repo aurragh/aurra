@@ -11,6 +11,7 @@ import Dashboard from "@/pages/dashboard";
 import Subscribe from "@/pages/subscribe";
 import AdminDashboard from "@/pages/admin";
 import Trash from "@/pages/trash";
+import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/trash" component={Trash} />
           <Route path="/subscribe" component={Subscribe} />
+          <Route path="/upgrade" component={Upgrade} />
           <Route path="/admin" component={AdminDashboard} />
         </>
       )}

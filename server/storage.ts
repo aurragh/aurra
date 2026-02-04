@@ -25,6 +25,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId: string): Promise<User>;
+  updateUserSubscription(userId: string, status: string): Promise<User>;
   
   // Style profile operations
   getStyleProfile(userId: string): Promise<StyleProfile | undefined>;
@@ -92,6 +93,18 @@ export class DatabaseStorage implements IStorage {
         stripeCustomerId,
         stripeSubscriptionId,
         subscriptionStatus: "premium",
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserSubscription(userId: string, status: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        subscriptionStatus: status,
         updatedAt: sql`CURRENT_TIMESTAMP`,
       })
       .where(eq(users.id, userId))

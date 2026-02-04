@@ -8,6 +8,7 @@ import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema } from "@shared/schema";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -502,6 +503,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching all outfits:", error);
       res.status(500).json({ message: "Failed to fetch outfits" });
+    }
+  });
+
+  // PayPal payment routes
+  app.get("/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
+
+  // Upgrade subscription endpoint
+  app.post('/api/upgrade', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { plan } = req.body;
+      
+      // Update user subscription status
+      await storage.updateUserSubscription(userId, plan || 'premium');
+      
+      res.json({ success: true, message: 'Subscription upgraded successfully' });
+    } catch (error) {
+      console.error("Error upgrading subscription:", error);
+      res.status(500).json({ message: "Failed to upgrade subscription" });
     }
   });
 
