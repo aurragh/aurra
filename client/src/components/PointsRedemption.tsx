@@ -21,6 +21,7 @@ interface PointsData {
   }>;
   activeTrial: { expiresAt: string } | null;
   activeDiscount: { code: string; discountAmount: number } | null;
+  freeOutfitCredits: number;
 }
 
 const redemptionOptions = [
@@ -127,6 +128,25 @@ export function PointsRedemption() {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {(pointsData?.freeOutfitCredits ?? 0) > 0 && (
+          <div className="p-3 bg-amber-500/20 border border-amber-500/30 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gift className="w-4 h-4 text-amber-400" />
+                <span className="text-amber-300 text-sm font-medium">
+                  Free Outfit Credits
+                </span>
+              </div>
+              <span className="text-amber-300 font-bold text-lg">
+                {pointsData?.freeOutfitCredits}
+              </span>
+            </div>
+            <p className="text-amber-400/70 text-xs mt-1">
+              Generate outfits without using your monthly limit
+            </p>
+          </div>
+        )}
+
         {pointsData?.activeTrial && (
           <div className="p-3 bg-purple-500/20 border border-purple-500/30 rounded-lg">
             <div className="flex items-center gap-2">

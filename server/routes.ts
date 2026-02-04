@@ -583,6 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transactions = await storage.getPointTransactions(userId);
       const activeTrial = await storage.getActivePremiumTrial(userId);
       const activeDiscount = await storage.getActiveDiscountCode(userId);
+      const freeOutfitCredits = await storage.getFreeOutfitCredits(userId);
       
       res.json({
         points: points.points ?? 0,
@@ -591,6 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactions,
         activeTrial: activeTrial ? { expiresAt: activeTrial.expiresAt } : null,
         activeDiscount: activeDiscount ? { code: activeDiscount.code, discountAmount: activeDiscount.discountAmount } : null,
+        freeOutfitCredits,
       });
     } catch (error) {
       console.error("Error fetching points:", error);

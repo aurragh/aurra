@@ -129,6 +129,13 @@ export const premiumTrials = pgTable("premium_trials", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const freeOutfitCredits = pgTable("free_outfit_credits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  credits: integer("credits").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   styleProfile: one(styleProfiles, {
@@ -240,3 +247,4 @@ export type InsertShoppingAnalytics = z.infer<typeof insertShoppingAnalyticsSche
 export type PointTransaction = typeof pointTransactions.$inferSelect;
 export type DiscountCode = typeof discountCodes.$inferSelect;
 export type PremiumTrial = typeof premiumTrials.$inferSelect;
+export type FreeOutfitCredits = typeof freeOutfitCredits.$inferSelect;

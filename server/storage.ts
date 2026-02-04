@@ -8,6 +8,7 @@ import {
   pointTransactions,
   discountCodes,
   premiumTrials,
+  freeOutfitCredits,
   type User,
   type UpsertUser,
   type StyleProfile,
@@ -22,6 +23,7 @@ import {
   type PointTransaction,
   type DiscountCode,
   type PremiumTrial,
+  type FreeOutfitCredits,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, lt, sql } from "drizzle-orm";
@@ -70,6 +72,11 @@ export interface IStorage {
   getActivePremiumTrial(userId: string): Promise<PremiumTrial | undefined>;
   getActiveDiscountCode(userId: string): Promise<DiscountCode | undefined>;
   useDiscountCode(code: string): Promise<{ success: boolean; discountAmount: number }>;
+  
+  // Free outfit credits operations
+  getFreeOutfitCredits(userId: string): Promise<number>;
+  addFreeOutfitCredit(userId: string): Promise<void>;
+  useFreeOutfitCredit(userId: string): Promise<boolean>;
   
   // Shopping analytics operations
   trackShoppingClick(analytics: InsertShoppingAnalytics): Promise<ShoppingAnalytics>;
@@ -395,10 +402,13 @@ export class DatabaseStorage implements IStorage {
       .set({ points: (userPts.points ?? 0) - COST, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(userPoints.userId, userId));
 
+    // Add a free outfit credit
+    await this.addFreeOutfitCredit(userId);
+
     // Record transaction
     await this.createPointTransaction(userId, 'redeem', 'free_outfit', -COST, 'Redeemed for 1 free outfit generation');
 
-    return { success: true, message: 'Successfully redeemed 50 points for a free outfit generation!' };
+    return { success: true, message: 'Successfully redeemed 50 points for a free outfit credit! Use it on your next outfit generation.' };
   }
 
   async redeemPointsForPremiumTrial(userId: string): Promise<{ success: boolean; message: string; expiresAt?: Date }> {
@@ -514,6 +524,58 @@ export class DatabaseStorage implements IStorage {
       .where(eq(discountCodes.code, code));
 
     return { success: true, discountAmount: discountCode.discountAmount };
+  }
+
+  // Free outfit credits operations
+  async getFreeOutfitCredits(userId: string): Promise<number> {
+    const [record] = await db
+      .select()
+      .from(freeOutfitCredits)
+      .where(eq(freeOutfitCredits.userId, userId));
+    return record?.credits ?? 0;
+  }
+
+  async addFreeOutfitCredit(userId: string): Promise<void> {
+    const existing = await this.getFreeOutfitCredits(userId);
+    
+    if (existing === 0) {
+      // Check if record exists first
+      const [record] = await db
+        .select()
+        .from(freeOutfitCredits)
+        .where(eq(freeOutfitCredits.userId, userId));
+      
+      if (record) {
+        await db
+          .update(freeOutfitCredits)
+          .set({ credits: 1, updatedAt: sql`CURRENT_TIMESTAMP` })
+          .where(eq(freeOutfitCredits.userId, userId));
+      } else {
+        await db
+          .insert(freeOutfitCredits)
+          .values({ userId, credits: 1 });
+      }
+    } else {
+      await db
+        .update(freeOutfitCredits)
+        .set({ credits: existing + 1, updatedAt: sql`CURRENT_TIMESTAMP` })
+        .where(eq(freeOutfitCredits.userId, userId));
+    }
+  }
+
+  async useFreeOutfitCredit(userId: string): Promise<boolean> {
+    const credits = await this.getFreeOutfitCredits(userId);
+    
+    if (credits <= 0) {
+      return false;
+    }
+
+    await db
+      .update(freeOutfitCredits)
+      .set({ credits: credits - 1, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(freeOutfitCredits.userId, userId));
+    
+    return true;
   }
 
   // Admin operations
