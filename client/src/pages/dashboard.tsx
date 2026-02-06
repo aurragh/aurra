@@ -42,6 +42,7 @@ import {
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 import { ShoppingModal } from "@/components/ShoppingModal";
 import { PointsRedemption } from "@/components/PointsRedemption";
+import { OutfitCard } from "@/components/OutfitCard";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -399,168 +400,47 @@ export default function Dashboard() {
                 </TabsList>
 
                 <TabsContent value="outfits" data-testid="tab-content-outfits">
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="space-y-8">
                     {outfits.map((outfit: any) => (
-                      <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-outfit-${outfit.id}`}>
-                        <CardContent className="p-0">
-                          {outfit.imageUrl && (
-                            <div 
-                              className="relative w-full h-48 mb-4 cursor-pointer group"
-                              onClick={() => setLightboxImage({ url: outfit.imageUrl, name: outfit.name })}
-                              data-testid={`img-container-${outfit.id}`}
-                            >
-                              <img 
-                                src={outfit.imageUrl} 
-                                alt={outfit.name}
-                                className="w-full h-full object-cover rounded-t-lg"
-                                data-testid={`img-outfit-${outfit.id}`}
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center rounded-t-lg">
-                                <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            </div>
-                          )}
-                          <div className="p-6">
-                            <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <h3 className="text-lg font-semibold text-white mb-1">{outfit.name}</h3>
-                                <Badge 
-                                  variant="secondary" 
-                                  className="bg-purple-600/20 text-purple-200"
-                                  data-testid={`badge-occasion-${outfit.id}`}
-                                >
-                                  {outfit.occasion}
-                                </Badge>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-white hover:bg-white/10"
-                                  onClick={() => toggleFavoriteMutation.mutate(outfit.id)}
-                                  disabled={toggleFavoriteMutation.isPending}
-                                  data-testid={`button-favorite-${outfit.id}`}
-                                >
-                                  <Heart 
-                                    className={`w-4 h-4 ${outfit.isFavorite ? 'fill-red-500 text-red-500' : ''}`}
-                                  />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-white hover:bg-white/10"
-                                  onClick={() => deleteOutfitMutation.mutate(outfit.id)}
-                                  disabled={deleteOutfitMutation.isPending}
-                                  data-testid={`button-delete-${outfit.id}`}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            
-                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">{outfit.description}</p>
-                            
-                            <div className="space-y-4 mb-4">
-                              {outfit.primaryRecommendation && (
-                                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                  <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">Primary</p>
-                                  <p className="text-sm text-white">{outfit.primaryRecommendation}</p>
-                                </div>
-                              )}
-                              {outfit.backupRecommendation && (
-                                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Backup</p>
-                                  <p className="text-sm text-gray-300">{outfit.backupRecommendation}</p>
-                                </div>
-                              )}
-                              {outfit.avoidRecommendation && (
-                                <div className="bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                                  <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Avoid</p>
-                                  <p className="text-sm text-red-200">{outfit.avoidRecommendation}</p>
-                                </div>
-                              )}
-                              {outfit.whyRecommendation && (
-                                <div className="p-3">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Why</p>
-                                  <p className="text-sm text-gray-400 italic">{outfit.whyRecommendation}</p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <p className="text-gray-400 text-xs font-medium">Items:</p>
-                              {JSON.parse(outfit.items || '[]').slice(0, 3).map((item: any, index: number) => (
-                                <div key={index} className="text-xs text-gray-300">
-                                  <span className="font-medium">{item.category}:</span> {item.description}
-                                </div>
-                              ))}
-                            </div>
-                            
-                            {outfit.imageUrl && (
-                              <div className="mt-4 pt-4 border-t border-white/10">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="w-full border-purple-400/30 text-purple-200 hover:bg-purple-600/20"
-                                  onClick={() => setShoppingModalOutfitId(outfit.id)}
-                                  data-testid={`button-shop-${outfit.id}`}
-                                >
-                                  <ShoppingBag className="w-4 h-4 mr-2" />
-                                  Shop This Look
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <OutfitCard
+                        key={outfit.id}
+                        outfit={outfit}
+                        onFavorite={(id) => toggleFavoriteMutation.mutate(id)}
+                        onDelete={(id) => deleteOutfitMutation.mutate(id)}
+                        onShop={(id) => setShoppingModalOutfitId(id)}
+                        onImageClick={(url, name) => setLightboxImage({ url, name })}
+                        onGenerateAnother={(occasion) => generateOutfitsMutation.mutate({ occasion, count: 1 })}
+                        isFavoritePending={toggleFavoriteMutation.isPending}
+                        isDeletePending={deleteOutfitMutation.isPending}
+                        isGenerating={generateOutfitsMutation.isPending}
+                      />
                     ))}
                   </div>
                 </TabsContent>
 
                 <TabsContent value="favorites" data-testid="tab-content-favorites">
                   {favoriteOutfits.length > 0 ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-8">
                       {favoriteOutfits.map((outfit: any) => (
-                        <Card key={outfit.id} className="bg-white/10 backdrop-blur-sm border-white/20" data-testid={`card-favorite-${outfit.id}`}>
-                          <CardContent className="p-0">
-                            {outfit.imageUrl && (
-                              <div 
-                                className="relative w-full h-48 mb-4 cursor-pointer group"
-                                onClick={() => setLightboxImage({ url: outfit.imageUrl, name: outfit.name })}
-                              >
-                                <img 
-                                  src={outfit.imageUrl} 
-                                  alt={outfit.name}
-                                  className="w-full h-full object-cover rounded-t-lg"
-                                />
-                                <Badge className="absolute top-2 right-2 bg-red-600 text-white pointer-events-none">
-                                  <Heart className="w-3 h-3 mr-1" />
-                                  Favorite
-                                </Badge>
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center rounded-t-lg">
-                                  <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                              </div>
-                            )}
-                            <div className="p-6">
-                              <h3 className="text-lg font-semibold text-white mb-2">{outfit.name}</h3>
-                              <Badge 
-                                variant="secondary" 
-                                className="bg-purple-600/20 text-purple-200 mb-4"
-                              >
-                                {outfit.occasion}
-                              </Badge>
-                              <p className="text-gray-300 text-sm line-clamp-2">{outfit.description}</p>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <OutfitCard
+                          key={outfit.id}
+                          outfit={outfit}
+                          onFavorite={(id) => toggleFavoriteMutation.mutate(id)}
+                          onDelete={(id) => deleteOutfitMutation.mutate(id)}
+                          onShop={(id) => setShoppingModalOutfitId(id)}
+                          onImageClick={(url, name) => setLightboxImage({ url, name })}
+                          onGenerateAnother={(occasion) => generateOutfitsMutation.mutate({ occasion, count: 1 })}
+                          isFavoritePending={toggleFavoriteMutation.isPending}
+                          isDeletePending={deleteOutfitMutation.isPending}
+                          isGenerating={generateOutfitsMutation.isPending}
+                        />
                       ))}
                     </div>
                   ) : (
                     <div className="text-center py-12">
                       <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-300">No favorite outfits yet</p>
-                      <p className="text-gray-400 text-sm mt-2">Heart your favorite looks to see them here!</p>
+                      <p className="text-gray-300">No saved recommendations yet</p>
+                      <p className="text-gray-400 text-sm mt-2">Save your favorite looks to see them here!</p>
                     </div>
                   )}
                 </TabsContent>
