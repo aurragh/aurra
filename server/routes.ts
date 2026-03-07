@@ -3,9 +3,9 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromImage } from "./openai";
+import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromImage, novaChatResponse } from "./openai";
 import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
-import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema } from "@shared/schema";
+import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema, insertWardrobeItemSchema } from "@shared/schema";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
@@ -676,6 +676,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error applying discount:", error);
       res.status(500).json({ message: "Failed to apply discount" });
+    }
+  });
+
+  // ── NOVA Chat Stylist
+  app.post('/api/nova/chat', isAuthenticated, async (req: any, res) => {
+    try {
+      const { message, history } = req.body;
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message required" });
+      }
+      const userId = req.user.claims.sub;
+      const profile = await storage.getStyleProfile(userId);
+      const reply = await novaChatResponse(message, profile || null, history || []);
+      res.json({ reply });
+    } catch (error) {
+      console.error("NOVA chat error:", error);
+      res.status(500).json({ message: "NOVA is unavailable right now." });
+    }
+  });
+
+  // ── Digital Wardrobe
+  app.get('/api/wardrobe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const items = await storage.getWardrobeItems(userId);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching wardrobe:", error);
+      res.status(500).json({ message: "Failed to fetch wardrobe" });
+    }
+  });
+
+  app.post('/api/wardrobe', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parsed = insertWardrobeItemSchema.safeParse({ ...req.body, userId });
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid item data", errors: parsed.error.errors });
+      }
+      const item = await storage.createWardrobeItem(parsed.data);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating wardrobe item:", error);
+      res.status(500).json({ message: "Failed to add item" });
+    }
+  });
+
+  app.delete('/api/wardrobe/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteWardrobeItem(req.params.id, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting wardrobe item:", error);
+      res.status(500).json({ message: "Failed to delete item" });
     }
   });
 

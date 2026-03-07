@@ -136,6 +136,19 @@ export const freeOutfitCredits = pgTable("free_outfit_credits", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Digital wardrobe items table
+export const wardrobeItems = pgTable("wardrobe_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: varchar("name").notNull(),
+  category: varchar("category").notNull(), // Tops / Bottoms / Shoes / Outerwear / Accessories
+  color: varchar("color"),
+  brand: varchar("brand"),
+  season: varchar("season"), // All Year / Spring-Summer / Fall-Winter
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   styleProfile: one(styleProfiles, {
@@ -210,6 +223,11 @@ export const premiumTrialsRelations = relations(premiumTrials, ({ one }) => ({
   }),
 }));
 
+export const insertWardrobeItemSchema = createInsertSchema(wardrobeItems).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Insert schemas
 export const insertStyleProfileSchema = createInsertSchema(styleProfiles).omit({
   id: true,
@@ -231,6 +249,9 @@ export const insertShoppingAnalyticsSchema = createInsertSchema(shoppingAnalytic
   id: true,
   clickedAt: true,
 });
+
+export type WardrobeItem = typeof wardrobeItems.$inferSelect;
+export type InsertWardrobeItem = z.infer<typeof insertWardrobeItemSchema>;
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;

@@ -9,6 +9,7 @@ import {
   discountCodes,
   premiumTrials,
   freeOutfitCredits,
+  wardrobeItems,
   type User,
   type UpsertUser,
   type StyleProfile,
@@ -24,6 +25,8 @@ import {
   type DiscountCode,
   type PremiumTrial,
   type FreeOutfitCredits,
+  type WardrobeItem,
+  type InsertWardrobeItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, lt, sql } from "drizzle-orm";
@@ -80,6 +83,11 @@ export interface IStorage {
   
   // Shopping analytics operations
   trackShoppingClick(analytics: InsertShoppingAnalytics): Promise<ShoppingAnalytics>;
+
+  // Wardrobe operations
+  getWardrobeItems(userId: string): Promise<WardrobeItem[]>;
+  createWardrobeItem(item: InsertWardrobeItem): Promise<WardrobeItem>;
+  deleteWardrobeItem(id: string, userId: string): Promise<void>;
   
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -576,6 +584,26 @@ export class DatabaseStorage implements IStorage {
       .where(eq(freeOutfitCredits.userId, userId));
     
     return true;
+  }
+
+  // Wardrobe operations
+  async getWardrobeItems(userId: string): Promise<WardrobeItem[]> {
+    return await db
+      .select()
+      .from(wardrobeItems)
+      .where(eq(wardrobeItems.userId, userId))
+      .orderBy(desc(wardrobeItems.createdAt));
+  }
+
+  async createWardrobeItem(item: InsertWardrobeItem): Promise<WardrobeItem> {
+    const [created] = await db.insert(wardrobeItems).values(item).returning();
+    return created;
+  }
+
+  async deleteWardrobeItem(id: string, userId: string): Promise<void> {
+    await db
+      .delete(wardrobeItems)
+      .where(and(eq(wardrobeItems.id, id), eq(wardrobeItems.userId, userId)));
   }
 
   // Admin operations

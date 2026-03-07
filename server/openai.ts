@@ -298,3 +298,58 @@ Focus on items that are clearly visible and identifiable. Return a JSON object w
     return [];
   }
 }
+
+// ── NOVA Chat Stylist: conversational AI using profile context
+export async function novaChatResponse(
+  message: string,
+  profile: StyleProfile | null,
+  history: { role: "user" | "assistant"; content: string }[]
+): Promise<string> {
+  try {
+    let profileContext = "";
+    if (profile) {
+      const personality = profile.personality ? JSON.parse(profile.personality) : {};
+      const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
+      const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
+      const impressionGoals = personality.impressionGoals ? JSON.parse(personality.impressionGoals) : [];
+      profileContext = `
+User Style Profile:
+- Identity: ${personality.identityWord || "not set"}
+- Presence archetype: ${personality.presenceArchetype || "not set"}
+- Confidence trigger: ${personality.confidenceTrigger || "not set"}
+- Impression goals: ${impressionGoals.join(", ") || "not set"}
+- Body type: ${profile.bodyType || "not set"}
+- Color palette: ${colorPrefs[0] || "not set"}
+- Budget: ${profile.budget || "not set"}
+- Industry: ${lifestyle.industry || "not set"}
+- Daily routine: ${lifestyle.dailyRoutine || "not set"}
+`;
+    }
+
+    const systemPrompt = `${aurraSystemPrompt}
+
+${profileContext ? `ACTIVE USER PROFILE:\n${profileContext}\nUse this profile to ground your answers in the user's specific identity, presence archetype, and context.` : "No profile available — give general decisive advice."}
+
+CONVERSATIONAL MODE:
+This is a chat. Respond in 2–4 short sentences max. Be direct and decisive.
+Do not use JSON format. Respond in plain text.
+Sound like a trusted advisor, not a chatbot.`;
+
+    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: systemPrompt },
+      ...history.slice(-6), // Keep last 6 messages for context
+      { role: "user", content: message },
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      max_completion_tokens: 300,
+    });
+
+    return response.choices[0].message.content || "I'm not sure — try rephrasing your question.";
+  } catch (error) {
+    console.error("NOVA chat error:", error);
+    return "I'm unavailable right now. Try again in a moment.";
+  }
+}

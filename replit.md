@@ -6,6 +6,31 @@ Aurra AI is a personalized fashion recommendation platform that uses artificial 
 
 The platform is currently **fully free** — all subscription/upgrade flows are hidden. Image generation uses Replicate API (flux-schnell model). Text recommendations use OpenAI GPT-4o.
 
+## Recent Updates (Mar 7, 2026) — Session 2
+
+- **NOVA Chat Stylist** (`/chat`): Full-screen conversational AI chat interface
+  - NOVA orb in sticky header, animated pulsing when speaking
+  - 4 starter prompt chips on first load for quick questions
+  - Chat history in component state (resets on reload — no DB storage)
+  - POST /api/nova/chat — fetches user's style profile, injects as context, responds via GPT-4o in conversational mode (2–4 sentences, plain text, in character)
+  - Browser TTS for NOVA replies (same voice system as quiz), mute toggle
+  - Accessible from dashboard floating button (bottom right) and dropdown menu
+
+- **Style DNA Card**: Visual identity card displayed at top of dashboard (for users with completed profiles)
+  - Dark purple gradient card with 4 identity chips: Identity / Presence / Palette / World
+  - Aurra-style 1-sentence profile summary generated client-side from psychological answers
+  - Collapsible header with expand/collapse toggle
+  - "Edit Profile" link at bottom right to /quiz
+
+- **Digital Wardrobe** (`/wardrobe`): Personal clothing inventory
+  - New DB table: `wardrobe_items` (id, userId, name, category, color, brand, season, notes, createdAt)
+  - Category filter tabs: All / Tops / Bottoms / Shoes / Outerwear / Accessories
+  - Item cards with color chip, category badge, brand/season labels, delete button
+  - "Add Item" modal form with full fields
+  - Empty state per-category
+  - API: GET/POST/DELETE /api/wardrobe (authenticated)
+  - Accessible from dashboard dropdown menu
+
 ## Recent Updates (Mar 7, 2026)
 
 - **NOVA Voice AI Quiz**: Completely redesigned style quiz as a psychological profiling chatbot

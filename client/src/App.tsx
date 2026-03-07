@@ -12,6 +12,8 @@ import Subscribe from "@/pages/subscribe";
 import AdminDashboard from "@/pages/admin";
 import Trash from "@/pages/trash";
 import Upgrade from "@/pages/upgrade";
+import NovaChat from "@/pages/nova-chat";
+import Wardrobe from "@/pages/wardrobe";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +35,8 @@ function Router() {
           <Route path="/quiz" component={StyleQuiz} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/trash" component={Trash} />
+          <Route path="/chat" component={NovaChat} />
+          <Route path="/wardrobe" component={Wardrobe} />
           <Route path="/subscribe">
             <Redirect to="/dashboard" />
           </Route>

@@ -36,12 +36,15 @@ import {
   User,
   Plus,
   X,
-  ZoomIn
+  ZoomIn,
+  MessageCircle,
+  Shirt
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 import { ShoppingModal } from "@/components/ShoppingModal";
 import { PointsRedemption } from "@/components/PointsRedemption";
 import { OutfitCard } from "@/components/OutfitCard";
+import { StyleDNACard } from "@/components/StyleDNACard";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -251,6 +254,18 @@ export default function Dashboard() {
                       <span>Edit Style Profile</span>
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/chat">
+                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-chat">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      <span>Chat with NOVA</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/wardrobe">
+                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-wardrobe">
+                      <Shirt className="mr-2 h-4 w-4" />
+                      <span>My Wardrobe</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <Link href="/trash">
                     <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-trash">
                       <Trash2 className="mr-2 h-4 w-4" />
@@ -309,6 +324,9 @@ export default function Dashboard() {
           </Card>
         ) : (
           <>
+            {/* Style DNA Card */}
+            {styleProfile?.completed && <StyleDNACard profile={styleProfile} />}
+
             {/* Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
@@ -531,6 +549,21 @@ export default function Dashboard() {
           onOpenChange={(open) => !open && setShoppingModalOutfitId(null)}
         />
       )}
+
+      {/* Floating NOVA Chat button */}
+      <Link href="/chat">
+        <button
+          className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 active:scale-95 z-40"
+          style={{
+            background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+            boxShadow: "0 4px 24px rgba(139,92,246,0.45)",
+          }}
+          data-testid="button-nova-chat"
+        >
+          <MessageCircle className="w-4 h-4" />
+          Chat with NOVA
+        </button>
+      </Link>
     </div>
   );
 }
