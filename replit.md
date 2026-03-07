@@ -6,6 +6,14 @@ Aurra AI is a personalized fashion recommendation platform that uses artificial 
 
 The platform is currently **fully free** — all subscription/upgrade flows are hidden. Image generation uses Replicate API (flux-schnell model). Text recommendations use OpenAI GPT-4o.
 
+## Recent Updates (Mar 7, 2026) — Session 3
+
+- **Shop This Look fixed**: Replaced GPT-4 Vision (quota-limited) with text-based extraction using GPT-4o. Reads `primaryRecommendation` + `backupRecommendation` fields — no image API call. Returns 3 shopping stores per item: Google Shopping, ASOS, Farfetch.
+- **"AI Exclusive Style" badge**: Purple translucent pill with sparkle icon on every outfit card image (top-right corner). Signals the look is AI-generated.
+- **Dashboard redesign**: Removed "New Decision Request" 4-button grid → replaced with a text input + "Generate Look" button. Removed 3 stat cards → slim count line. Dark purple aesthetic throughout. Page title "Your Looks".
+- **OutfitCard redesign**: Dark theme matching app. Trash icon top-right, heart/save + "Why this works" + Details + "Shop This Look" actions. No "Show another direction" or "Not for today".
+- **ShoppingModal redesign**: Dark themed, skeleton loading, 3 store buttons per item.
+
 ## Recent Updates (Mar 7, 2026) — Session 2
 
 - **NOVA Chat Stylist** (`/chat`): Full-screen conversational AI chat interface

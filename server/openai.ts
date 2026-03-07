@@ -244,6 +244,52 @@ export interface ShoppingItem {
   searchQuery: string;
 }
 
+// ── Text-based shopping extraction (no Vision API — uses stored outfit text)
+export async function extractShoppingItemsFromText(
+  primaryRecommendation: string,
+  backupRecommendation: string,
+  occasion: string,
+  profileContext?: string
+): Promise<ShoppingItem[]> {
+  try {
+    const outfitDescription = [
+      `Primary look: ${primaryRecommendation}`,
+      backupRecommendation ? `Backup look: ${backupRecommendation}` : "",
+      `Occasion: ${occasion}`,
+    ].filter(Boolean).join("\n");
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a fashion shopping assistant. Given an outfit description, identify 4–5 specific shoppable clothing or accessory pieces.
+For each piece return a targeted search query that would find it on a shopping site.
+Return JSON only: { "items": [{ "name": string, "description": string, "category": string, "searchQuery": string }] }
+Categories: Top, Bottom, Shoes, Outerwear, Accessory, Bag.
+Keep descriptions concise and search queries specific (include color, material, silhouette where mentioned).`
+        },
+        {
+          role: "user",
+          content: `Extract shoppable items from this outfit description:\n\n${outfitDescription}`
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 600,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) return [];
+    const parsed = JSON.parse(content);
+    const items = parsed.items || [];
+    console.log(`Text-based extraction: found ${items.length} shopping items`);
+    return items;
+  } catch (error) {
+    console.error("Text-based shopping extraction error:", error);
+    return [];
+  }
+}
+
 export async function extractShoppingItemsFromImage(imageUrl: string): Promise<ShoppingItem[]> {
   try {
     console.log(`Extracting shopping items from image: ${imageUrl}`);

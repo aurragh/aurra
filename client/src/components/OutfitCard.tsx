@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles } from "lucide-react";
 
 interface OutfitCardProps {
   outfit: any;
@@ -83,6 +83,18 @@ export function OutfitCard({
               {outfit.occasion}
             </span>
           )}
+          <span
+            className="absolute top-3 right-3 flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium"
+            style={{
+              background: "rgba(124,58,237,0.55)",
+              backdropFilter: "blur(6px)",
+              color: "#e2d9f3",
+              border: "1px solid rgba(168,85,247,0.35)",
+            }}
+          >
+            <Sparkles className="w-2.5 h-2.5" />
+            AI Exclusive
+          </span>
         </div>
       ) : (
         <div

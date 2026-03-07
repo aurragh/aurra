@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromImage, novaChatResponse } from "./openai";
+import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromText, novaChatResponse } from "./openai";
 import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema, insertWardrobeItemSchema } from "@shared/schema";
 import path from 'path';
@@ -400,53 +400,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const outfitId = req.params.id;
-      
-      // Get the outfit to access its image URL
+
       const outfit = await storage.getOutfit(outfitId, userId);
       if (!outfit) {
         return res.status(404).json({ message: "Outfit not found" });
       }
-      
-      if (!outfit.imageUrl) {
-        return res.status(400).json({ message: "Outfit has no image to analyze" });
+
+      const primary = outfit.primaryRecommendation || outfit.description || "";
+      const backup = outfit.backupRecommendation || "";
+      const occasion = outfit.occasion || "general";
+
+      if (!primary) {
+        return res.json({ items: [] });
       }
-      
-      // Construct public URL for GPT-4 Vision
-      let publicImageUrl: string;
-      
-      if (outfit.imageUrl.startsWith('http://') || outfit.imageUrl.startsWith('https://')) {
-        // Already an absolute URL (legacy DALL-E URLs)
-        publicImageUrl = outfit.imageUrl;
-      } else {
-        // Relative path - construct full URL using request host
-        const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-        const host = req.get('host') || 'localhost:5000';
-        publicImageUrl = `${protocol}://${host}${outfit.imageUrl}`;
-      }
-      
-      console.log(`Shopping assistant analyzing image: ${publicImageUrl}`);
-      
-      // Extract shopping items using GPT-4 Vision with public URL
-      const itemsRaw = await extractShoppingItemsFromImage(publicImageUrl);
-      
-      // Defensive guard: ensure items is always an array
+
+      console.log(`Shopping: extracting items from outfit text for outfit ${outfitId}`);
+
+      const itemsRaw = await extractShoppingItemsFromText(primary, backup, occasion);
       const items = Array.isArray(itemsRaw) ? itemsRaw : [];
-      
-      // Generate Google Shopping URLs for each item with proper null checking
+
       const shoppingItems = items
-        .filter(item => item && item.name) // Filter out invalid items
-        .map(item => ({
-          name: item.name || "Fashion Item",
-          description: item.description || "Stylish fashion piece",
-          category: item.category || "Clothing",
-          shoppingLinks: [
-            {
-              store: "Google Shopping",
-              url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.searchQuery || item.name || "fashion item")}`
-            }
-          ]
-        }));
-      
+        .filter(item => item && item.name)
+        .map(item => {
+          const q = encodeURIComponent(item.searchQuery || item.name || "fashion item");
+          return {
+            name: item.name || "Fashion Item",
+            description: item.description || "",
+            category: item.category || "Clothing",
+            shoppingLinks: [
+              {
+                store: "Google Shopping",
+                url: `https://www.google.com/search?tbm=shop&q=${q}`,
+              },
+              {
+                store: "ASOS",
+                url: `https://www.asos.com/search/?q=${q}`,
+              },
+              {
+                store: "Farfetch",
+                url: `https://www.farfetch.com/shopping/women/search/items.aspx?q=${q}`,
+              },
+            ],
+          };
+        });
+
       res.json({ items: shoppingItems });
     } catch (error) {
       console.error("Error extracting shopping items:", error);
