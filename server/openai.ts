@@ -411,7 +411,7 @@ export async function generateTryOnImage(
 
     const prompt = `a photo of a woman img, wearing ${outfitText}, full body outfit shot, professional fashion editorial photography, clean studio background, sharp focus, high-end fashion magazine quality`;
 
-    const output = await replicate.run("tencentarc/photomaker", {
+    const output = await replicate.run("tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4", {
       input: {
         prompt,
         input_image: avatarPhotoUrl,
