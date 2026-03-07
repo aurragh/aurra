@@ -8,6 +8,22 @@ The platform is currently **fully free** — all subscription/upgrade flows are 
 
 ## Recent Updates (Mar 7, 2026)
 
+- **NOVA Voice AI Quiz**: Completely redesigned style quiz as a psychological profiling chatbot
+  - Conversational chat-style UI — NOVA presents questions as animated chat bubbles (typewriter effect)
+  - Animated purple orb avatar in sticky header, pulsing when idle/speaking/listening
+  - 11 psychological questions across 3 phases: Who You Are / How You Show Up / The Decision
+  - Phase 1: identity word, dressing relationship, impression goals, confidence trigger
+  - Phase 2: presence archetype, body frame, color palette, industry, daily routine
+  - Phase 3: investment range, occasions
+  - Single-select questions auto-advance 700ms after selection (no Next button)
+  - Multi-select questions show Continue button after selecting
+  - Answered questions show compact NOVA+user chat history with user bubbles on the right
+  - Web Speech API voice: NOVA speaks questions aloud (SpeechSynthesis), user can hold mic to answer (SpeechRecognition) — no API key needed, built into browser
+  - NOVA intro speech on load: "Hi, I'm NOVA. I'll help you build your style profile."
+  - Mute button toggles NOVA's voice; graceful fallback if voice not supported
+  - Richer psychological profile stored in `personality` JSON field
+  - System prompt and OpenAI prompt updated to use psychological data for personalized "why" reasoning
+
 - **Production-ready cleanup**: Removed all subscription/upgrade references for free-tier launch
   - Pricing section removed from landing page
   - "Pricing" nav link removed from navigation
