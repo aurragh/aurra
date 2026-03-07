@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,17 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
   const [shoppingModalOutfitId, setShoppingModalOutfitId] = useState<string | null>(null);
+  const [highlightNewOutfit, setHighlightNewOutfit] = useState(false);
+  const firstOutfitRef = useRef<HTMLDivElement>(null);
+
+  // T003: Detect ?new=1 param on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
+      setHighlightNewOutfit(true);
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -84,6 +95,17 @@ export default function Dashboard() {
     queryKey: ["/api/style-profile"],
     enabled: !!user,
   });
+
+  // T003: Scroll and highlight first outfit when ?new=1
+  useEffect(() => {
+    if (highlightNewOutfit && outfits.length > 0 && firstOutfitRef.current) {
+      setTimeout(() => {
+        firstOutfitRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+      const t = setTimeout(() => setHighlightNewOutfit(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [highlightNewOutfit, outfits]);
 
   const generateOutfitsMutation = useMutation({
     mutationFn: async (data: { occasion: string; count?: number }) => {
@@ -394,19 +416,33 @@ export default function Dashboard() {
 
                 <TabsContent value="outfits" data-testid="tab-content-outfits">
                   <div className="space-y-8">
-                    {outfits.map((outfit: any) => (
-                      <OutfitCard
+                    {outfits.map((outfit: any, index: number) => (
+                      <div
                         key={outfit.id}
-                        outfit={outfit}
-                        onFavorite={(id) => toggleFavoriteMutation.mutate(id)}
-                        onDelete={(id) => deleteOutfitMutation.mutate(id)}
-                        onShop={(id) => setShoppingModalOutfitId(id)}
-                        onImageClick={(url, name) => setLightboxImage({ url, name })}
-                        onGenerateAnother={(occasion) => generateOutfitsMutation.mutate({ occasion, count: 1 })}
-                        isFavoritePending={toggleFavoriteMutation.isPending}
-                        isDeletePending={deleteOutfitMutation.isPending}
-                        isGenerating={generateOutfitsMutation.isPending}
-                      />
+                        ref={index === 0 ? firstOutfitRef : undefined}
+                        className="transition-all duration-700"
+                        style={
+                          index === 0 && highlightNewOutfit
+                            ? {
+                                borderRadius: "16px",
+                                boxShadow: "0 0 0 2px rgba(168,85,247,0.7), 0 0 40px rgba(168,85,247,0.25)",
+                                animation: "novaHighlight 1.5s ease-in-out infinite",
+                              }
+                            : undefined
+                        }
+                      >
+                        <OutfitCard
+                          outfit={outfit}
+                          onFavorite={(id) => toggleFavoriteMutation.mutate(id)}
+                          onDelete={(id) => deleteOutfitMutation.mutate(id)}
+                          onShop={(id) => setShoppingModalOutfitId(id)}
+                          onImageClick={(url, name) => setLightboxImage({ url, name })}
+                          onGenerateAnother={(occasion) => generateOutfitsMutation.mutate({ occasion, count: 1 })}
+                          isFavoritePending={toggleFavoriteMutation.isPending}
+                          isDeletePending={deleteOutfitMutation.isPending}
+                          isGenerating={generateOutfitsMutation.isPending}
+                        />
+                      </div>
                     ))}
                   </div>
                 </TabsContent>

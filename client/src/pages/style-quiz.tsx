@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
-import { Mic, MicOff, Volume2, VolumeX, ChevronRight, RotateCcw, Check } from "lucide-react";
+import { Mic, Volume2, VolumeX, ChevronRight, RotateCcw, Check, ArrowRight } from "lucide-react";
 import { type StyleProfile } from "@shared/schema";
 
 // ─── Question Data ────────────────────────────────────────────────────────────
@@ -228,6 +228,20 @@ const defaultAnswers: Answers = {
   occasions: [],
 };
 
+// ─── Build rich occasion context string (T002) ────────────────────────────────
+
+function buildOccasionContext(answers: Answers): string {
+  const primaryOccasion = answers.occasions[0] || "General styling";
+  const parts: string[] = [];
+  if (answers.identityWord) parts.push(`Identity: ${answers.identityWord}`);
+  if (answers.presenceArchetype) parts.push(`Presence: ${answers.presenceArchetype}`);
+  if (answers.confidenceTrigger) parts.push(`Confidence trigger: ${answers.confidenceTrigger}`);
+  if (answers.lifestyle.industry) parts.push(`Environment: ${answers.lifestyle.industry}`);
+  if (answers.impressionGoals.length > 0) parts.push(`Impression goal: ${answers.impressionGoals.join(", ")}`);
+  if (parts.length === 0) return primaryOccasion;
+  return `${primaryOccasion} — ${parts.join(", ")}`;
+}
+
 // ─── Typewriter Hook ──────────────────────────────────────────────────────────
 
 function useTypewriter(text: string, speed = 22, onDone?: () => void) {
@@ -255,18 +269,29 @@ function useTypewriter(text: string, speed = 22, onDone?: () => void) {
 
 // ─── NOVA Orb Component ───────────────────────────────────────────────────────
 
-function NovaOrb({ state }: { state: "idle" | "speaking" | "listening" }) {
+function NovaOrb({ state, size = "sm" }: { state: "idle" | "speaking" | "listening" | "processing"; size?: "sm" | "lg" }) {
+  const isLg = size === "lg";
+  const outerSize = isLg ? "w-36 h-36" : "w-20 h-20";
+  const innerSize = isLg ? "w-24 h-24" : "w-14 h-14";
+  const fontSize = isLg ? "text-xl" : "text-sm";
+
   return (
-    <div className="relative flex items-center justify-center w-20 h-20">
+    <div className={`relative flex items-center justify-center ${outerSize}`}>
       {state === "listening" && (
         <>
-          <div className="absolute w-20 h-20 rounded-full bg-purple-500/20 animate-ping" />
-          <div className="absolute w-16 h-16 rounded-full bg-purple-500/20 animate-ping" style={{ animationDelay: "0.2s" }} />
+          <div className={`absolute ${outerSize} rounded-full bg-purple-500/20 animate-ping`} />
+          <div className={`absolute ${isLg ? "w-28 h-28" : "w-16 h-16"} rounded-full bg-purple-500/20 animate-ping`} style={{ animationDelay: "0.2s" }} />
+        </>
+      )}
+      {state === "processing" && (
+        <>
+          <div className={`absolute ${outerSize} rounded-full border border-purple-500/30 animate-spin`} style={{ animationDuration: "3s" }} />
+          <div className={`absolute ${isLg ? "w-28 h-28" : "w-16 h-16"} rounded-full border border-purple-400/20 animate-spin`} style={{ animationDuration: "2s", animationDirection: "reverse" }} />
         </>
       )}
       {(state === "speaking" || state === "idle") && (
         <div
-          className="absolute w-20 h-20 rounded-full"
+          className={`absolute ${outerSize} rounded-full`}
           style={{
             background: "radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)",
             animation: state === "speaking" ? "novaGlow 0.8s ease-in-out infinite alternate" : "novaGlow 2s ease-in-out infinite alternate",
@@ -274,14 +299,17 @@ function NovaOrb({ state }: { state: "idle" | "speaking" | "listening" }) {
         />
       )}
       <div
-        className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-sm tracking-widest z-10"
+        className={`${innerSize} rounded-full flex items-center justify-center text-white font-bold tracking-widest z-10 ${fontSize}`}
         style={{
           background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6d28d9 100%)",
-          boxShadow: state === "listening"
-            ? "0 0 30px rgba(168,85,247,0.8), 0 0 60px rgba(168,85,247,0.4)"
-            : state === "speaking"
-            ? "0 0 20px rgba(168,85,247,0.6), 0 0 40px rgba(168,85,247,0.3)"
-            : "0 0 12px rgba(168,85,247,0.4)",
+          boxShadow:
+            state === "listening"
+              ? "0 0 30px rgba(168,85,247,0.8), 0 0 60px rgba(168,85,247,0.4)"
+              : state === "speaking"
+              ? "0 0 20px rgba(168,85,247,0.6), 0 0 40px rgba(168,85,247,0.3)"
+              : state === "processing"
+              ? "0 0 40px rgba(168,85,247,0.7), 0 0 80px rgba(168,85,247,0.3)"
+              : "0 0 12px rgba(168,85,247,0.4)",
           animation: state !== "idle" ? "novaOrb 1.5s ease-in-out infinite" : "novaOrb 3s ease-in-out infinite",
         }}
       >
@@ -369,6 +397,175 @@ function PhaseBadge({ phase }: { phase: number }) {
   );
 }
 
+// ─── NOVA Generation Screen (T001) ───────────────────────────────────────────
+
+const GEN_STEPS = [
+  "Mapping your profile...",
+  "Analyzing your occasion...",
+  "Building your recommendation...",
+  "Finalizing your look...",
+];
+
+function NovaGeneratingScreen({
+  answers,
+  isComplete,
+  onGoToDashboard,
+  isMuted,
+}: {
+  answers: Answers;
+  isComplete: boolean;
+  onGoToDashboard: () => void;
+  isMuted: boolean;
+}) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [showCTA, setShowCTA] = useState(false);
+  const [slowMessage, setSlowMessage] = useState(false);
+
+  // Profile recap pills
+  const pills: { label: string; value: string }[] = [];
+  if (answers.identityWord) pills.push({ label: "Identity", value: answers.identityWord });
+  if (answers.presenceArchetype) pills.push({ label: "Presence", value: answers.presenceArchetype.replace("The person who ", "") });
+  if (answers.lifestyle.industry) pills.push({ label: "World", value: answers.lifestyle.industry });
+  if (answers.confidenceTrigger && answers.confidenceTrigger !== "Inner confidence") pills.push({ label: "Style", value: answers.confidenceTrigger });
+
+  // Cycle status text
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStepIndex((prev) => (prev < GEN_STEPS.length - 1 ? prev + 1 : prev));
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Show slow message after 8s
+  useEffect(() => {
+    const t = setTimeout(() => setSlowMessage(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // When complete, show CTA
+  useEffect(() => {
+    if (isComplete) {
+      const t = setTimeout(() => setShowCTA(true), 400);
+      return () => clearTimeout(t);
+    }
+  }, [isComplete]);
+
+  // NOVA voice
+  useEffect(() => {
+    if (!isMuted && window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance("Got everything I need. Building your first recommendation now.");
+      u.rate = 0.88;
+      u.pitch = 1.05;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isComplete && !isMuted && window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance("Your first look is ready.");
+      u.rate = 0.88;
+      u.pitch = 1.05;
+      window.speechSynthesis.cancel();
+      setTimeout(() => window.speechSynthesis.speak(u), 300);
+    }
+  }, [isComplete]);
+
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+      style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 50%, #0d0812 100%)" }}
+    >
+      {/* Orb */}
+      <div className="mb-8">
+        <NovaOrb state={isComplete ? "speaking" : "processing"} size="lg" />
+      </div>
+
+      {/* Profile recap */}
+      {pills.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-sm animate-fadeIn">
+          {pills.map((p) => (
+            <div
+              key={p.label}
+              className="px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{
+                background: "rgba(139,92,246,0.12)",
+                border: "1px solid rgba(139,92,246,0.25)",
+                color: "#c4b5fd",
+              }}
+            >
+              <span className="text-purple-400/60 mr-1">{p.label}:</span>
+              {p.value}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Status text */}
+      {!isComplete && (
+        <div className="space-y-3 animate-fadeIn">
+          <p
+            className="text-purple-200 text-base font-medium transition-all duration-500"
+            key={stepIndex}
+            style={{ animation: "fadeIn 0.4s ease forwards" }}
+          >
+            {GEN_STEPS[stepIndex]}
+          </p>
+          {slowMessage && (
+            <p className="text-gray-500 text-sm animate-fadeIn">
+              Still working... this takes a moment.
+            </p>
+          )}
+          <div className="flex gap-1.5 justify-center mt-4">
+            {GEN_STEPS.map((_, i) => (
+              <div
+                key={i}
+                className="h-1 rounded-full transition-all duration-500"
+                style={{
+                  width: i === stepIndex ? "24px" : "6px",
+                  background: i <= stepIndex ? "#a855f7" : "rgba(168,85,247,0.2)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Complete state */}
+      {isComplete && showCTA && (
+        <div className="space-y-4 animate-fadeIn">
+          <p className="text-white text-lg font-semibold">Your first look is ready.</p>
+          <p className="text-purple-300/70 text-sm">NOVA built this from your profile.</p>
+          <button
+            onClick={onGoToDashboard}
+            className="mt-4 flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-base transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+              boxShadow: "0 0 30px rgba(168,85,247,0.4), 0 4px 20px rgba(0,0,0,0.3)",
+            }}
+          >
+            See Your Look
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Complete state before CTA ready */}
+      {isComplete && !showCTA && (
+        <div className="flex gap-1 justify-center">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-2 h-2 rounded-full bg-purple-400"
+              style={{ animation: `waveBar 0.6s ease-in-out ${i * 0.15}s infinite` }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function StyleQuiz() {
@@ -387,6 +584,9 @@ export default function StyleQuiz() {
   const [confirmedAnswers, setConfirmedAnswers] = useState<number[]>([]);
   const [autoAdvancing, setAutoAdvancing] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  // Generation screen state (T001)
+  const [showGenerating, setShowGenerating] = useState(false);
+  const [generationComplete, setGenerationComplete] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -395,13 +595,13 @@ export default function StyleQuiz() {
   const totalQ = QUESTIONS.length;
 
   // ── Typewriter for current question
-  const { displayed: novaText, done: typingDone } = useTypewriter(
+  const { displayed: novaText } = useTypewriter(
     question.novaText,
     20,
     () => setShowOptions(true)
   );
 
-  // Show options immediately when question changes (also set by typewriter done)
+  // Show options when question changes
   useEffect(() => {
     setShowOptions(false);
     const t = setTimeout(() => setShowOptions(true), question.novaText.length * 20 + 100);
@@ -490,7 +690,6 @@ export default function StyleQuiz() {
       const colorPrefs = JSON.parse(existingProfile.colorPreferences || "[]");
       const occasions = JSON.parse(existingProfile.occasions || "[]");
       const lifestyle = JSON.parse(existingProfile.lifestyle || "{}");
-      const intentMoments = personality.intentMoments ? JSON.parse(personality.intentMoments) : [];
 
       setAnswers({
         identityWord: personality.identityWord || "",
@@ -508,29 +707,32 @@ export default function StyleQuiz() {
     }
   }, [existingProfile, isEditing]);
 
-  // ── Save mutation
+  // ── Save mutation (T001 + T002: shows generation screen, uses rich occasion)
   const saveProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
       await apiRequest("POST", "/api/style-profile", profileData);
       if (!isEditing && answers.occasions.length > 0) {
+        // T002: build rich occasion context string
+        const richOccasion = buildOccasionContext(answers);
         await apiRequest("POST", "/api/generate-outfits", {
-          occasion: answers.occasions[0],
+          occasion: richOccasion,
           count: 1,
         });
       }
     },
     onSuccess: () => {
-      toast({
-        title: isEditing ? "Profile Updated!" : "Profile Saved!",
-        description: answers.occasions.length > 0
-          ? "Building your first recommendation..."
-          : "Your style profile is ready.",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/style-profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outfits"] });
-      setLocation("/dashboard");
+      if (isEditing) {
+        toast({ title: "Profile Updated!" });
+        setLocation("/dashboard");
+      } else {
+        // T001: show completion state in generation screen
+        setGenerationComplete(true);
+      }
     },
     onError: (error) => {
+      setShowGenerating(false);
       if (isUnauthorizedError(error)) {
         window.location.href = "/api/login";
         return;
@@ -563,7 +765,6 @@ export default function StyleQuiz() {
           setAnswers((prev) => ({ ...prev, [q.field]: value }));
         }
 
-        // Auto-advance after short delay
         if (!autoAdvancing) {
           setAutoAdvancing(true);
           setTimeout(() => {
@@ -575,7 +776,6 @@ export default function StyleQuiz() {
           }, 700);
         }
       } else {
-        // Multi-select: toggle
         const current = (answers as any)[q.field] as string[];
         const updated = current.includes(value)
           ? current.filter((v) => v !== value)
@@ -596,30 +796,44 @@ export default function StyleQuiz() {
     }
   };
 
-  // ── Submit
-  const handleSubmit = () => {
+  // ── Submit — shows generating screen immediately (T001)
+  const handleSubmit = (currentAnswers?: Answers) => {
+    const finalAnswers = currentAnswers || answers;
     window.speechSynthesis?.cancel();
+
     const personalityData = {
-      identityWord: answers.identityWord,
-      dressingRelationship: answers.dressingRelationship,
-      impressionGoals: JSON.stringify(answers.impressionGoals),
-      confidenceTrigger: answers.confidenceTrigger,
-      presenceArchetype: answers.presenceArchetype,
-      presenceGoal: answers.presenceArchetype,
-      intentMoments: JSON.stringify(answers.occasions),
+      identityWord: finalAnswers.identityWord,
+      dressingRelationship: finalAnswers.dressingRelationship,
+      impressionGoals: JSON.stringify(finalAnswers.impressionGoals),
+      confidenceTrigger: finalAnswers.confidenceTrigger,
+      presenceArchetype: finalAnswers.presenceArchetype,
+      presenceGoal: finalAnswers.presenceArchetype,
+      intentMoments: JSON.stringify(finalAnswers.occasions),
     };
     const profileData = {
       personality: JSON.stringify(personalityData),
-      bodyType: answers.bodyType,
-      colorPreferences: JSON.stringify([answers.colorPalette].filter(Boolean)),
-      stylePreferences: JSON.stringify([answers.presenceArchetype].filter(Boolean)),
+      bodyType: finalAnswers.bodyType,
+      colorPreferences: JSON.stringify([finalAnswers.colorPalette].filter(Boolean)),
+      stylePreferences: JSON.stringify([finalAnswers.presenceArchetype].filter(Boolean)),
       clothingItems: JSON.stringify([]),
-      lifestyle: JSON.stringify(answers.lifestyle),
-      budget: answers.budget,
-      occasions: JSON.stringify(answers.occasions),
+      lifestyle: JSON.stringify(finalAnswers.lifestyle),
+      budget: finalAnswers.budget,
+      occasions: JSON.stringify(finalAnswers.occasions),
       completed: true,
     };
+
+    // Show generation screen before API call (T001)
+    if (!isEditing && finalAnswers.occasions.length > 0) {
+      setShowGenerating(true);
+    }
+
     saveProfileMutation.mutate(profileData);
+  };
+
+  // ── Go to dashboard from generation screen (T003: add ?new=1)
+  const handleGoToDashboard = () => {
+    window.speechSynthesis?.cancel();
+    setLocation("/dashboard?new=1");
   };
 
   // ── Voice: start listening
@@ -700,6 +914,8 @@ export default function StyleQuiz() {
     setCurrentQ(0);
     setConfirmedAnswers([]);
     setIsEditing(false);
+    setShowGenerating(false);
+    setGenerationComplete(false);
     toast({ title: "Reset", description: "Starting fresh." });
   };
 
@@ -720,7 +936,6 @@ export default function StyleQuiz() {
     return q.options.find((o) => o.value === val)?.label || val || "—";
   };
 
-  // ── Phase change detection
   const prevPhase = currentQ > 0 ? QUESTIONS[currentQ - 1].phase : null;
   const showPhaseHeader = question.phase !== prevPhase;
 
@@ -736,26 +951,34 @@ export default function StyleQuiz() {
     );
   }
 
+  // ── T001: Show NOVA generation screen
+  if (showGenerating) {
+    return (
+      <>
+        <style>{`
+          @keyframes novaOrb { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+          @keyframes novaGlow { from { opacity: 0.4; transform: scale(0.9); } to { opacity: 0.9; transform: scale(1.15); } }
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes waveBar { 0%, 100% { height: 4px; } 50% { height: 20px; } }
+          .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
+        `}</style>
+        <NovaGeneratingScreen
+          answers={answers}
+          isComplete={generationComplete}
+          onGoToDashboard={handleGoToDashboard}
+          isMuted={isMuted}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <style>{`
-        @keyframes novaOrb {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.06); }
-          100% { transform: scale(1); }
-        }
-        @keyframes novaGlow {
-          from { opacity: 0.4; transform: scale(0.9); }
-          to { opacity: 0.9; transform: scale(1.15); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes waveBar {
-          0%, 100% { height: 4px; }
-          50% { height: 20px; }
-        }
+        @keyframes novaOrb { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+        @keyframes novaGlow { from { opacity: 0.4; transform: scale(0.9); } to { opacity: 0.9; transform: scale(1.15); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes waveBar { 0%, 100% { height: 4px; } 50% { height: 20px; } }
         .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
         .wave-bar { width: 3px; border-radius: 2px; background: rgb(168,85,247); animation: waveBar 0.6s ease-in-out infinite; }
         .wave-bar:nth-child(2) { animation-delay: 0.1s; }
@@ -826,7 +1049,6 @@ export default function StyleQuiz() {
               )}
               {qIdx === 0 && <PhaseBadge phase={QUESTIONS[0].phase} />}
 
-              {/* NOVA question (compact) */}
               <div className="flex items-start gap-3 mb-2">
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
@@ -842,7 +1064,6 @@ export default function StyleQuiz() {
                 </div>
               </div>
 
-              {/* User answer */}
               <UserBubble text={getConfirmedLabel(qIdx)} />
             </div>
           ))}
@@ -852,7 +1073,6 @@ export default function StyleQuiz() {
             {showPhaseHeader && <PhaseBadge phase={question.phase} />}
             {confirmedAnswers.length === 0 && currentQ === 0 && <PhaseBadge phase={1} />}
 
-            {/* NOVA message */}
             <div className="flex items-start gap-3 mb-4">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5"
@@ -875,7 +1095,6 @@ export default function StyleQuiz() {
               </div>
             </div>
 
-            {/* Options */}
             {showOptions && (
               <div className="space-y-2 ml-10 animate-fadeIn">
                 {question.options.map((opt) => {
@@ -896,7 +1115,7 @@ export default function StyleQuiz() {
                   <div className="pt-2">
                     {isLastQuestion ? (
                       <Button
-                        onClick={handleSubmit}
+                        onClick={() => handleSubmit()}
                         disabled={!isMultiSelected || saveProfileMutation.isPending}
                         className="w-full rounded-xl font-medium h-11"
                         style={{

@@ -109,6 +109,11 @@
   }
 }
 
+@keyframes novaHighlight {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(168,85,247,0.7), 0 0 40px rgba(168,85,247,0.25); }
+  50% { box-shadow: 0 0 0 3px rgba(168,85,247,0.9), 0 0 60px rgba(168,85,247,0.4); }
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent;
