@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -23,22 +22,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
-import { 
-  Heart, 
-  Star, 
-  Award, 
-  ShoppingBag,
-  RefreshCw,
+import {
+  Heart,
+  Sparkles,
   Trash2,
   Menu,
   Home,
   LogOut,
-  User,
   Plus,
   X,
-  ZoomIn,
   MessageCircle,
-  Shirt
+  Shirt,
+  RefreshCw,
+  Send,
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 import { ShoppingModal } from "@/components/ShoppingModal";
@@ -53,9 +49,10 @@ export default function Dashboard() {
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
   const [shoppingModalOutfitId, setShoppingModalOutfitId] = useState<string | null>(null);
   const [highlightNewOutfit, setHighlightNewOutfit] = useState(false);
+  const [occasionInput, setOccasionInput] = useState("");
   const firstOutfitRef = useRef<HTMLDivElement>(null);
 
-  // T003: Detect ?new=1 param on mount
+  // Detect ?new=1 param on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("new") === "1") {
@@ -75,7 +72,6 @@ export default function Dashboard() {
       setTimeout(() => {
         window.location.href = "/api/login";
       }, 500);
-      return;
     }
   }, [user, isLoading, toast]);
 
@@ -99,7 +95,7 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // T003: Scroll and highlight first outfit when ?new=1
+  // Scroll and highlight first outfit when ?new=1
   useEffect(() => {
     if (highlightNewOutfit && outfits.length > 0 && firstOutfitRef.current) {
       setTimeout(() => {
@@ -116,28 +112,19 @@ export default function Dashboard() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Outfit Generated!",
-        description: "Your new outfit is ready!",
-      });
+      toast({ title: "New look ready!" });
+      setOccasionInput("");
       refetchOutfits();
       queryClient.invalidateQueries({ queryKey: ["/api/user/points"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
+        window.location.href = "/api/login";
         return;
       }
       toast({
         title: "Error",
-        description: "Failed to generate outfit. Please try again.",
+        description: "Failed to generate look. Please try again.",
         variant: "destructive",
       });
     },
@@ -148,29 +135,12 @@ export default function Dashboard() {
       await apiRequest("DELETE", `/api/outfits/${id}`);
     },
     onSuccess: () => {
-      toast({
-        title: "Outfit Deleted",
-        description: "Outfit moved to trash. You can restore it within 30 days.",
-      });
+      toast({ title: "Look removed", description: "You can restore it from Trash within 30 days." });
       queryClient.invalidateQueries({ queryKey: ["/api/outfits"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to delete outfit",
-        variant: "destructive",
-      });
+      if (isUnauthorizedError(error)) { window.location.href = "/api/login"; return; }
+      toast({ title: "Error", description: "Failed to remove look", variant: "destructive" });
     },
   });
 
@@ -180,260 +150,226 @@ export default function Dashboard() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Favorite Updated",
-        description: "Outfit favorite status changed.",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/outfits"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to update favorite",
-        variant: "destructive",
-      });
+      if (isUnauthorizedError(error)) { window.location.href = "/api/login"; return; }
     },
   });
 
-  const favoriteOutfits = outfits.filter((outfit) => outfit.isFavorite);
+  const handleGenerate = () => {
+    const occasion = occasionInput.trim() || "general";
+    generateOutfitsMutation.mutate({ occasion, count: 1 });
+  };
+
+  const favoriteOutfits = outfits.filter((o) => o.isFavorite);
+  const needsProfile = !styleProfile || !styleProfile.completed;
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-950 via-purple-900 to-black">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0812" }}>
+        <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
-  // Check if user hasn't completed their profile
-  const needsProfile = !styleProfile || !styleProfile.completed;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-black">
-      {/* Navigation */}
-      <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-white" data-testid="heading-dashboard">
-                Aurra
-              </h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="button-menu">
-                    <Menu className="w-5 h-5 mr-2" />
-                    Menu
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-gray-900 text-white border-gray-700">
-                  <DropdownMenuLabel>Navigation</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-gray-700" />
-                  <Link href="/landing">
-                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-landing">
-                      <Home className="mr-2 h-4 w-4" />
-                      <span>Back to Landing</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/quiz">
-                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-quiz">
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      <span>Edit Style Profile</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/chat">
-                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-chat">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      <span>Chat with NOVA</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/wardrobe">
-                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-wardrobe">
-                      <Shirt className="mr-2 h-4 w-4" />
-                      <span>My Wardrobe</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/trash">
-                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-trash">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>View Trash</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <DropdownMenuSeparator className="bg-gray-700" />
-                  <DropdownMenuItem 
-                    onClick={() => window.location.href = "/api/logout"}
-                    className="hover:bg-gray-800 cursor-pointer text-red-400"
-                    data-testid="menu-item-logout"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+    <div
+      className="min-h-screen"
+      style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 50%, #0d0812 100%)" }}
+    >
+      {/* Nav */}
+      <nav
+        className="sticky top-0 z-30"
+        style={{
+          background: "rgba(13,8,18,0.9)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+        }}
+      >
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+          <h1
+            className="text-xl font-bold text-white tracking-tight"
+            data-testid="heading-dashboard"
+          >
+            Aurra
+          </h1>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-gray-300 hover:text-white transition-colors"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+                data-testid="button-menu"
+              >
+                <Menu className="w-4 h-4" />
+                Menu
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-52 border-gray-800"
+              style={{ background: "#130d1a", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              <DropdownMenuLabel className="text-gray-500 text-xs">Navigation</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-gray-800" />
+              <Link href="/landing">
+                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-landing">
+                  <Home className="mr-2 h-4 w-4" />
+                  Back to Landing
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/quiz">
+                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-quiz">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Edit Style Profile
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/chat">
+                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-chat">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Chat with NOVA
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/wardrobe">
+                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-wardrobe">
+                  <Shirt className="mr-2 h-4 w-4" />
+                  My Wardrobe
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/trash">
+                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-trash">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  View Trash
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator className="bg-gray-800" />
+              <DropdownMenuItem
+                onClick={() => (window.location.href = "/api/logout")}
+                className="text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-white/5 focus:bg-white/5 cursor-pointer"
+                data-testid="menu-item-logout"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Message */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2" data-testid="heading-welcome">
-            Decision History
-          </h2>
-          <p className="text-gray-300">
-            {user?.email && `Authenticated as ${user.email}`}
-          </p>
-        </div>
+      <div className="max-w-2xl mx-auto px-4 py-6">
 
-        {/* If no profile, show CTA to complete quiz */}
+        {/* No profile CTA */}
         {needsProfile ? (
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-complete-profile">
-            <CardHeader className="text-center">
-              <CardTitle className="text-white text-2xl">
-                Ready to decide?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-300 mb-6">
-                Start the decision process to get grounded recommendations for your next room.
-              </p>
-              <Link href="/quiz">
-                <Button 
-                  size="lg"
-                  className="bg-white text-purple-900 hover:bg-white/90"
-                  data-testid="button-style-quiz"
-                >
-                  Start Decision Process
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <div
+            className="rounded-2xl p-8 text-center"
+            style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}
+            data-testid="card-complete-profile"
+          >
+            <div
+              className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-lg font-bold"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+            >
+              N
+            </div>
+            <h2 className="text-white text-xl font-semibold mb-2">Build your style profile</h2>
+            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+              Answer 11 questions with NOVA to get personalized look recommendations.
+            </p>
+            <Link href="/quiz">
+              <button
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+                data-testid="button-style-quiz"
+              >
+                Start Style Profile
+              </button>
+            </Link>
+          </div>
         ) : (
           <>
             {/* Style DNA Card */}
             {styleProfile?.completed && <StyleDNACard profile={styleProfile} />}
 
-            {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-level">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-300 text-sm">Style Level</p>
-                      <p className="text-2xl font-bold text-white">{userPoints?.level || 'Beginner'}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-purple-200 text-sm">{userPoints?.points || 0} points</span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-400">Total: {userPoints?.totalEarned || 0}</span>
-                      </div>
-                    </div>
-                    <Award className="w-10 h-10 text-purple-400" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-outfits">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-300 text-sm">Total Outfits</p>
-                      <p className="text-2xl font-bold text-white">{outfits.length}</p>
-                      <p className="text-purple-200 text-sm">{favoriteOutfits.length} favorites</p>
-                    </div>
-                    <ShoppingBag className="w-10 h-10 text-purple-400" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20" data-testid="card-stat-collections">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-300 text-sm">Collections</p>
-                      <p className="text-2xl font-bold text-white">{collections.length}</p>
-                      <p className="text-purple-200 text-sm">Style sets</p>
-                    </div>
-                    <Star className="w-10 h-10 text-purple-400" />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Page header with count */}
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-white text-lg font-semibold" data-testid="heading-welcome">
+                Your Looks
+              </h2>
+              <p className="text-gray-600 text-xs">
+                {outfits.length} {outfits.length === 1 ? "look" : "looks"} · {favoriteOutfits.length} saved
+              </p>
             </div>
 
-            {/* Generate More Outfits Section */}
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-8" data-testid="card-generate-more">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Plus className="w-6 h-6 mr-2 text-purple-400" />
-                  New Decision Request
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300 mb-4">What are you choosing for right now?</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { value: 'meeting', label: 'High-Stakes Meeting', icon: '⚖️' },
-                    { value: 'speaking', label: 'Public Speaking', icon: '🎤' },
-                    { value: 'leadership', label: 'Daily Leadership', icon: '🏛️' },
-                    { value: 'travel', label: 'Visibility Travel', icon: '🌐' }
-                  ].map((occasion) => (
-                    <Card 
-                      key={occasion.value}
-                      className={`cursor-pointer transition-all duration-200 hover:scale-105 bg-white/5 border-white/10 hover:border-purple-400 ${generateOutfitsMutation.isPending ? 'opacity-50 pointer-events-none' : ''}`}
-                      onClick={() => {
-                        if (!generateOutfitsMutation.isPending) {
-                          generateOutfitsMutation.mutate({ occasion: occasion.label, count: 1 });
-                        }
-                      }}
-                      data-testid={`generate-more-${occasion.value}`}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <div className="text-2xl mb-2">{occasion.icon}</div>
-                        <p className="text-white text-sm font-medium">{occasion.label}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                
-                {generateOutfitsMutation.isPending && (
-                  <div className="text-center mt-6">
-                    <div className="animate-spin w-6 h-6 border-4 border-purple-600 border-t-transparent mx-auto mb-2" />
-                    <p className="text-purple-200 text-sm">Processing decision...</p>
-                  </div>
+            {/* Generate CTA bar */}
+            <div
+              className="flex items-center gap-2 mb-6 p-2 rounded-2xl"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+              data-testid="card-generate-more"
+            >
+              <input
+                type="text"
+                value={occasionInput}
+                onChange={(e) => setOccasionInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !generateOutfitsMutation.isPending && handleGenerate()}
+                placeholder="Describe the moment (e.g. board meeting, evening dinner...)"
+                className="flex-1 bg-transparent text-sm text-gray-300 placeholder-gray-600 outline-none px-3 py-2"
+                disabled={generateOutfitsMutation.isPending}
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={generateOutfitsMutation.isPending}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-60 flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+                data-testid="generate-more-meeting"
+              >
+                {generateOutfitsMutation.isPending ? (
+                  <>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Generate Look
+                  </>
                 )}
-              </CardContent>
-            </Card>
+              </button>
+            </div>
 
-            {/* Outfits Section */}
+            {/* Outfits section */}
             {outfits.length > 0 ? (
-              <Tabs defaultValue="outfits" className="space-y-6">
-                <TabsList className="bg-white/10 border-white/20" data-testid="tabs-dashboard">
-                  <TabsTrigger value="outfits" className="data-[state=active]:bg-purple-600">
-                    All Decisions
+              <Tabs defaultValue="outfits" className="space-y-5">
+                <TabsList
+                  className="w-full border-0 p-1 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  data-testid="tabs-dashboard"
+                >
+                  <TabsTrigger
+                    value="outfits"
+                    className="flex-1 text-xs rounded-lg data-[state=active]:text-white data-[state=active]:shadow-none text-gray-500"
+                    style={{ "--tw-ring-shadow": "none" } as any}
+                  >
+                    All Looks
                   </TabsTrigger>
-                  <TabsTrigger value="favorites" className="data-[state=active]:bg-purple-600">
-                    Saved Recommendations
+                  <TabsTrigger
+                    value="favorites"
+                    className="flex-1 text-xs rounded-lg data-[state=active]:text-white data-[state=active]:shadow-none text-gray-500"
+                  >
+                    Saved ({favoriteOutfits.length})
                   </TabsTrigger>
-                  <TabsTrigger value="rewards" className="data-[state=active]:bg-purple-600">
+                  <TabsTrigger
+                    value="rewards"
+                    className="flex-1 text-xs rounded-lg data-[state=active]:text-white data-[state=active]:shadow-none text-gray-500"
+                  >
                     Rewards
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="outfits" data-testid="tab-content-outfits">
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     {outfits.map((outfit: any, index: number) => (
                       <div
                         key={outfit.id}
@@ -444,7 +380,6 @@ export default function Dashboard() {
                             ? {
                                 borderRadius: "16px",
                                 boxShadow: "0 0 0 2px rgba(168,85,247,0.7), 0 0 40px rgba(168,85,247,0.25)",
-                                animation: "novaHighlight 1.5s ease-in-out infinite",
                               }
                             : undefined
                         }
@@ -455,7 +390,6 @@ export default function Dashboard() {
                           onDelete={(id) => deleteOutfitMutation.mutate(id)}
                           onShop={(id) => setShoppingModalOutfitId(id)}
                           onImageClick={(url, name) => setLightboxImage({ url, name })}
-                          onGenerateAnother={(occasion) => generateOutfitsMutation.mutate({ occasion, count: 1 })}
                           isFavoritePending={toggleFavoriteMutation.isPending}
                           isDeletePending={deleteOutfitMutation.isPending}
                           isGenerating={generateOutfitsMutation.isPending}
@@ -467,7 +401,7 @@ export default function Dashboard() {
 
                 <TabsContent value="favorites" data-testid="tab-content-favorites">
                   {favoriteOutfits.length > 0 ? (
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                       {favoriteOutfits.map((outfit: any) => (
                         <OutfitCard
                           key={outfit.id}
@@ -476,7 +410,6 @@ export default function Dashboard() {
                           onDelete={(id) => deleteOutfitMutation.mutate(id)}
                           onShop={(id) => setShoppingModalOutfitId(id)}
                           onImageClick={(url, name) => setLightboxImage({ url, name })}
-                          onGenerateAnother={(occasion) => generateOutfitsMutation.mutate({ occasion, count: 1 })}
                           isFavoritePending={toggleFavoriteMutation.isPending}
                           isDeletePending={deleteOutfitMutation.isPending}
                           isGenerating={generateOutfitsMutation.isPending}
@@ -484,56 +417,59 @@ export default function Dashboard() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-300">No saved recommendations yet</p>
-                      <p className="text-gray-400 text-sm mt-2">Save your favorite looks to see them here!</p>
+                    <div className="text-center py-16">
+                      <Heart className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+                      <p className="text-gray-400 text-sm">No saved looks yet</p>
+                      <p className="text-gray-600 text-xs mt-1">Tap the heart on any look to save it here.</p>
                     </div>
                   )}
                 </TabsContent>
 
                 <TabsContent value="rewards" data-testid="tab-content-rewards">
-                  <div className="max-w-md mx-auto">
+                  <div className="max-w-sm mx-auto">
                     <PointsRedemption />
                   </div>
                 </TabsContent>
               </Tabs>
             ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                  <CardContent className="text-center py-12">
-                    <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-300 mb-2">No outfits generated yet</p>
-                    <p className="text-gray-400 text-sm">Click on an occasion above to generate your first personalized outfit!</p>
-                  </CardContent>
-                </Card>
-                <PointsRedemption />
+              <div
+                className="rounded-2xl p-10 text-center"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <Sparkles className="w-10 h-10 text-purple-600 mx-auto mb-3" />
+                <p className="text-gray-300 text-sm font-medium mb-1">No looks generated yet</p>
+                <p className="text-gray-600 text-xs">
+                  Use the box above to describe a moment and generate your first personalized look.
+                </p>
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Lightbox Modal */}
+      {/* Lightbox */}
       <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
-        <DialogContent className="max-w-4xl w-full bg-black/95 border-white/20 p-0" data-testid="dialog-lightbox">
-          <DialogTitle className="sr-only">{lightboxImage?.name || 'Outfit Image'}</DialogTitle>
+        <DialogContent
+          className="max-w-3xl w-full p-0 border-0"
+          style={{ background: "rgba(0,0,0,0.97)" }}
+          data-testid="dialog-lightbox"
+        >
+          <DialogTitle className="sr-only">{lightboxImage?.name || "Outfit Image"}</DialogTitle>
           <DialogDescription className="sr-only">Zoomed view of outfit image</DialogDescription>
           <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10 bg-black/50 text-white hover:bg-black/70"
+            <button
+              className="absolute top-3 right-3 z-10 p-2 rounded-full"
+              style={{ background: "rgba(255,255,255,0.1)" }}
               onClick={() => setLightboxImage(null)}
               data-testid="button-close-lightbox"
             >
-              <X className="w-6 h-6" />
-            </Button>
+              <X className="w-5 h-5 text-white" />
+            </button>
             {lightboxImage && (
-              <img 
-                src={lightboxImage.url} 
+              <img
+                src={lightboxImage.url}
                 alt={lightboxImage.name}
-                className="w-full h-auto max-h-[85vh] object-contain"
+                className="w-full h-auto max-h-[88vh] object-contain"
                 data-testid="img-lightbox"
               />
             )}

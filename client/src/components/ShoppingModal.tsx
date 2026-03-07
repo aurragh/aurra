@@ -1,15 +1,11 @@
-import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ShoppingBag, ExternalLink } from "lucide-react";
+import { Loader2, ShoppingBag, ExternalLink, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ShoppingItem {
@@ -28,6 +24,19 @@ interface ShoppingModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function SkeletonCard() {
+  return (
+    <div
+      className="rounded-xl p-4 animate-pulse"
+      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+    >
+      <div className="h-4 w-1/3 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.08)" }} />
+      <div className="h-3 w-2/3 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.06)" }} />
+      <div className="h-8 w-32 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }} />
+    </div>
+  );
+}
+
 export function ShoppingModal({ outfitId, open, onOpenChange }: ShoppingModalProps) {
   const { data: shoppingData, isLoading } = useQuery<{ items: ShoppingItem[] }>({
     queryKey: ["/api/outfits", outfitId, "shopping"],
@@ -44,79 +53,134 @@ export function ShoppingModal({ outfitId, open, onOpenChange }: ShoppingModalPro
     },
   });
 
-  const handleShopClick = (item: ShoppingItem, url: string, searchQuery: string) => {
-    // Track the click with the original search query
+  const handleShopClick = (item: ShoppingItem, url: string) => {
     trackClickMutation.mutate({
       outfitId,
       itemName: item.name,
-      searchQuery: searchQuery, // Store the actual search query, not the URL
+      searchQuery: item.category + " " + item.name,
     });
-    
-    // Open the shopping link
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" data-testid="dialog-shopping-modal">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2" data-testid="text-shopping-modal-title">
-            <ShoppingBag className="h-5 w-5" />
-            Shop This Look
-          </DialogTitle>
-          <DialogDescription data-testid="text-shopping-modal-description">
-            Find similar items from top online stores
-          </DialogDescription>
-        </DialogHeader>
-
-        {isLoading && (
-          <div className="flex items-center justify-center py-12" data-testid="loading-shopping-items">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <DialogContent
+        className="max-w-md w-full border-0 p-0 overflow-hidden"
+        style={{
+          background: "linear-gradient(160deg, #130d1a, #0d0812)",
+          border: "1px solid rgba(168,85,247,0.2)",
+          borderRadius: "20px",
+          maxHeight: "85vh",
+        }}
+        data-testid="dialog-shopping-modal"
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+            >
+              <ShoppingBag className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-white font-semibold text-sm leading-tight">
+                Shop This Look
+              </DialogTitle>
+              <DialogDescription className="text-gray-500 text-xs">
+                Find each piece online
+              </DialogDescription>
+            </div>
           </div>
-        )}
+        </div>
 
-        {!isLoading && shoppingData?.items && shoppingData.items.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground" data-testid="text-no-shopping-items">
-            No items could be extracted from this outfit image.
-          </div>
-        )}
+        {/* Body */}
+        <div className="overflow-y-auto px-5 py-4 space-y-3" style={{ maxHeight: "calc(85vh - 72px)" }}>
+          {/* Loading */}
+          {isLoading && (
+            <div className="space-y-3" data-testid="loading-shopping-items">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          )}
 
-        {!isLoading && shoppingData?.items && shoppingData.items.length > 0 && (
-          <div className="space-y-4" data-testid="container-shopping-items">
-            {shoppingData.items.map((item, index) => (
-              <Card key={index} data-testid={`card-shopping-item-${index}`}>
-                <CardHeader>
-                  <CardTitle className="text-lg" data-testid={`text-item-name-${index}`}>
-                    {item.name}
-                  </CardTitle>
-                  <CardDescription data-testid={`text-item-category-${index}`}>
-                    {item.category}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4" data-testid={`text-item-description-${index}`}>
-                    {item.description}
-                  </p>
+          {/* Empty */}
+          {!isLoading && shoppingData?.items && shoppingData.items.length === 0 && (
+            <div className="text-center py-12" data-testid="text-no-shopping-items">
+              <ShoppingBag className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">No items could be identified from this look.</p>
+            </div>
+          )}
+
+          {/* Items */}
+          {!isLoading && shoppingData?.items && shoppingData.items.length > 0 && (
+            <div className="space-y-3" data-testid="container-shopping-items">
+              {shoppingData.items.map((item, index) => (
+                <div
+                  key={index}
+                  className="rounded-xl p-4"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                  data-testid={`card-shopping-item-${index}`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <p
+                      className="text-white text-sm font-semibold leading-snug"
+                      data-testid={`text-item-name-${index}`}
+                    >
+                      {item.name}
+                    </p>
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                      style={{
+                        background: "rgba(139,92,246,0.15)",
+                        border: "1px solid rgba(139,92,246,0.25)",
+                        color: "#c4b5fd",
+                      }}
+                      data-testid={`text-item-category-${index}`}
+                    >
+                      {item.category}
+                    </span>
+                  </div>
+
+                  {item.description && (
+                    <p
+                      className="text-gray-500 text-xs leading-relaxed mb-3"
+                      data-testid={`text-item-description-${index}`}
+                    >
+                      {item.description}
+                    </p>
+                  )}
+
                   <div className="flex flex-wrap gap-2">
                     {item.shoppingLinks.map((link, linkIndex) => (
-                      <Button
+                      <button
                         key={linkIndex}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleShopClick(item, link.url, item.category + ' ' + item.name)}
-                        className="gap-2"
+                        onClick={() => handleShopClick(item, link.url)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:opacity-90 active:scale-95"
+                        style={{
+                          background: "rgba(139,92,246,0.2)",
+                          border: "1px solid rgba(139,92,246,0.35)",
+                          color: "#c4b5fd",
+                        }}
                         data-testid={`button-shop-${index}-${linkIndex}`}
                       >
-                        <ExternalLink className="h-4 w-4" />
-                        Shop on {link.store}
-                      </Button>
+                        <ExternalLink className="w-3 h-3" />
+                        {link.store}
+                      </button>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
