@@ -1,6 +1,11 @@
 import OpenAI from "openai";
+import Replicate from "replicate";
 import type { StyleProfile } from "@shared/schema";
 import { aurraSystemPrompt } from "./aurraSystemPrompt";
+
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "default_key"
@@ -119,61 +124,40 @@ Occasion/Input: ${occasion}
   }
 }
 
-// Helper function to generate outfit images - structured for easy provider swapping
-async function generateWithDallE(
+// Generate outfit images using Replicate (flux-schnell model)
+async function generateWithReplicate(
   basicItems: string,
   occasion: string
 ): Promise<string | null> {
-  // Ensure we have items description
   const itemsDesc = basicItems || 'stylish outfit';
-  
+
+  const imagePrompt = `Professional fashion photography: complete outfit flat lay on pure white background. Items: ${itemsDesc} for ${occasion}. Vertically arranged: top garment at top, bottom garment in middle, shoes at bottom, accessories around. High-end fashion catalog aesthetic, crisp studio lighting, editorial quality. Ultra sharp focus, luxury brand photography. No models, no mannequins, no hangers.`;
+
+  console.log(`Replicate Image Prompt: ${imagePrompt}`);
+
   try {
-    // Full-body outfit visualization - complete head-to-toe look
-    const imagePrompt = `Professional fashion photography: COMPLETE OUTFIT from head to toe displayed as a flat lay arrangement on pure white background. Items: ${itemsDesc} for ${occasion}. 
-
-COMPOSITION: Vertically arranged flat lay showing the full outfit - top garment at top, bottom garment in middle, shoes at bottom, accessories positioned naturally around. Each item clearly visible and separated.
-
-STYLE: High-end fashion catalog aesthetic. Crisp shadows, studio lighting, editorial quality. Pure white (#FFFFFF) seamless background. No models, no mannequins, no hangers.
-
-QUALITY: Ultra sharp focus, professional product photography, luxury fashion brand quality. Clean, minimal, sophisticated.`;
-
-    console.log(`DALL-E Image Prompt: ${imagePrompt}`);
-
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: imagePrompt,
-      n: 1,
-      size: "1024x1792", // Portrait orientation for full outfit display
-      quality: "hd",
-      style: "natural"
+    const output = await replicate.run("black-forest-labs/flux-schnell", {
+      input: {
+        prompt: imagePrompt,
+        num_outputs: 1,
+        aspect_ratio: "9:16",
+        output_format: "webp",
+        output_quality: 90,
+        go_fast: true,
+      }
     });
 
-    return response.data?.[0]?.url || null;
-
-  } catch (error: any) {
-    console.error("DALL-E API error:", error);
-    
-    // Fallback to simpler prompt with standard size
-    if (error?.code === 'content_policy_violation' || error?.code === 'invalid_size') {
-      try {
-        const fallbackPrompt = `Fashion flat lay: ${itemsDesc} arranged vertically on white background, top to bottom layout, catalog style, professional product photography`;
-        
-        const retryResponse = await openai.images.generate({
-          model: "dall-e-3",
-          prompt: fallbackPrompt,
-          n: 1,
-          size: "1024x1024",
-          quality: "hd",
-          style: "natural"
-        });
-
-        return retryResponse.data?.[0]?.url || null;
-      } catch (retryError) {
-        console.error("DALL-E retry failed:", retryError);
-        return null;
-      }
+    // Output is an array of FileOutput objects
+    const outputArray = output as any[];
+    if (outputArray && outputArray.length > 0) {
+      const url = outputArray[0]?.url ? outputArray[0].url() : String(outputArray[0]);
+      console.log(`Replicate image generated: ${url}`);
+      return url || null;
     }
-    
+
+    return null;
+  } catch (error: any) {
+    console.error("Replicate API error:", error);
     return null;
   }
 }
@@ -185,14 +169,12 @@ export async function generateOutfitImage(
 ): Promise<string | null> {
   try {
     const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
-    
-    // Include ALL outfit items including accessories (not just first 3)
-    const allItems = items.map(item => 
+
+    const allItems = items.map(item =>
       `${item.color} ${item.category.toLowerCase()}`
     ).join(', ');
-    
-    // Use DALL-E ghost mannequin style (will add Replicate option when API token is available)
-    return await generateWithDallE(allItems, occasion);
+
+    return await generateWithReplicate(allItems || outfit.primary, occasion);
 
   } catch (error: any) {
     console.error("Image generation error:", error);
