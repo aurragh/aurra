@@ -1,7 +1,6 @@
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import FeaturesSection from "@/components/features-section";
-import PricingSection from "@/components/pricing-section";
 // removed FashionGallery import
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,8 +65,6 @@ export default function Landing() {
       </section>
 
       <FeaturesSection />
-      
-      <PricingSection onSelectPlan={handleGetStarted} />
       
       {/* Fashion Inspiration Gallery removed */}
       
