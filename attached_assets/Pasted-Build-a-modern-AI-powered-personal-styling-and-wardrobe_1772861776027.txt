@@ -1,0 +1,462 @@
+Build a modern AI-powered personal styling and wardrobe management application that helps users:
+
+• Understand their personal style
+• Digitize their wardrobe
+• Get AI-generated outfit suggestions
+• Virtually try clothes before buying
+• Shop confidently with recommendations
+
+The product should feel like a personal stylist, closet manager, and fashion assistant in one app.
+
+The app must prioritize personalization, simplicity, and visual design.
+
+The global AI fashion market is growing extremely fast and projected to reach $40B+ by 2034, driven by demand for personalization and virtual try-on experiences.
+
+PRODUCT STRUCTURE
+Core Modules
+
+AI Style Analysis
+
+Digital Wardrobe
+
+Outfit Generator
+
+Virtual Try-On
+
+AI Chat Stylist
+
+Shopping Recommendations
+
+Style History
+
+Community Inspiration
+
+Analytics & Insights
+
+USER JOURNEY
+Step 1 — Onboarding
+
+User signs up and completes a style profile.
+
+Collect:
+
+• Selfie photo
+• Gender preference
+• Height
+• Body shape
+• Skin tone
+• Fashion preferences
+• Favorite brands
+• Budget range
+• Lifestyle (office / casual / events)
+
+AI analyzes:
+
+• Face shape
+• Color season
+• Body type
+• Style archetype
+
+Output:
+
+"Your Style DNA"
+
+Example:
+
+Style Profile:
+• Color Season: Autumn
+• Face Shape: Oval
+• Body Type: Athletic
+• Style Archetype: Minimal Chic
+
+FEATURE 1 — DIGITAL WARDROBE
+
+Allow users to upload clothing items.
+
+Upload options:
+
+• Take photo
+• Import from gallery
+• Import from online store
+• Auto import from receipts
+
+AI automatically extracts:
+
+• Clothing type
+• Color
+• Pattern
+• Brand
+• Season
+• Style category
+
+Items stored in categories:
+
+Tops
+Bottoms
+Shoes
+Outerwear
+Accessories
+
+Users can filter by:
+
+• season
+• color
+• occasion
+• brand
+
+FEATURE 2 — AI OUTFIT GENERATOR
+
+The AI generates outfit combinations.
+
+Input data:
+
+• wardrobe items
+• weather
+• calendar events
+• personal style profile
+
+Output examples:
+
+Today's Outfit Suggestions
+
+Option 1
+Beige blazer
+White shirt
+Black trousers
+Loafers
+
+Option 2
+Blue denim jacket
+White tee
+Black jeans
+Sneakers
+
+Users can:
+
+• save outfits
+• schedule outfits
+• rate suggestions
+• remix outfits
+
+FEATURE 3 — OUTFIT PLANNER
+
+Calendar integration.
+
+Users can plan:
+
+• work outfits
+• travel outfits
+• party outfits
+• seasonal wardrobe rotations
+
+Example:
+
+Monday → Office outfit
+Saturday → Dinner outfit
+
+FEATURE 4 — VIRTUAL TRY ON
+
+Users upload a photo or use the camera.
+
+The AI overlays clothing items on their body.
+
+Capabilities:
+
+• try outfits from wardrobe
+• try clothes from online stores
+• mix items virtually
+• size recommendations
+
+Benefits:
+
+• reduces online shopping returns
+• improves purchase confidence
+
+FEATURE 5 — AI CHAT STYLIST
+
+Add a conversational AI assistant.
+
+Example prompts:
+
+"What should I wear for a wedding?"
+
+"Does this jacket match these pants?"
+
+"Give me 3 smart casual outfits."
+
+"Create an outfit for a summer date."
+
+The AI should use:
+
+• wardrobe data
+• style profile
+• weather data
+• fashion rules
+
+FEATURE 6 — SHOPPING RECOMMENDATIONS
+
+AI recommends items that match the user's wardrobe.
+
+Example:
+
+"You are missing a neutral blazer."
+
+Suggested items:
+
+• Zara blazer
+• Mango blazer
+• Uniqlo blazer
+
+Include:
+
+• affiliate links
+• brand integrations
+
+FEATURE 7 — STYLE EVOLUTION TRACKING
+
+Track user fashion over time.
+
+Analytics:
+
+• most worn items
+• color trends
+• wardrobe utilization
+• spending habits
+
+Example:
+
+"You wear black 40% of the time."
+
+"You rarely wear 12 items in your wardrobe."
+
+FEATURE 8 — COMMUNITY
+
+Allow users to share:
+
+• outfits
+• lookbooks
+• style inspiration
+
+Features:
+
+• trending outfits
+• style creators
+• outfit voting
+
+ADVANCED AI FEATURES
+
+These features make the product 10x better than competitors.
+
+Smart Closet AI
+
+AI detects:
+
+• duplicates
+• unused clothes
+• missing essentials
+
+Example:
+
+"You have 7 black shirts but no white shirt."
+
+Capsule Wardrobe Builder
+
+AI creates minimal wardrobes.
+
+Example:
+
+20 items → 80 outfits.
+
+Travel Pack Assistant
+
+User enters:
+
+destination
+days
+weather
+
+AI generates packing list.
+
+Weather Styling
+
+Pull weather API.
+
+Example:
+
+"Rainy today — wear waterproof jacket."
+
+Event Styling
+
+User inputs event type.
+
+Example:
+
+• wedding
+• job interview
+• beach vacation
+
+AI generates outfits.
+
+DESIGN REQUIREMENTS
+
+Design must be visual-first.
+
+Key UI elements:
+
+• clothing cards
+• outfit grids
+• swipe outfit suggestions
+• lookbook gallery
+• wardrobe categories
+
+Navigation:
+
+Home
+Wardrobe
+Outfits
+Style AI
+Shop
+Profile
+
+TECH STACK
+
+Frontend:
+
+React / Next.js
+React Native or Flutter
+
+Backend:
+
+Node.js
+Python AI services
+
+AI Tools:
+
+OpenAI
+DeepSeek
+Vision models
+CLIP / image tagging
+
+Database:
+
+PostgreSQL
+
+Storage:
+
+Cloud storage for images
+
+MONETIZATION STRATEGY
+Freemium
+
+Free tier:
+
+• 50 wardrobe items
+• basic outfit suggestions
+
+Premium tier:
+
+• unlimited wardrobe
+• advanced AI styling
+• virtual try-on
+• style analytics
+
+Price:
+
+$5–10/month
+
+Affiliate Revenue
+
+Earn commissions from:
+
+• Zara
+• H&M
+• Amazon Fashion
+• ASOS
+
+Brand Partnerships
+
+Brands pay for:
+
+• featured items
+• sponsored outfits
+• trend placements
+
+GROWTH STRATEGY
+Influencer Marketing
+
+Partner with:
+
+• fashion creators
+• TikTok stylists
+• Instagram fashion pages
+
+Viral Features
+
+Allow users to share:
+
+"My AI generated outfit"
+
+Social Hooks
+
+Auto generate images like:
+
+"Your Style DNA"
+
+Retention
+
+Daily notifications:
+
+"Today's outfit is ready."
+
+MVP FEATURES
+
+For version 1 launch:
+
+1 Digital wardrobe
+2 AI outfit generator
+3 Style profile
+4 Basic AI stylist
+5 Outfit planner
+
+Launch quickly.
+
+Add advanced features later.
+
+SUCCESS FACTORS
+
+The app succeeds if it solves these real problems:
+
+People don't know:
+
+• what to wear
+• how to match clothes
+• what suits them
+• what to buy
+
+Your product solves decision fatigue.
+
+DIFFERENTIATION
+
+To beat competitors your app must focus on:
+
+1 Better AI personalization
+2 Cleaner wardrobe experience
+3 Faster outfit generation
+4 Strong visual UX
+5 Social sharing
+
+SIMPLE VALUE PROPOSITION
+
+Your marketing message should be:
+
+"Your AI Personal Stylist & Digital Closet."
+
+ONE SENTENCE PITCH
+
+An AI-powered wardrobe assistant that analyzes your style, organizes your closet, generates outfits, and helps you shop smarter.
+
+💡 Since you like building profitable apps and SaaS (like your resume builder idea), this type of app has strong potential because:
+
+• fashion is a massive market
+• affiliate revenue is huge
+• AI personalization is trending

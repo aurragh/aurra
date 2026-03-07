@@ -65,16 +65,32 @@ export async function generateOutfitRecommendations(
     const stylePrefs = profile.stylePreferences ? JSON.parse(profile.stylePreferences) : [];
     const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
 
-    const userPrompt = `
-User Profile:
-- Body Type: ${profile.bodyType}
-- Budget: ${profile.budget}
-- Color Preferences: ${colorPrefs.join(', ')}
-- Style Preferences: ${stylePrefs.join(', ')}
-- Personality Traits: ${Object.entries(personality).map(([k, v]) => `${k}: ${v}`).join(', ')}
-- Lifestyle: ${Object.entries(lifestyle).map(([k, v]) => `${k}: ${v}`).join(', ')}
+    // Parse richer psychological fields
+    const impressionGoals = personality.impressionGoals
+      ? JSON.parse(personality.impressionGoals).join(', ')
+      : '';
+    const intentMoments = personality.intentMoments
+      ? JSON.parse(personality.intentMoments).join(', ')
+      : '';
 
-Occasion/Input: ${occasion}
+    const userPrompt = `
+User Psychological Profile:
+- Identity word (how they describe themselves at their best): ${personality.identityWord || 'not specified'}
+- Dressing relationship: ${personality.dressingRelationship || 'not specified'}
+- Impression goals (what they want others to feel): ${impressionGoals || 'not specified'}
+- Confidence trigger (what they wear when most confident): ${personality.confidenceTrigger || 'not specified'}
+- Presence archetype: ${personality.presenceArchetype || personality.presenceGoal || 'not specified'}
+
+Physical & Practical:
+- Body Type: ${profile.bodyType || 'not specified'}
+- Budget: ${profile.budget || 'not specified'}
+- Color Palette: ${colorPrefs.join(', ') || 'not specified'}
+- Industry: ${lifestyle.industry || 'not specified'}
+- Daily Routine: ${lifestyle.dailyRoutine || 'not specified'}
+
+Situation:
+- Occasion: ${occasion}
+- Key moments where presence matters: ${intentMoments || occasion}
 `;
 
     let result: any;
