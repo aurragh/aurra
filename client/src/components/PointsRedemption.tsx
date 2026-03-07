@@ -29,25 +29,9 @@ const redemptionOptions = [
     id: "outfit",
     name: "Free Outfit",
     cost: 50,
-    description: "Generate one outfit without using your monthly limit",
+    description: "Generate a bonus outfit recommendation",
     icon: Gift,
     action: "outfit",
-  },
-  {
-    id: "premium",
-    name: "24-Hour Premium",
-    cost: 100,
-    description: "Unlock all premium features for 24 hours",
-    icon: Crown,
-    action: "premium-trial",
-  },
-  {
-    id: "discount",
-    name: "$2 Off Upgrade",
-    cost: 200,
-    description: "Get a discount code for your next subscription upgrade",
-    icon: Ticket,
-    action: "discount",
   },
 ];
 

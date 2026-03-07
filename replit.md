@@ -4,9 +4,26 @@
 
 Aurra AI is a personalized fashion recommendation platform that uses artificial intelligence to generate outfit suggestions based on user preferences, personality traits, and lifestyle factors. The application combines a comprehensive style quiz with AI-powered outfit generation and shopping integration to provide users with tailored fashion advice.
 
-The platform features a freemium model with basic free functionality and premium subscription tiers, gamification elements through a points system, and social features for style collection sharing.
+The platform is currently **fully free** — all subscription/upgrade flows are hidden. Image generation uses Replicate API (flux-schnell model). Text recommendations use OpenAI GPT-4o.
 
-## Recent Updates (Feb 4, 2026)
+## Recent Updates (Mar 7, 2026)
+
+- **Production-ready cleanup**: Removed all subscription/upgrade references for free-tier launch
+  - Pricing section removed from landing page
+  - "Pricing" nav link removed from navigation
+  - "Upgrade Plan" removed from dashboard menu
+  - /upgrade and /subscribe routes now redirect to /dashboard
+  - Points redemption simplified to "Free Outfit" only (no premium trial or discount codes)
+  - Footer links cleaned up: removed dead placeholder links, added mailto contact
+  - Copyright year updated to 2026
+  - "Learn More" button now scrolls to Features section (was a console.log TODO)
+
+- **Replicate API image generation**: Replaced DALL-E with Replicate's flux-schnell model
+  - Token stored as REPLICATE_API_TOKEN secret
+  - Portrait 9:16 aspect ratio for full outfit visualization
+  - WebP output format, quality 90
+
+## Previous Updates (Feb 4, 2026)
 
 - **Points Redemption System**: Users can now redeem earned points for rewards
   - Free Outfit Credit (50 pts): Generates an outfit without earning points (prevents double benefit)

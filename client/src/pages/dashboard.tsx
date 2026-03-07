@@ -24,7 +24,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import { 
-  Sparkles, 
   Heart, 
   Star, 
   Award, 
@@ -234,12 +233,6 @@ export default function Dashboard() {
                     <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer" data-testid="menu-item-trash">
                       <Trash2 className="mr-2 h-4 w-4" />
                       <span>View Trash</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/upgrade">
-                    <DropdownMenuItem className="hover:bg-gray-800 cursor-pointer text-yellow-400" data-testid="menu-item-upgrade">
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      <span>Upgrade Plan</span>
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator className="bg-gray-700" />

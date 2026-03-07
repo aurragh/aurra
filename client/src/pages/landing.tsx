@@ -12,15 +12,15 @@ export default function Landing() {
     window.location.href = "/api/login";
   };
 
-  const handleWatchDemo = () => {
-    // TODO: Implement demo video modal
-    console.log("Watch demo clicked");
+  const handleLearnMore = () => {
+    const el = document.getElementById("features");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <RotatingBackground className="bg-transparent text-foreground">
       <Navigation />
-      <HeroSection onGetStarted={handleGetStarted} onWatchDemo={handleWatchDemo} />
+      <HeroSection onGetStarted={handleGetStarted} onWatchDemo={handleLearnMore} />
       
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-black/40 backdrop-blur-sm">
@@ -93,7 +93,7 @@ export default function Landing() {
               size="lg" 
               variant="outline" 
               className="border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 text-lg"
-              onClick={handleWatchDemo}
+              onClick={handleLearnMore}
               data-testid="button-learn-more"
             >
               Learn More
@@ -152,34 +152,30 @@ export default function Landing() {
               <ul className="space-y-2 text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors" data-testid="link-features">Features</a></li>
                 <li><a href="#how-it-works" className="hover:text-foreground transition-colors" data-testid="link-how-it-works">How It Works</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors" data-testid="link-pricing">Pricing</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-api">API</a></li>
+                <li><a href="/api/login" className="hover:text-foreground transition-colors" data-testid="link-get-started">Get Started Free</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4" data-testid="heading-footer-company">Company</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-about">About</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-blog">Blog</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-careers">Careers</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-contact">Contact</a></li>
+                <li><a href="#how-it-works" className="hover:text-foreground transition-colors" data-testid="link-about">About</a></li>
+                <li><a href="mailto:support@aurra.ai" className="hover:text-foreground transition-colors" data-testid="link-contact">Contact Us</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4" data-testid="heading-footer-support">Support</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-help">Help Center</a></li>
+                <li><a href="mailto:support@aurra.ai" className="hover:text-foreground transition-colors" data-testid="link-help">Help Center</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-privacy">Privacy Policy</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-terms">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors" data-testid="link-cookies">Cookie Policy</a></li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-border mt-12 pt-8 text-center text-muted-foreground" data-testid="text-footer-copyright">
-            <p>&copy; 2024 Aurra. All rights reserved.</p>
+            <p>&copy; 2026 Aurra. All rights reserved.</p>
           </div>
         </div>
       </footer>

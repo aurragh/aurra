@@ -33,8 +33,12 @@ function Router() {
           <Route path="/quiz" component={StyleQuiz} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/trash" component={Trash} />
-          <Route path="/subscribe" component={Subscribe} />
-          <Route path="/upgrade" component={Upgrade} />
+          <Route path="/subscribe">
+            <Redirect to="/dashboard" />
+          </Route>
+          <Route path="/upgrade">
+            <Redirect to="/dashboard" />
+          </Route>
           <Route path="/admin" component={AdminDashboard} />
         </>
       )}
