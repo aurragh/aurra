@@ -500,6 +500,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Share routes
+  app.post('/api/outfits/:id/share', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const outfitId = req.params.id;
+
+      const outfit = await storage.getOutfit(outfitId, userId);
+      if (!outfit) return res.status(404).json({ message: "Outfit not found" });
+
+      // If already shared, reuse token
+      if (outfit.shareToken) {
+        const protocol = req.get('x-forwarded-proto') === 'https' ? 'https' : req.protocol;
+        const host = req.get('host') || 'localhost:5000';
+        return res.json({ shareToken: outfit.shareToken, shareUrl: `${protocol}://${host}/look/${outfit.shareToken}` });
+      }
+
+      // Generate a random 12-char token
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(9)))
+        .map(b => b.toString(36).padStart(2, '0'))
+        .join('')
+        .slice(0, 12);
+
+      const updated = await storage.setOutfitShareToken(outfitId, userId, token);
+      const protocol = req.get('x-forwarded-proto') === 'https' ? 'https' : req.protocol;
+      const host = req.get('host') || 'localhost:5000';
+      res.json({ shareToken: updated.shareToken, shareUrl: `${protocol}://${host}/look/${updated.shareToken}` });
+    } catch (error) {
+      console.error("Error creating share link:", error);
+      res.status(500).json({ message: "Failed to create share link" });
+    }
+  });
+
+  // Public share page data — no auth required
+  app.get('/api/share/:token', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const outfit = await storage.getOutfitByShareToken(token);
+      if (!outfit) return res.status(404).json({ message: "Look not found" });
+
+      // Return only public-safe fields
+      res.json({
+        id: outfit.id,
+        name: outfit.name,
+        occasion: outfit.occasion,
+        imageUrl: outfit.imageUrl,
+        primaryRecommendation: outfit.primaryRecommendation,
+        whyRecommendation: outfit.whyRecommendation,
+        createdAt: outfit.createdAt,
+      });
+    } catch (error) {
+      console.error("Error fetching shared look:", error);
+      res.status(500).json({ message: "Failed to fetch look" });
+    }
+  });
+
   // Try-on route — generate photorealistic image of user wearing an outfit
   app.post('/api/outfits/:id/try-on', isAuthenticated, async (req: any, res) => {
     try {

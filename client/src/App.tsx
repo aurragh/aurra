@@ -14,6 +14,7 @@ import Trash from "@/pages/trash";
 import Upgrade from "@/pages/upgrade";
 import NovaChat from "@/pages/nova-chat";
 import Wardrobe from "@/pages/wardrobe";
+import SharedLook from "@/pages/shared-look";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,9 @@ function Router() {
 
   return (
     <Switch>
+      {/* Public routes — always accessible */}
+      <Route path="/look/:token" component={SharedLook} />
+
       {isLoading || !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />

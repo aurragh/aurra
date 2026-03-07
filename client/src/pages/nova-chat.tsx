@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { ArrowLeft, Send, Volume2, VolumeX } from "lucide-react";
 
 interface Message {
@@ -90,6 +90,9 @@ export default function NovaChat() {
     [isMuted]
   );
 
+  const searchString = useSearch();
+  const remixSentRef = useRef(false);
+
   // Welcome message
   useEffect(() => {
     if (!isLoading && user) {
@@ -98,6 +101,17 @@ export default function NovaChat() {
       setTimeout(() => speakReply(welcome), 600);
     }
   }, [isLoading, user]);
+
+  // Remix auto-send — fires once after welcome is set
+  useEffect(() => {
+    if (remixSentRef.current || messages.length === 0) return;
+    const params = new URLSearchParams(searchString);
+    const look = params.get("look");
+    if (!look) return;
+    remixSentRef.current = true;
+    const remixMsg = `I love this look: "${decodeURIComponent(look)}". Can you show me 3 variations — one casual, one elevated, and one for the weekend?`;
+    setTimeout(() => sendMessage(remixMsg), 400);
+  }, [messages.length]);
 
   const sendMessage = useCallback(
     async (text: string) => {

@@ -38,6 +38,8 @@ export interface IStorage {
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId: string): Promise<User>;
   updateUserSubscription(userId: string, status: string): Promise<User>;
   updateUserAvatarPhoto(userId: string, avatarPhotoUrl: string): Promise<User>;
+  getOutfitByShareToken(token: string): Promise<Outfit | undefined>;
+  setOutfitShareToken(id: string, userId: string, token: string): Promise<Outfit>;
   
   // Style profile operations
   getStyleProfile(userId: string): Promise<StyleProfile | undefined>;
@@ -215,6 +217,23 @@ export class DatabaseStorage implements IStorage {
         eq(outfits.id, id),
         eq(outfits.userId, userId)
       ));
+    return outfit;
+  }
+
+  async getOutfitByShareToken(token: string): Promise<Outfit | undefined> {
+    const [outfit] = await db
+      .select()
+      .from(outfits)
+      .where(eq(outfits.shareToken, token));
+    return outfit;
+  }
+
+  async setOutfitShareToken(id: string, userId: string, token: string): Promise<Outfit> {
+    const [outfit] = await db
+      .update(outfits)
+      .set({ shareToken: token })
+      .where(and(eq(outfits.id, id), eq(outfits.userId, userId)))
+      .returning();
     return outfit;
   }
 

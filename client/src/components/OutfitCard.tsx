@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles, Camera } from "lucide-react";
+import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles, Camera, Share2, Shuffle } from "lucide-react";
 
 interface OutfitCardProps {
   outfit: any;
@@ -7,6 +7,8 @@ interface OutfitCardProps {
   onDelete: (id: string) => void;
   onShop: (id: string) => void;
   onTryOn: (id: string) => void;
+  onShare: (id: string) => void;
+  onRemix: (outfit: any) => void;
   onImageClick: (url: string, name: string) => void;
   onGenerateAnother?: (occasion: string) => void;
   isFavoritePending?: boolean;
@@ -20,6 +22,8 @@ export function OutfitCard({
   onDelete,
   onShop,
   onTryOn,
+  onShare,
+  onRemix,
   onImageClick,
   isFavoritePending,
   isDeletePending,
@@ -38,7 +42,7 @@ export function OutfitCard({
         border: "1px solid rgba(255,255,255,0.08)",
       }}
     >
-      {/* Header: primary recommendation + delete */}
+      {/* Header: primary recommendation + actions */}
       <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
         {outfit.primaryRecommendation ? (
           <p className="text-white/90 text-base font-serif italic leading-relaxed flex-1">
@@ -47,15 +51,33 @@ export function OutfitCard({
         ) : (
           <p className="text-gray-400 text-sm flex-1">{outfit.name}</p>
         )}
-        <button
-          onClick={() => onDelete(outfit.id)}
-          disabled={isDeletePending}
-          className="flex-shrink-0 p-1.5 rounded-full transition-colors hover:bg-red-500/15 group mt-0.5"
-          data-testid={`button-delete-${outfit.id}`}
-          title="Remove look"
-        >
-          <Trash2 className="w-4 h-4 text-gray-600 group-hover:text-red-400 transition-colors" />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+          <button
+            onClick={() => onRemix(outfit)}
+            className="p-1.5 rounded-full transition-colors hover:bg-purple-500/15 group"
+            data-testid={`button-remix-${outfit.id}`}
+            title="Remix this look"
+          >
+            <Shuffle className="w-3.5 h-3.5 text-gray-600 group-hover:text-purple-400 transition-colors" />
+          </button>
+          <button
+            onClick={() => onShare(outfit.id)}
+            className="p-1.5 rounded-full transition-colors hover:bg-blue-500/15 group"
+            data-testid={`button-share-${outfit.id}`}
+            title="Share this look"
+          >
+            <Share2 className="w-3.5 h-3.5 text-gray-600 group-hover:text-blue-400 transition-colors" />
+          </button>
+          <button
+            onClick={() => onDelete(outfit.id)}
+            disabled={isDeletePending}
+            className="p-1.5 rounded-full transition-colors hover:bg-red-500/15 group"
+            data-testid={`button-delete-${outfit.id}`}
+            title="Remove look"
+          >
+            <Trash2 className="w-4 h-4 text-gray-600 group-hover:text-red-400 transition-colors" />
+          </button>
+        </div>
       </div>
 
       {/* Image */}

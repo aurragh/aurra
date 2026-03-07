@@ -70,6 +70,7 @@ export const outfits = pgTable("outfits", {
   imageUrl: varchar("image_url"),
   dalleUrl: varchar("dalle_url"),
   isFavorite: boolean("is_favorite").default(false),
+  shareToken: varchar("share_token"),
   createdAt: timestamp("created_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
 });

@@ -21,7 +21,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   Heart,
   Sparkles,
@@ -35,6 +35,7 @@ import {
   Shirt,
   RefreshCw,
   Send,
+  Zap,
 } from "lucide-react";
 import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile } from "@shared/schema";
 import { ShoppingModal } from "@/components/ShoppingModal";
@@ -43,10 +44,20 @@ import { OutfitCard } from "@/components/OutfitCard";
 import { StyleDNACard } from "@/components/StyleDNACard";
 import { TryOnModal } from "@/components/TryOnModal";
 
+const STYLE_CHALLENGES = [
+  { emoji: "☀️", name: "Weekend Capsule", occasion: "casual weekend day" },
+  { emoji: "💼", name: "Boardroom Power", occasion: "important board meeting" },
+  { emoji: "🌹", name: "Date Night Edit", occasion: "romantic evening dinner" },
+  { emoji: "🎨", name: "Street Style", occasion: "creative street style day out" },
+  { emoji: "🌊", name: "Vacation Ready", occasion: "beach vacation travel day" },
+  { emoji: "✨", name: "Black Tie Emergency", occasion: "black tie gala event" },
+];
+
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
   const [shoppingModalOutfitId, setShoppingModalOutfitId] = useState<string | null>(null);
   const [tryOnOutfitId, setTryOnOutfitId] = useState<string | null>(null);
@@ -159,8 +170,29 @@ export default function Dashboard() {
     },
   });
 
-  const handleGenerate = () => {
-    const occasion = occasionInput.trim() || "general";
+  const handleGenerate = (overrideOccasion?: string) => {
+    const occasion = (overrideOccasion ?? occasionInput).trim() || "general";
+    generateOutfitsMutation.mutate({ occasion, count: 1 });
+  };
+
+  const handleShare = async (outfitId: string) => {
+    try {
+      const res = await apiRequest("POST", `/api/outfits/${outfitId}/share`);
+      const data = await res.json();
+      await navigator.clipboard.writeText(data.shareUrl);
+      toast({ title: "Link copied!", description: "Share your look anywhere." });
+    } catch {
+      toast({ title: "Couldn't copy link", description: "Please try again.", variant: "destructive" });
+    }
+  };
+
+  const handleRemix = (outfit: any) => {
+    const look = encodeURIComponent(outfit.primaryRecommendation || outfit.name);
+    setLocation(`/chat?remix=${outfit.id}&look=${look}`);
+  };
+
+  const handleChallenge = (occasion: string) => {
+    setOccasionInput(occasion);
     generateOutfitsMutation.mutate({ occasion, count: 1 });
   };
 
@@ -302,6 +334,32 @@ export default function Dashboard() {
               </p>
             </div>
 
+            {/* Style Challenges */}
+            <div className="mb-5">
+              <div className="flex items-center gap-1.5 mb-3">
+                <Zap className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">Style Challenges</span>
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+                {STYLE_CHALLENGES.map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => handleChallenge(c.occasion)}
+                    disabled={generateOutfitsMutation.isPending}
+                    className="flex-shrink-0 flex flex-col items-start p-3 rounded-xl transition-all hover:border-purple-500/50 active:scale-95 disabled:opacity-50 text-left"
+                    style={{
+                      width: "120px",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <span className="text-xl mb-1.5">{c.emoji}</span>
+                    <span className="text-white text-xs font-semibold leading-tight">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Generate CTA bar */}
             <div
               className="flex items-center gap-2 mb-6 p-2 rounded-2xl"
@@ -392,6 +450,8 @@ export default function Dashboard() {
                           onDelete={(id) => deleteOutfitMutation.mutate(id)}
                           onShop={(id) => setShoppingModalOutfitId(id)}
                           onTryOn={(id) => setTryOnOutfitId(id)}
+                          onShare={(id) => handleShare(id)}
+                          onRemix={(o) => handleRemix(o)}
                           onImageClick={(url, name) => setLightboxImage({ url, name })}
                           isFavoritePending={toggleFavoriteMutation.isPending}
                           isDeletePending={deleteOutfitMutation.isPending}
@@ -413,6 +473,8 @@ export default function Dashboard() {
                           onDelete={(id) => deleteOutfitMutation.mutate(id)}
                           onShop={(id) => setShoppingModalOutfitId(id)}
                           onTryOn={(id) => setTryOnOutfitId(id)}
+                          onShare={(id) => handleShare(id)}
+                          onRemix={(o) => handleRemix(o)}
                           onImageClick={(url, name) => setLightboxImage({ url, name })}
                           isFavoritePending={toggleFavoriteMutation.isPending}
                           isDeletePending={deleteOutfitMutation.isPending}
