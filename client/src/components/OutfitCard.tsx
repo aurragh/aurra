@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles } from "lucide-react";
+import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles, Camera } from "lucide-react";
 
 interface OutfitCardProps {
   outfit: any;
   onFavorite: (id: string) => void;
   onDelete: (id: string) => void;
   onShop: (id: string) => void;
+  onTryOn: (id: string) => void;
   onImageClick: (url: string, name: string) => void;
   onGenerateAnother?: (occasion: string) => void;
   isFavoritePending?: boolean;
@@ -18,6 +19,7 @@ export function OutfitCard({
   onFavorite,
   onDelete,
   onShop,
+  onTryOn,
   onImageClick,
   isFavoritePending,
   isDeletePending,
@@ -185,12 +187,25 @@ export function OutfitCard({
         )}
       </div>
 
-      {/* Shop This Look */}
-      {outfit.imageUrl && (
-        <div className="px-4 pb-4">
+      {/* Bottom action buttons */}
+      <div className="px-4 pb-4 flex gap-2">
+        <button
+          onClick={() => onTryOn(outfit.id)}
+          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.99]"
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "#c4b5fd",
+          }}
+          data-testid={`button-tryon-${outfit.id}`}
+        >
+          <Camera className="w-4 h-4" />
+          Try It On
+        </button>
+        {outfit.imageUrl && (
           <button
             onClick={() => onShop(outfit.id)}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.99]"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.99]"
             style={{
               background: "linear-gradient(135deg, rgba(124,58,237,0.6), rgba(168,85,247,0.5))",
               border: "1px solid rgba(168,85,247,0.3)",
@@ -198,10 +213,10 @@ export function OutfitCard({
             data-testid={`button-shop-${outfit.id}`}
           >
             <ShoppingBag className="w-4 h-4" />
-            Shop This Look
+            Shop
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

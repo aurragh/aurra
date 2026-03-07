@@ -37,6 +37,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId: string): Promise<User>;
   updateUserSubscription(userId: string, status: string): Promise<User>;
+  updateUserAvatarPhoto(userId: string, avatarPhotoUrl: string): Promise<User>;
   
   // Style profile operations
   getStyleProfile(userId: string): Promise<StyleProfile | undefined>;
@@ -138,6 +139,15 @@ export class DatabaseStorage implements IStorage {
         subscriptionStatus: status,
         updatedAt: sql`CURRENT_TIMESTAMP`,
       })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserAvatarPhoto(userId: string, avatarPhotoUrl: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ avatarPhotoUrl, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(users.id, userId))
       .returning();
     return user;

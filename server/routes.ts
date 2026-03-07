@@ -3,12 +3,14 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromText, novaChatResponse } from "./openai";
+import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromText, novaChatResponse, generateTryOnImage } from "./openai";
 import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema, insertWardrobeItemSchema } from "@shared/schema";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+import multer from "multer";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,9 +20,29 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
   apiVersion: "2025-08-27.basil",
 }) : null;
 
+const profilePhotosDir = path.join(__dirname, '..', 'public', 'profile-photos');
+if (!fs.existsSync(profilePhotosDir)) fs.mkdirSync(profilePhotosDir, { recursive: true });
+
+const profilePhotoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, profilePhotosDir),
+    filename: (req: any, file, cb) => {
+      const userId = req.user?.claims?.sub || "unknown";
+      const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
+      cb(null, `${userId}${ext}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files allowed"));
+  },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from public directory (for outfit images)
   app.use('/outfit-images', (await import('express')).default.static(path.join(__dirname, '..', 'public', 'outfit-images')));
+  app.use('/profile-photos', (await import('express')).default.static(profilePhotosDir));
 
   // Auth middleware
   await setupAuth(app);
@@ -55,6 +77,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+
+  // Profile photo routes
+  app.get('/api/profile/photo', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json({ avatarPhotoUrl: user?.avatarPhotoUrl || null });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch profile photo" });
+    }
+  });
+
+  app.post('/api/profile/photo', isAuthenticated, profilePhotoUpload.single('photo'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      const avatarPhotoUrl = `/profile-photos/${req.file.filename}`;
+      const user = await storage.updateUserAvatarPhoto(userId, avatarPhotoUrl);
+      res.json({ avatarPhotoUrl: user.avatarPhotoUrl });
+    } catch (error) {
+      console.error("Error uploading profile photo:", error);
+      res.status(500).json({ message: "Failed to upload photo" });
+    }
+  });
+
 
   // Style profile routes
   app.get('/api/style-profile', isAuthenticated, async (req: any, res) => {
@@ -448,6 +497,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error extracting shopping items:", error);
       res.status(500).json({ message: "Failed to extract shopping items" });
+    }
+  });
+
+  // Try-on route — generate photorealistic image of user wearing an outfit
+  app.post('/api/outfits/:id/try-on', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const outfitId = req.params.id;
+
+      const user = await storage.getUser(userId);
+      if (!user?.avatarPhotoUrl) {
+        return res.status(400).json({ message: "No selfie uploaded. Please upload a photo first." });
+      }
+
+      const outfit = await storage.getOutfit(outfitId, userId);
+      if (!outfit) {
+        return res.status(404).json({ message: "Outfit not found" });
+      }
+
+      const outfitText = outfit.primaryRecommendation || outfit.description || "stylish outfit";
+      const occasion = outfit.occasion || "general";
+
+      const protocol = req.get('x-forwarded-proto') === 'https' ? 'https' : req.protocol;
+      const host = req.get('host') || 'localhost:5000';
+      const absoluteAvatarUrl = user.avatarPhotoUrl.startsWith('http')
+        ? user.avatarPhotoUrl
+        : `${protocol}://${host}${user.avatarPhotoUrl}`;
+
+      console.log(`Try-on: generating for outfit ${outfitId}, avatar: ${absoluteAvatarUrl}`);
+      const imageUrl = await generateTryOnImage(absoluteAvatarUrl, outfitText, occasion);
+
+      if (!imageUrl) {
+        return res.status(500).json({ message: "Failed to generate try-on image" });
+      }
+
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Error generating try-on:", error);
+      res.status(500).json({ message: "Failed to generate try-on image" });
     }
   });
 

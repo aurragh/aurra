@@ -41,6 +41,7 @@ import { ShoppingModal } from "@/components/ShoppingModal";
 import { PointsRedemption } from "@/components/PointsRedemption";
 import { OutfitCard } from "@/components/OutfitCard";
 import { StyleDNACard } from "@/components/StyleDNACard";
+import { TryOnModal } from "@/components/TryOnModal";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
   const [shoppingModalOutfitId, setShoppingModalOutfitId] = useState<string | null>(null);
+  const [tryOnOutfitId, setTryOnOutfitId] = useState<string | null>(null);
   const [highlightNewOutfit, setHighlightNewOutfit] = useState(false);
   const [occasionInput, setOccasionInput] = useState("");
   const firstOutfitRef = useRef<HTMLDivElement>(null);
@@ -389,6 +391,7 @@ export default function Dashboard() {
                           onFavorite={(id) => toggleFavoriteMutation.mutate(id)}
                           onDelete={(id) => deleteOutfitMutation.mutate(id)}
                           onShop={(id) => setShoppingModalOutfitId(id)}
+                          onTryOn={(id) => setTryOnOutfitId(id)}
                           onImageClick={(url, name) => setLightboxImage({ url, name })}
                           isFavoritePending={toggleFavoriteMutation.isPending}
                           isDeletePending={deleteOutfitMutation.isPending}
@@ -409,6 +412,7 @@ export default function Dashboard() {
                           onFavorite={(id) => toggleFavoriteMutation.mutate(id)}
                           onDelete={(id) => deleteOutfitMutation.mutate(id)}
                           onShop={(id) => setShoppingModalOutfitId(id)}
+                          onTryOn={(id) => setTryOnOutfitId(id)}
                           onImageClick={(url, name) => setLightboxImage({ url, name })}
                           isFavoritePending={toggleFavoriteMutation.isPending}
                           isDeletePending={deleteOutfitMutation.isPending}
@@ -485,6 +489,12 @@ export default function Dashboard() {
           onOpenChange={(open) => !open && setShoppingModalOutfitId(null)}
         />
       )}
+
+      {/* Try-On Modal */}
+      <TryOnModal
+        outfitId={tryOnOutfitId}
+        onClose={() => setTryOnOutfitId(null)}
+      />
 
       {/* Floating NOVA Chat button */}
       <Link href="/chat">

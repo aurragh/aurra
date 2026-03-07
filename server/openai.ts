@@ -399,3 +399,38 @@ Sound like a trusted advisor, not a chatbot.`;
     return "I'm unavailable right now. Try again in a moment.";
   }
 }
+
+// ── Try-On: generate photorealistic image of user wearing an outfit
+export async function generateTryOnImage(
+  avatarPhotoUrl: string,
+  outfitText: string,
+  occasion: string
+): Promise<string | null> {
+  try {
+    console.log(`Generating try-on image for occasion: ${occasion}`);
+
+    const prompt = `a photo of a woman img, wearing ${outfitText}, full body outfit shot, professional fashion editorial photography, clean studio background, sharp focus, high-end fashion magazine quality`;
+
+    const output = await replicate.run("tencentarc/photomaker", {
+      input: {
+        prompt,
+        input_image: avatarPhotoUrl,
+        num_outputs: 1,
+        style_name: "Photographic (Default)",
+        style_strength_ratio: 20,
+        num_steps: 20,
+        negative_prompt: "nsfw, cartoon, illustration, painting, deformed, bad anatomy, ugly, blurry",
+      }
+    }) as any[];
+
+    if (output && output.length > 0) {
+      const url = output[0]?.url ? output[0].url() : String(output[0]);
+      console.log(`Try-on image generated: ${url}`);
+      return url || null;
+    }
+    return null;
+  } catch (error: any) {
+    console.error("Try-on generation error:", error);
+    return null;
+  }
+}
