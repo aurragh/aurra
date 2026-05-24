@@ -41,6 +41,7 @@ import { type Outfit, type StyleCollection, type UserPoints, type StyleProfile }
 import { ShoppingModal } from "@/components/ShoppingModal";
 import { PointsRedemption } from "@/components/PointsRedemption";
 import { OutfitCard } from "@/components/OutfitCard";
+import { OutfitSkeleton } from "@/components/OutfitSkeleton";
 import { StyleDNACard } from "@/components/StyleDNACard";
 import { TryOnModal } from "@/components/TryOnModal";
 
@@ -224,18 +225,22 @@ export default function Dashboard() {
       <nav
         className="sticky top-0 z-30"
         style={{
-          background: "rgba(13,8,18,0.9)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(15,14,20,0.85)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(168,92,246,0.08)",
         }}
       >
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <h1
-            className="text-xl font-bold text-white tracking-tight"
-            data-testid="heading-dashboard"
-          >
-            Aurra
-          </h1>
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <img src="/Logo.png" alt="Aurra" className="w-7 h-7 rounded-full" />
+            <h1
+              className="font-display text-2xl text-white tracking-tight"
+              style={{ letterSpacing: "-0.02em" }}
+              data-testid="heading-dashboard"
+            >
+              Aurra
+            </h1>
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -348,23 +353,30 @@ export default function Dashboard() {
                 <Zap className="w-3.5 h-3.5 text-purple-400" />
                 <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">Style Challenges</span>
               </div>
-              <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-                {STYLE_CHALLENGES.map((c) => (
-                  <button
-                    key={c.name}
-                    onClick={() => handleChallenge(c.occasion)}
-                    disabled={generateOutfitsMutation.isPending}
-                    className="flex-shrink-0 flex flex-col items-start p-3 rounded-xl transition-all hover:border-purple-500/50 active:scale-95 disabled:opacity-50 text-left"
-                    style={{
-                      width: "120px",
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <span className="text-xl mb-1.5">{c.emoji}</span>
-                    <span className="text-white text-xs font-semibold leading-tight">{c.name}</span>
-                  </button>
-                ))}
+              <div className="relative">
+                <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+                  {STYLE_CHALLENGES.map((c) => (
+                    <button
+                      key={c.name}
+                      onClick={() => handleChallenge(c.occasion)}
+                      disabled={generateOutfitsMutation.isPending}
+                      className="flex-shrink-0 flex flex-col items-start p-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-purple-400/30 hover:shadow-[0_6px_20px_rgba(124,58,237,0.12)] active:scale-95 disabled:opacity-50 text-left"
+                      style={{
+                        width: "120px",
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.045), rgba(168,85,247,0.025))",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <span className="text-xl mb-1.5">{c.emoji}</span>
+                      <span className="text-white text-xs font-semibold leading-tight">{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+                {/* Right fade indicates more items */}
+                <div
+                  className="absolute top-0 right-0 bottom-0 w-12 pointer-events-none"
+                  style={{ background: "linear-gradient(to right, transparent, #0F0E14 90%)" }}
+                />
               </div>
             </div>
 
@@ -438,6 +450,7 @@ export default function Dashboard() {
 
                 <TabsContent value="outfits" data-testid="tab-content-outfits">
                   <div className="space-y-6">
+                    {generateOutfitsMutation.isPending && <OutfitSkeleton />}
                     {outfits.map((outfit: any, index: number) => (
                       <div
                         key={outfit.id}

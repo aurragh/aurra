@@ -35,11 +35,12 @@ export function OutfitCard({
 
   return (
     <div
-      className="max-w-lg mx-auto w-full rounded-2xl overflow-hidden"
+      className="max-w-lg mx-auto w-full rounded-2xl overflow-hidden transition-all duration-300 hover:border-purple-400/25 hover:shadow-[0_8px_32px_rgba(124,58,237,0.12)] hover:-translate-y-0.5"
       data-testid={`card-outfit-${outfit.id}`}
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.045), rgba(168,85,247,0.025))",
+        border: "1px solid rgba(255,255,255,0.07)",
+        backdropFilter: "blur(8px)",
       }}
     >
       {/* Header: primary recommendation + actions */}

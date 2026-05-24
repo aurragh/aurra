@@ -960,21 +960,22 @@ export default function StyleQuiz() {
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-3 sticky top-0 z-20"
-          style={{ background: "rgba(13,8,18,0.9)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(168,85,247,0.1)" }}
+          className="sticky top-0 z-20"
+          style={{ background: "rgba(15,14,20,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(168,85,247,0.08)" }}
         >
+          <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <NovaOrb state={orbState} />
             <div>
               <p className="text-white font-semibold text-sm">NOVA</p>
               <p className="text-purple-400/70 text-xs">
-                {isListening ? "Listening..." : orbState === "speaking" ? "Speaking..." : "Style AI"}
+                {isListening ? "Listening..." : orbState === "speaking" ? "Speaking..." : `Question ${currentQ + 1} of ${totalQ}`}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-xs">{currentQ + 1} / {totalQ}</span>
+            <span className="text-gray-500 text-[10px] tabular-nums">{Math.round(((currentQ + 1) / totalQ) * 100)}%</span>
 
             {voiceSupported && (
               <button
@@ -1002,6 +1003,18 @@ export default function StyleQuiz() {
                 <RotateCcw className="w-4 h-4 text-gray-500" />
               </button>
             )}
+          </div>
+          </div>
+          {/* Progress bar */}
+          <div className="h-0.5 bg-white/[0.04]">
+            <div
+              className="h-full transition-all duration-500 ease-out"
+              style={{
+                width: `${((currentQ + 1) / totalQ) * 100}%`,
+                background: "linear-gradient(90deg, #7c3aed, #a855f7)",
+                boxShadow: "0 0 8px rgba(168,85,247,0.4)",
+              }}
+            />
           </div>
         </div>
 
