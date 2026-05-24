@@ -1,0 +1,85 @@
+/**
+ * Prompt registry. Loads .md files from prompts/ at startup and exposes
+ * render(name, vars) that interpolates {{vars}} into the template.
+ *
+ * Single source of truth — server/openai.ts pulls all its strings from here.
+ */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+// Resolve from repo root (process.cwd()) so this works in both `tsx` dev and bundled prod.
+const PROMPTS_DIR = join(process.cwd(), "prompts");
+
+function load(relPath: string): string {
+  return readFileSync(join(PROMPTS_DIR, relPath), "utf8");
+}
+
+const SYSTEM_AURRA_RAW = load("system/aurra-stylist.md");
+const TPL_OUTFIT = load("templates/outfit-recommendation.md");
+const TPL_NOVA = load("templates/nova-chat.md");
+const TPL_SHOPPING = load("templates/shopping-extraction.md");
+const TPL_ANALYSIS = load("templates/style-analysis.md");
+
+/** Strip the markdown front-matter header (everything before the first `---` separator after the title). */
+function stripHeader(md: string): string {
+  const parts = md.split(/^---\s*$/m);
+  return parts.length > 1 ? parts.slice(1).join("---").trim() : md.trim();
+}
+
+export const SYSTEM_AURRA = stripHeader(SYSTEM_AURRA_RAW);
+
+/** Replace `{{key}}` occurrences. Missing keys render as empty string and warn. */
+function render(template: string, vars: Record<string, string | number | undefined | null>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const val = vars[key];
+    if (val === undefined || val === null || val === "") {
+      return "not specified";
+    }
+    return String(val);
+  });
+}
+
+export interface OutfitVars {
+  identityWord?: string;
+  dressingRelationship?: string;
+  impressionGoals?: string;
+  confidenceTrigger?: string;
+  presenceArchetype?: string;
+  bodyType?: string;
+  colorPalette?: string;
+  industry?: string;
+  dailyRoutine?: string;
+  budget?: string;
+  occasion: string;
+  intentMoments?: string;
+}
+
+export function renderOutfitPrompt(vars: OutfitVars): string {
+  return render(stripHeader(TPL_OUTFIT), vars as Record<string, string>);
+}
+
+export function renderNovaSystemAppend(profileContext: string): string {
+  return render(stripHeader(TPL_NOVA), { profileContext: profileContext || "(no profile yet)" });
+}
+
+export function renderShoppingExtraction(vars: {
+  primaryRecommendation: string;
+  backupRecommendation: string;
+  occasion: string;
+}): { system: string; user: string } {
+  const body = stripHeader(TPL_SHOPPING);
+  const [systemPart, userPart] = body.split(/^##\s*USER\s*$/m);
+  return {
+    system: render(systemPart.replace(/^##\s*SYSTEM\s*$/m, "").trim(), vars),
+    user: render(userPart.trim(), vars),
+  };
+}
+
+export function renderStyleAnalysis(profileJson: string): { system: string; user: string } {
+  const body = stripHeader(TPL_ANALYSIS);
+  const [systemPart, userPart] = body.split(/^##\s*USER\s*$/m);
+  return {
+    system: systemPart.replace(/^##\s*SYSTEM\s*$/m, "").trim(),
+    user: render(userPart.trim(), { profileJson }),
+  };
+}

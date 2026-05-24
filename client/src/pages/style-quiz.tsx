@@ -1071,7 +1071,6 @@ export default function StyleQuiz() {
           {/* Current question */}
           <div className="animate-fadeIn">
             {showPhaseHeader && <PhaseBadge phase={question.phase} />}
-            {confirmedAnswers.length === 0 && currentQ === 0 && <PhaseBadge phase={1} />}
 
             <div className="flex items-start gap-3 mb-4">
               <div

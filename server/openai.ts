@@ -1,7 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import Replicate from "replicate";
 import type { StyleProfile } from "../shared/schema";
-import { aurraSystemPrompt } from "./aurraSystemPrompt";
+import {
+  SYSTEM_AURRA,
+  renderOutfitPrompt,
+  renderNovaSystemAppend,
+  renderShoppingExtraction,
+  renderStyleAnalysis,
+  type OutfitVars,
+} from "../prompts/index";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -13,11 +20,11 @@ const anthropic = new Anthropic({
 
 const MODEL = "claude-sonnet-4-6";
 
-// System block with prompt caching — used in 3 call sites.
-const aurraSystem: Anthropic.TextBlockParam[] = [
+// Cached Aurra base system prompt. Cached with ephemeral to make repeat calls ~10x cheaper.
+const aurraSystemBlock: Anthropic.TextBlockParam[] = [
   {
     type: "text",
-    text: aurraSystemPrompt,
+    text: SYSTEM_AURRA,
     cache_control: { type: "ephemeral" },
   },
 ];
@@ -29,7 +36,6 @@ function extractText(message: Anthropic.Message): string {
     .join("");
 }
 
-// Strip ```json fences if the model wraps the response.
 function parseJsonResponse(text: string): any {
   const trimmed = text.trim();
   const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
@@ -56,18 +62,46 @@ interface GeneratedOutfit {
   aiRecommendation: string;
 }
 
-async function makeAurraAPICall(userPrompt: string): Promise<any> {
+/** Build the OutfitVars object directly from a StyleProfile row. Single source of truth for the quiz → LLM mapping. */
+function buildOutfitVars(profile: StyleProfile, occasion: string): OutfitVars {
+  const personality = profile.personality ? JSON.parse(profile.personality) : {};
+  const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
+  const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
+
+  const impressionGoals = personality.impressionGoals
+    ? JSON.parse(personality.impressionGoals).join(", ")
+    : "";
+  const intentMoments = personality.intentMoments
+    ? JSON.parse(personality.intentMoments).join(", ")
+    : "";
+
+  return {
+    identityWord: personality.identityWord,
+    dressingRelationship: personality.dressingRelationship,
+    impressionGoals,
+    confidenceTrigger: personality.confidenceTrigger,
+    presenceArchetype: personality.presenceArchetype || personality.presenceGoal,
+    bodyType: profile.bodyType ?? undefined,
+    colorPalette: colorPrefs.join(", "),
+    industry: lifestyle.industry,
+    dailyRoutine: lifestyle.dailyRoutine,
+    budget: profile.budget ?? undefined,
+    occasion,
+    intentMoments: intentMoments || occasion,
+  };
+}
+
+async function callAurra(userPrompt: string): Promise<any> {
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1500,
-    system: aurraSystem,
-    messages: [
-      {
-        role: "user",
-        content: `${userPrompt}\n\nRespond with valid JSON only, no markdown fences, no preamble.`,
-      },
-    ],
+    system: aurraSystemBlock,
+    messages: [{ role: "user", content: userPrompt }],
   });
+
+  console.log(
+    `[aurra] usage in=${response.usage.input_tokens} out=${response.usage.output_tokens} cache_read=${response.usage.cache_read_input_tokens ?? 0} cache_write=${response.usage.cache_creation_input_tokens ?? 0}`,
+  );
 
   return parseJsonResponse(extractText(response));
 }
@@ -78,52 +112,25 @@ export async function generateOutfitRecommendations(
   count: number = 1,
 ): Promise<GeneratedOutfit[]> {
   try {
-    const personality = profile.personality ? JSON.parse(profile.personality) : {};
-    const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
-    const stylePrefs = profile.stylePreferences ? JSON.parse(profile.stylePreferences) : [];
-    const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
+    const vars = buildOutfitVars(profile, occasion);
+    const userPrompt = renderOutfitPrompt(vars);
 
-    const impressionGoals = personality.impressionGoals
-      ? JSON.parse(personality.impressionGoals).join(", ")
-      : "";
-    const intentMoments = personality.intentMoments
-      ? JSON.parse(personality.intentMoments).join(", ")
-      : "";
-
-    const userPrompt = `
-User Psychological Profile:
-- Identity word (how they describe themselves at their best): ${personality.identityWord || "not specified"}
-- Dressing relationship: ${personality.dressingRelationship || "not specified"}
-- Impression goals (what they want others to feel): ${impressionGoals || "not specified"}
-- Confidence trigger (what they wear when most confident): ${personality.confidenceTrigger || "not specified"}
-- Presence archetype: ${personality.presenceArchetype || personality.presenceGoal || "not specified"}
-
-Physical & Practical:
-- Body Type: ${profile.bodyType || "not specified"}
-- Budget: ${profile.budget || "not specified"}
-- Color Palette: ${colorPrefs.join(", ") || "not specified"}
-- Industry: ${lifestyle.industry || "not specified"}
-- Daily Routine: ${lifestyle.dailyRoutine || "not specified"}
-
-Situation:
-- Occasion: ${occasion}
-- Key moments where presence matters: ${intentMoments || occasion}
-`;
+    console.log(`[aurra] generating outfit. Vars:`, JSON.stringify(vars));
 
     let result: any;
     try {
-      result = await makeAurraAPICall(userPrompt);
+      result = await callAurra(userPrompt);
     } catch (parseError: any) {
       if (parseError instanceof SyntaxError || parseError.message?.includes("JSON")) {
-        console.log("Aurra: JSON parsing failed, retrying once...");
-        result = await makeAurraAPICall(userPrompt);
+        console.log("[aurra] JSON parse failed, retrying once");
+        result = await callAurra(userPrompt);
       } else {
         throw parseError;
       }
     }
 
     if (!result.primary || !result.backup || !result.avoid) {
-      console.log("Aurra: Some required fields missing, using fallbacks for empty fields");
+      console.warn("[aurra] response missing required fields, using fallbacks", result);
     }
 
     return [
@@ -146,7 +153,7 @@ Situation:
       },
     ];
   } catch (error) {
-    console.error("Aurra AI error:", error);
+    console.error("[aurra] outfit generation error:", error);
     return [
       {
         primary: "Default recommendation",
@@ -162,14 +169,11 @@ Situation:
   }
 }
 
-async function generateWithReplicate(
-  basicItems: string,
-  occasion: string,
-): Promise<string | null> {
+async function generateWithReplicate(basicItems: string, occasion: string): Promise<string | null> {
   const itemsDesc = basicItems || "stylish outfit";
   const imagePrompt = `Professional fashion photography: complete outfit flat lay on pure white background. Items: ${itemsDesc} for ${occasion}. Vertically arranged: top garment at top, bottom garment in middle, shoes at bottom, accessories around. High-end fashion catalog aesthetic, crisp studio lighting, editorial quality. Ultra sharp focus, luxury brand photography. No models, no mannequins, no hangers.`;
 
-  console.log(`Replicate Image Prompt: ${imagePrompt}`);
+  console.log(`[replicate] image prompt: ${imagePrompt}`);
 
   try {
     const output = await replicate.run("black-forest-labs/flux-schnell", {
@@ -186,12 +190,12 @@ async function generateWithReplicate(
     const outputArray = output as any[];
     if (outputArray && outputArray.length > 0) {
       const url = outputArray[0]?.url ? outputArray[0].url() : String(outputArray[0]);
-      console.log(`Replicate image generated: ${url}`);
+      console.log(`[replicate] image generated: ${url}`);
       return url || null;
     }
     return null;
   } catch (error: any) {
-    console.error("Replicate API error:", error);
+    console.error("[replicate] error:", error);
     return null;
   }
 }
@@ -208,40 +212,27 @@ export async function generateOutfitImage(
       .join(", ");
     return await generateWithReplicate(allItems || outfit.primary, occasion);
   } catch (error: any) {
-    console.error("Image generation error:", error);
+    console.error("[replicate] outfit image error:", error);
     return null;
   }
 }
 
 export async function analyzeStyleProfile(profileData: any): Promise<string> {
   try {
-    const prompt = `Analyze this style profile and provide personalized fashion insights:
-
-Profile Data: ${JSON.stringify(profileData)}
-
-Provide a comprehensive style analysis including:
-1. Personal style summary
-2. Color palette recommendations
-3. Key styling tips
-4. Shopping recommendations
-5. Style evolution suggestions
-
-Respond with insightful, actionable advice in a friendly, expert tone.`;
+    const { system, user } = renderStyleAnalysis(JSON.stringify(profileData));
 
     const response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 1200,
-      system:
-        "You are a professional fashion consultant providing personalized style advice.",
-      messages: [{ role: "user", content: prompt }],
+      system,
+      messages: [{ role: "user", content: user }],
     });
 
     return (
-      extractText(response) ||
-      "Your style profile shows great potential for fashion exploration."
+      extractText(response) || "Your style profile shows great potential for fashion exploration."
     );
   } catch (error) {
-    console.error("Style analysis error:", error);
+    console.error("[aurra] style analysis error:", error);
     return "Complete your style profile to receive personalized fashion insights and recommendations.";
   }
 }
@@ -257,41 +248,29 @@ export async function extractShoppingItemsFromText(
   primaryRecommendation: string,
   backupRecommendation: string,
   occasion: string,
-  profileContext?: string,
 ): Promise<ShoppingItem[]> {
   try {
-    const outfitDescription = [
-      `Primary look: ${primaryRecommendation}`,
-      backupRecommendation ? `Backup look: ${backupRecommendation}` : "",
-      `Occasion: ${occasion}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const { system, user } = renderShoppingExtraction({
+      primaryRecommendation,
+      backupRecommendation,
+      occasion,
+    });
 
     const response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 800,
-      system: `You are a fashion shopping assistant. Given an outfit description, identify 4-5 specific shoppable clothing or accessory pieces.
-For each piece return a targeted search query that would find it on a shopping site.
-Return JSON only (no markdown fences): { "items": [{ "name": string, "description": string, "category": string, "searchQuery": string }] }
-Categories: Top, Bottom, Shoes, Outerwear, Accessory, Bag.
-Keep descriptions concise and search queries specific (include color, material, silhouette where mentioned).`,
-      messages: [
-        {
-          role: "user",
-          content: `Extract shoppable items from this outfit description:\n\n${outfitDescription}\n\nRespond with valid JSON only.`,
-        },
-      ],
+      system,
+      messages: [{ role: "user", content: user }],
     });
 
     const text = extractText(response);
     if (!text) return [];
     const parsed = parseJsonResponse(text);
     const items = parsed.items || [];
-    console.log(`Text-based extraction: found ${items.length} shopping items`);
+    console.log(`[aurra] shopping extraction: ${items.length} items`);
     return items;
   } catch (error) {
-    console.error("Text-based shopping extraction error:", error);
+    console.error("[aurra] shopping extraction error:", error);
     return [];
   }
 }
@@ -307,41 +286,29 @@ export async function novaChatResponse(
       const personality = profile.personality ? JSON.parse(profile.personality) : {};
       const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
       const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
-      const impressionGoals = personality.impressionGoals
-        ? JSON.parse(personality.impressionGoals)
-        : [];
-      profileContext = `
-User Style Profile:
-- Identity: ${personality.identityWord || "not set"}
-- Presence archetype: ${personality.presenceArchetype || "not set"}
-- Confidence trigger: ${personality.confidenceTrigger || "not set"}
-- Impression goals: ${impressionGoals.join(", ") || "not set"}
-- Body type: ${profile.bodyType || "not set"}
-- Color palette: ${colorPrefs[0] || "not set"}
-- Budget: ${profile.budget || "not set"}
-- Industry: ${lifestyle.industry || "not set"}
-- Daily routine: ${lifestyle.dailyRoutine || "not set"}
-`;
+      const impressionGoals = personality.impressionGoals ? JSON.parse(personality.impressionGoals) : [];
+      profileContext = [
+        `- Identity: ${personality.identityWord || "not set"}`,
+        `- Presence archetype: ${personality.presenceArchetype || "not set"}`,
+        `- Confidence trigger: ${personality.confidenceTrigger || "not set"}`,
+        `- Impression goals: ${impressionGoals.join(", ") || "not set"}`,
+        `- Body type: ${profile.bodyType || "not set"}`,
+        `- Color palette: ${colorPrefs[0] || "not set"}`,
+        `- Budget: ${profile.budget || "not set"}`,
+        `- Industry: ${lifestyle.industry || "not set"}`,
+        `- Daily routine: ${lifestyle.dailyRoutine || "not set"}`,
+      ].join("\n");
     }
 
     const novaSystem: Anthropic.TextBlockParam[] = [
       {
         type: "text",
-        text: aurraSystemPrompt,
+        text: SYSTEM_AURRA,
         cache_control: { type: "ephemeral" },
       },
       {
         type: "text",
-        text: `${
-          profileContext
-            ? `ACTIVE USER PROFILE:\n${profileContext}\nUse this profile to ground your answers in the user's specific identity, presence archetype, and context.`
-            : "No profile available — give general decisive advice."
-        }
-
-CONVERSATIONAL MODE:
-This is a chat. Respond in 2-4 short sentences max. Be direct and decisive.
-Do not use JSON format. Respond in plain text.
-Sound like a trusted advisor, not a chatbot.`,
+        text: renderNovaSystemAppend(profileContext),
       },
     ];
 
@@ -359,7 +326,7 @@ Sound like a trusted advisor, not a chatbot.`,
 
     return extractText(response) || "I'm not sure — try rephrasing your question.";
   } catch (error) {
-    console.error("NOVA chat error:", error);
+    console.error("[aurra] NOVA chat error:", error);
     return "I'm unavailable right now. Try again in a moment.";
   }
 }
@@ -370,7 +337,7 @@ export async function generateTryOnImage(
   occasion: string,
 ): Promise<string | null> {
   try {
-    console.log(`Generating try-on image for occasion: ${occasion}`);
+    console.log(`[replicate] try-on for occasion: ${occasion}`);
 
     const prompt = `a photo of a woman img, wearing ${outfitText}, full body outfit shot, professional fashion editorial photography, clean studio background, sharp focus, high-end fashion magazine quality`;
 
@@ -392,12 +359,12 @@ export async function generateTryOnImage(
 
     if (output && output.length > 0) {
       const url = output[0]?.url ? output[0].url() : String(output[0]);
-      console.log(`Try-on image generated: ${url}`);
+      console.log(`[replicate] try-on image generated: ${url}`);
       return url || null;
     }
     return null;
   } catch (error: any) {
-    console.error("Try-on generation error:", error);
+    console.error("[replicate] try-on error:", error);
     return null;
   }
 }
