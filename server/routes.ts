@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./googleAuth";
+import { streamSpeech } from "./elevenlabs";
 import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromText, novaChatResponse, generateTryOnImage } from "./openai";
 import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
 import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema, insertWardrobeItemSchema } from "../shared/schema";
@@ -47,6 +48,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth middleware
   await setupAuth(app);
+
+  // ── TTS: ElevenLabs proxy. Authenticated; client never sees the API key. ───
+  // POST /api/tts { text } -> audio/mpeg stream
+  // Cached at the edge for 1 day so the same phrase doesn't re-hit ElevenLabs.
+  app.post("/api/tts", isAuthenticated, async (req: any, res) => {
+    try {
+      const text: string = (req.body?.text || "").toString().trim();
+      if (!text) return res.status(400).json({ message: "text required" });
+      if (text.length > 800) return res.status(400).json({ message: "text too long (max 800 chars)" });
+
+      const upstream = await streamSpeech({ text });
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.setHeader("Cache-Control", "public, max-age=86400, immutable");
+
+      if (!upstream.body) return res.status(502).end();
+      const reader = upstream.body.getReader();
+      try {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      res.end();
+    } catch (err: any) {
+      console.error("[tts] error:", err.message);
+      if (!res.headersSent) res.status(500).json({ message: "TTS failed" });
+      else res.end();
+    }
+  });
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

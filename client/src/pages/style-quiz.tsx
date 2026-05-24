@@ -8,6 +8,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import { Mic, Volume2, VolumeX, ChevronRight, RotateCcw, Check, ArrowRight } from "lucide-react";
 import { type StyleProfile } from "@shared/schema";
+import { useAurraTTS } from "@/hooks/useAurraTTS";
 
 // ─── Question Data ────────────────────────────────────────────────────────────
 
@@ -420,6 +421,7 @@ function NovaGeneratingScreen({
   const [stepIndex, setStepIndex] = useState(0);
   const [showCTA, setShowCTA] = useState(false);
   const [slowMessage, setSlowMessage] = useState(false);
+  const genTts = useAurraTTS();
 
   // Profile recap pills
   const pills: { label: string; value: string }[] = [];
@@ -450,31 +452,22 @@ function NovaGeneratingScreen({
     }
   }, [isComplete]);
 
-  // NOVA voice
+  // NOVA voice — via ElevenLabs (consistent across users)
   useEffect(() => {
-    if (!isMuted && window.speechSynthesis) {
-      const u = new SpeechSynthesisUtterance("Got everything I need. Building your first recommendation now.");
-      u.rate = 0.88;
-      u.pitch = 1.05;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    }
+    genTts.speak("Got everything I need. Building your first recommendation now.", { muted: isMuted });
   }, []);
 
   useEffect(() => {
-    if (isComplete && !isMuted && window.speechSynthesis) {
-      const u = new SpeechSynthesisUtterance("Your first look is ready.");
-      u.rate = 0.88;
-      u.pitch = 1.05;
-      window.speechSynthesis.cancel();
-      setTimeout(() => window.speechSynthesis.speak(u), 300);
+    if (isComplete) {
+      const t = setTimeout(() => genTts.speak("Your first look is ready.", { muted: isMuted }), 300);
+      return () => clearTimeout(t);
     }
   }, [isComplete]);
 
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
-      style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 50%, #0d0812 100%)" }}
+      style={{ background: "linear-gradient(160deg, #0F0E14 0%, #1A1825 50%, #0F0E14 100%)" }}
     >
       {/* Orb */}
       <div className="mb-8">
@@ -589,7 +582,7 @@ export default function StyleQuiz() {
   const [generationComplete, setGenerationComplete] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const tts = useAurraTTS();
 
   const question = QUESTIONS[currentQ];
   const totalQ = QUESTIONS.length;
@@ -613,49 +606,23 @@ export default function StyleQuiz() {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentQ, confirmedAnswers]);
 
-  // ── Voice support detection
+  // ── Voice support detection (always true for ElevenLabs; mic still needs browser API)
   useEffect(() => {
-    const hasSpeech = "speechSynthesis" in window;
     const hasRec = "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
-    setVoiceSupported(hasSpeech && hasRec);
+    setVoiceSupported(hasRec);
   }, []);
 
-  // ── Speak NOVA question
+  // ── Speak NOVA question via ElevenLabs (consistent voice, no browser TTS)
   const speakText = useCallback(
     (text: string) => {
-      if (!window.speechSynthesis || isMuted) return;
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.88;
-      utterance.pitch = 1.05;
-      utterance.volume = 0.95;
-
-      const loadVoices = () => {
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(
-          (v) =>
-            v.name.includes("Samantha") ||
-            v.name.includes("Victoria") ||
-            v.name.includes("Karen") ||
-            v.name.includes("Google UK English Female") ||
-            (v.lang === "en-US" && v.name.toLowerCase().includes("female"))
-        );
-        if (preferred) utterance.voice = preferred;
-      };
-
-      if (window.speechSynthesis.getVoices().length > 0) {
-        loadVoices();
-      } else {
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-      }
-
-      utterance.onstart = () => setOrbState("speaking");
-      utterance.onend = () => setOrbState("idle");
-      utterance.onerror = () => setOrbState("idle");
-      synthRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+      tts.cancel();
+      tts.speak(text, {
+        muted: isMuted,
+        onStart: () => setOrbState("speaking"),
+        onEnd: () => setOrbState("idle"),
+      });
     },
-    [isMuted]
+    [tts, isMuted]
   );
 
   // ── Speak question when it changes
@@ -799,7 +766,7 @@ export default function StyleQuiz() {
   // ── Submit — shows generating screen immediately (T001)
   const handleSubmit = (currentAnswers?: Answers) => {
     const finalAnswers = currentAnswers || answers;
-    window.speechSynthesis?.cancel();
+    tts.cancel();
 
     const personalityData = {
       identityWord: finalAnswers.identityWord,
@@ -832,7 +799,7 @@ export default function StyleQuiz() {
 
   // ── Go to dashboard from generation screen (T003: add ?new=1)
   const handleGoToDashboard = () => {
-    window.speechSynthesis?.cancel();
+    tts.cancel();
     setLocation("/dashboard?new=1");
   };
 
@@ -842,7 +809,7 @@ export default function StyleQuiz() {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    window.speechSynthesis?.cancel();
+    tts.cancel();
     setIsListening(true);
     setOrbState("listening");
 
@@ -909,7 +876,7 @@ export default function StyleQuiz() {
 
   // ── Reset
   const handleReset = () => {
-    window.speechSynthesis?.cancel();
+    tts.cancel();
     setAnswers({ ...defaultAnswers });
     setCurrentQ(0);
     setConfirmedAnswers([]);
@@ -945,7 +912,7 @@ export default function StyleQuiz() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0812" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0F0E14" }}>
         <div className="w-8 h-8 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
       </div>
     );
@@ -989,7 +956,7 @@ export default function StyleQuiz() {
 
       <div
         className="min-h-screen flex flex-col"
-        style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 50%, #0d0812 100%)" }}
+        style={{ background: "linear-gradient(160deg, #0F0E14 0%, #1A1825 50%, #0F0E14 100%)" }}
       >
         {/* Header */}
         <div
@@ -1013,7 +980,7 @@ export default function StyleQuiz() {
               <button
                 onClick={() => {
                   setIsMuted(!isMuted);
-                  if (!isMuted) window.speechSynthesis?.cancel();
+                  if (!isMuted) tts.cancel();
                 }}
                 className="p-2 rounded-full transition-colors"
                 style={{ background: "rgba(255,255,255,0.05)" }}

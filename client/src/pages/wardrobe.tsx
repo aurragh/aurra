@@ -59,7 +59,7 @@ function AddItemForm({ onClose, onSave, isSaving }: AddItemFormProps) {
     >
       <div
         className="w-full max-w-md rounded-2xl overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #130d1a, #0d0812)", border: "1px solid rgba(168,85,247,0.2)" }}
+        style={{ background: "linear-gradient(160deg, #1A1825, #0F0E14)", border: "1px solid rgba(168,85,247,0.2)" }}
       >
         <div
           className="flex items-center justify-between px-5 py-4"
@@ -235,7 +235,7 @@ export default function Wardrobe() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0812" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0F0E14" }}>
         <div className="w-8 h-8 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
       </div>
     );
@@ -244,7 +244,7 @@ export default function Wardrobe() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 60%, #0d0812 100%)" }}
+      style={{ background: "linear-gradient(160deg, #0F0E14 0%, #1A1825 60%, #0F0E14 100%)" }}
     >
       {/* Header */}
       <div

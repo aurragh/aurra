@@ -88,7 +88,7 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
       <DialogContent
         className="border-0 p-0 overflow-hidden max-w-sm w-full"
         style={{
-          background: "linear-gradient(160deg, #130d1a 0%, #1a0f2e 100%)",
+          background: "linear-gradient(160deg, #1A1825 0%, #1a0f2e 100%)",
           border: "1px solid rgba(168,85,247,0.2)",
         }}
         data-testid="dialog-tryon-modal"

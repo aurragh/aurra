@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation, useSearch } from "wouter";
 import { ArrowLeft, Send, Volume2, VolumeX } from "lucide-react";
+import { useAurraTTS } from "@/hooks/useAurraTTS";
 
 interface Message {
   role: "user" | "assistant";
@@ -63,31 +64,19 @@ export default function NovaChat() {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isThinking]);
 
-  // Speak NOVA reply
+  const tts = useAurraTTS();
+
+  // Speak NOVA reply via ElevenLabs (consistent voice across the app)
   const speakReply = useCallback(
     (text: string) => {
-      if (!window.speechSynthesis || isMuted) return;
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.88;
-      utterance.pitch = 1.05;
-
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(
-        (v) =>
-          v.name.includes("Samantha") ||
-          v.name.includes("Victoria") ||
-          v.name.includes("Google UK English Female") ||
-          (v.lang === "en-US" && v.name.toLowerCase().includes("female"))
-      );
-      if (preferred) utterance.voice = preferred;
-
-      utterance.onstart = () => setNovaSpeaking(true);
-      utterance.onend = () => setNovaSpeaking(false);
-      utterance.onerror = () => setNovaSpeaking(false);
-      window.speechSynthesis.speak(utterance);
+      tts.cancel();
+      tts.speak(text, {
+        muted: isMuted,
+        onStart: () => setNovaSpeaking(true),
+        onEnd: () => setNovaSpeaking(false),
+      });
     },
-    [isMuted]
+    [tts, isMuted]
   );
 
   const searchString = useSearch();
@@ -160,7 +149,7 @@ export default function NovaChat() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0812" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0F0E14" }}>
         <div className="w-8 h-8 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
       </div>
     );
@@ -180,7 +169,7 @@ export default function NovaChat() {
 
       <div
         className="min-h-screen flex flex-col"
-        style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 60%, #0d0812 100%)" }}
+        style={{ background: "linear-gradient(160deg, #0F0E14 0%, #1A1825 60%, #0F0E14 100%)" }}
       >
         {/* Header */}
         <div
@@ -210,7 +199,7 @@ export default function NovaChat() {
           <button
             onClick={() => {
               setIsMuted((v) => !v);
-              if (!isMuted) window.speechSynthesis?.cancel();
+              if (!isMuted) tts.cancel();
             }}
             className="p-2 rounded-full transition-colors"
             style={{ background: "rgba(255,255,255,0.05)" }}

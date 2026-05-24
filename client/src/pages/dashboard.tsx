@@ -209,7 +209,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0812" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0F0E14" }}>
         <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -218,7 +218,7 @@ export default function Dashboard() {
   return (
     <div
       className="min-h-screen"
-      style={{ background: "linear-gradient(160deg, #0d0812 0%, #130d1a 50%, #0d0812 100%)" }}
+      style={{ background: "linear-gradient(160deg, #0F0E14 0%, #1A1825 50%, #0F0E14 100%)" }}
     >
       {/* Nav */}
       <nav
@@ -250,7 +250,7 @@ export default function Dashboard() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               className="w-52 border-gray-800"
-              style={{ background: "#130d1a", border: "1px solid rgba(255,255,255,0.1)" }}
+              style={{ background: "#1A1825", border: "1px solid rgba(255,255,255,0.1)" }}
             >
               <DropdownMenuLabel className="text-gray-500 text-xs">Navigation</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-800" />

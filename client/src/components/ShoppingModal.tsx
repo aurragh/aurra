@@ -67,7 +67,7 @@ export function ShoppingModal({ outfitId, open, onOpenChange }: ShoppingModalPro
       <DialogContent
         className="max-w-md w-full border-0 p-0 overflow-hidden"
         style={{
-          background: "linear-gradient(160deg, #130d1a, #0d0812)",
+          background: "linear-gradient(160deg, #1A1825, #0F0E14)",
           border: "1px solid rgba(168,85,247,0.2)",
           borderRadius: "20px",
           maxHeight: "85vh",
