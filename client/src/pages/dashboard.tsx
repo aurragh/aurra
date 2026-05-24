@@ -231,8 +231,7 @@ export default function Dashboard() {
         }}
       >
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* A small purple dot as monogram, paired with serif wordmark, clean + brand-consistent */}
+          <div className="flex items-center gap-2.5">
             <div
               className="w-2 h-2 rounded-full"
               style={{
@@ -240,13 +239,18 @@ export default function Dashboard() {
                 boxShadow: "0 0 8px rgba(168,85,247,0.5)",
               }}
             />
-            <h1
-              className="font-display text-2xl text-white tracking-tight"
-              style={{ letterSpacing: "-0.02em" }}
-              data-testid="heading-dashboard"
-            >
-              Aurra
-            </h1>
+            <div className="flex items-baseline gap-2">
+              <h1
+                className="font-display text-2xl text-white tracking-tight leading-none"
+                style={{ letterSpacing: "-0.02em" }}
+                data-testid="heading-dashboard"
+              >
+                Aurra
+              </h1>
+              <span className="text-[10px] text-purple-300/50 uppercase tracking-[0.15em] hidden sm:inline">
+                by House of Nova
+              </span>
+            </div>
           </div>
 
           <DropdownMenu>
