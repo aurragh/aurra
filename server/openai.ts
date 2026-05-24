@@ -1,15 +1,40 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import Replicate from "replicate";
-import type { StyleProfile } from "@shared/schema";
+import type { StyleProfile } from "../shared/schema";
 import { aurraSystemPrompt } from "./aurraSystemPrompt";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "default_key"
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const MODEL = "claude-sonnet-4-6";
+
+// System block with prompt caching — used in 3 call sites.
+const aurraSystem: Anthropic.TextBlockParam[] = [
+  {
+    type: "text",
+    text: aurraSystemPrompt,
+    cache_control: { type: "ephemeral" },
+  },
+];
+
+function extractText(message: Anthropic.Message): string {
+  return message.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("");
+}
+
+// Strip ```json fences if the model wraps the response.
+function parseJsonResponse(text: string): any {
+  const trimmed = text.trim();
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return JSON.parse(fenceMatch ? fenceMatch[1] : trimmed);
+}
 
 interface OutfitItem {
   category: string;
@@ -25,39 +50,32 @@ interface GeneratedOutfit {
   backup: string;
   avoid: string;
   why: string;
-  // Legacy compatibility for frontend mapping
   name: string;
   description: string;
   items: string;
   aiRecommendation: string;
 }
 
-// Helper function to make API call and parse JSON response
 async function makeAurraAPICall(userPrompt: string): Promise<any> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1500,
+    system: aurraSystem,
     messages: [
       {
-        role: "system",
-        content: aurraSystemPrompt
-      },
-      {
         role: "user",
-        content: userPrompt
-      }
+        content: `${userPrompt}\n\nRespond with valid JSON only, no markdown fences, no preamble.`,
+      },
     ],
-    response_format: { type: "json_object" },
-    max_completion_tokens: 1000,
   });
 
-  const content = response.choices[0].message.content || '{}';
-  return JSON.parse(content);
+  return parseJsonResponse(extractText(response));
 }
 
 export async function generateOutfitRecommendations(
   profile: StyleProfile,
   occasion: string,
-  count: number = 1
+  count: number = 1,
 ): Promise<GeneratedOutfit[]> {
   try {
     const personality = profile.personality ? JSON.parse(profile.personality) : {};
@@ -65,28 +83,27 @@ export async function generateOutfitRecommendations(
     const stylePrefs = profile.stylePreferences ? JSON.parse(profile.stylePreferences) : [];
     const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
 
-    // Parse richer psychological fields
     const impressionGoals = personality.impressionGoals
-      ? JSON.parse(personality.impressionGoals).join(', ')
-      : '';
+      ? JSON.parse(personality.impressionGoals).join(", ")
+      : "";
     const intentMoments = personality.intentMoments
-      ? JSON.parse(personality.intentMoments).join(', ')
-      : '';
+      ? JSON.parse(personality.intentMoments).join(", ")
+      : "";
 
     const userPrompt = `
 User Psychological Profile:
-- Identity word (how they describe themselves at their best): ${personality.identityWord || 'not specified'}
-- Dressing relationship: ${personality.dressingRelationship || 'not specified'}
-- Impression goals (what they want others to feel): ${impressionGoals || 'not specified'}
-- Confidence trigger (what they wear when most confident): ${personality.confidenceTrigger || 'not specified'}
-- Presence archetype: ${personality.presenceArchetype || personality.presenceGoal || 'not specified'}
+- Identity word (how they describe themselves at their best): ${personality.identityWord || "not specified"}
+- Dressing relationship: ${personality.dressingRelationship || "not specified"}
+- Impression goals (what they want others to feel): ${impressionGoals || "not specified"}
+- Confidence trigger (what they wear when most confident): ${personality.confidenceTrigger || "not specified"}
+- Presence archetype: ${personality.presenceArchetype || personality.presenceGoal || "not specified"}
 
 Physical & Practical:
-- Body Type: ${profile.bodyType || 'not specified'}
-- Budget: ${profile.budget || 'not specified'}
-- Color Palette: ${colorPrefs.join(', ') || 'not specified'}
-- Industry: ${lifestyle.industry || 'not specified'}
-- Daily Routine: ${lifestyle.dailyRoutine || 'not specified'}
+- Body Type: ${profile.bodyType || "not specified"}
+- Budget: ${profile.budget || "not specified"}
+- Color Palette: ${colorPrefs.join(", ") || "not specified"}
+- Industry: ${lifestyle.industry || "not specified"}
+- Daily Routine: ${lifestyle.dailyRoutine || "not specified"}
 
 Situation:
 - Occasion: ${occasion}
@@ -94,13 +111,10 @@ Situation:
 `;
 
     let result: any;
-    
-    // Guardrail: If JSON parsing fails, retry once automatically (per spec Doc 1, Section 6)
     try {
       result = await makeAurraAPICall(userPrompt);
     } catch (parseError: any) {
-      // Only retry on JSON parsing errors, not all API errors
-      if (parseError instanceof SyntaxError || parseError.message?.includes('JSON')) {
+      if (parseError instanceof SyntaxError || parseError.message?.includes("JSON")) {
         console.log("Aurra: JSON parsing failed, retrying once...");
         result = await makeAurraAPICall(userPrompt);
       } else {
@@ -108,45 +122,51 @@ Situation:
       }
     }
 
-    // Log if required fields are missing (don't retry, just use fallbacks)
     if (!result.primary || !result.backup || !result.avoid) {
       console.log("Aurra: Some required fields missing, using fallbacks for empty fields");
     }
-    
-    // Map Aurra structure to existing Outfit schema for compatibility
-    return [{
-      primary: result.primary || "",
-      backup: result.backup || "",
-      avoid: result.avoid || "",
-      why: result.why || "",
-      name: "Aurra Recommendation",
-      description: result.primary || "",
-      items: JSON.stringify([{ category: "Recommendation", description: result.primary, color: "N/A", style: "N/A" }]),
-      aiRecommendation: `WHY: ${result.why || ""}\n\nBACKUP: ${result.backup || ""}\n\nAVOID: ${result.avoid || ""}`
-    }];
 
+    return [
+      {
+        primary: result.primary || "",
+        backup: result.backup || "",
+        avoid: result.avoid || "",
+        why: result.why || "",
+        name: "Aurra Recommendation",
+        description: result.primary || "",
+        items: JSON.stringify([
+          {
+            category: "Recommendation",
+            description: result.primary,
+            color: "N/A",
+            style: "N/A",
+          },
+        ]),
+        aiRecommendation: `WHY: ${result.why || ""}\n\nBACKUP: ${result.backup || ""}\n\nAVOID: ${result.avoid || ""}`,
+      },
+    ];
   } catch (error) {
     console.error("Aurra AI error:", error);
-    return [{
-      primary: "Default recommendation",
-      backup: "Default backup",
-      avoid: "Default avoid",
-      why: "Error processing request",
-      name: "Aurra Recommendation",
-      description: "Default recommendation",
-      items: JSON.stringify([]),
-      aiRecommendation: "Error processing request"
-    }];
+    return [
+      {
+        primary: "Default recommendation",
+        backup: "Default backup",
+        avoid: "Default avoid",
+        why: "Error processing request",
+        name: "Aurra Recommendation",
+        description: "Default recommendation",
+        items: JSON.stringify([]),
+        aiRecommendation: "Error processing request",
+      },
+    ];
   }
 }
 
-// Generate outfit images using Replicate (flux-schnell model)
 async function generateWithReplicate(
   basicItems: string,
-  occasion: string
+  occasion: string,
 ): Promise<string | null> {
-  const itemsDesc = basicItems || 'stylish outfit';
-
+  const itemsDesc = basicItems || "stylish outfit";
   const imagePrompt = `Professional fashion photography: complete outfit flat lay on pure white background. Items: ${itemsDesc} for ${occasion}. Vertically arranged: top garment at top, bottom garment in middle, shoes at bottom, accessories around. High-end fashion catalog aesthetic, crisp studio lighting, editorial quality. Ultra sharp focus, luxury brand photography. No models, no mannequins, no hangers.`;
 
   console.log(`Replicate Image Prompt: ${imagePrompt}`);
@@ -160,17 +180,15 @@ async function generateWithReplicate(
         output_format: "webp",
         output_quality: 90,
         go_fast: true,
-      }
+      },
     });
 
-    // Output is an array of FileOutput objects
     const outputArray = output as any[];
     if (outputArray && outputArray.length > 0) {
       const url = outputArray[0]?.url ? outputArray[0].url() : String(outputArray[0]);
       console.log(`Replicate image generated: ${url}`);
       return url || null;
     }
-
     return null;
   } catch (error: any) {
     console.error("Replicate API error:", error);
@@ -181,17 +199,14 @@ async function generateWithReplicate(
 export async function generateOutfitImage(
   outfit: GeneratedOutfit,
   profile: StyleProfile,
-  occasion: string
+  occasion: string,
 ): Promise<string | null> {
   try {
-    const items = JSON.parse(outfit.items || '[]') as OutfitItem[];
-
-    const allItems = items.map(item =>
-      `${item.color} ${item.category.toLowerCase()}`
-    ).join(', ');
-
+    const items = JSON.parse(outfit.items || "[]") as OutfitItem[];
+    const allItems = items
+      .map((item) => `${item.color} ${item.category.toLowerCase()}`)
+      .join(", ");
     return await generateWithReplicate(allItems || outfit.primary, occasion);
-
   } catch (error: any) {
     console.error("Image generation error:", error);
     return null;
@@ -213,24 +228,18 @@ Provide a comprehensive style analysis including:
 
 Respond with insightful, actionable advice in a friendly, expert tone.`;
 
-    // Use the most reliable OpenAI model for style analysis
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system", 
-          content: "You are a professional fashion consultant providing personalized style advice."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      max_completion_tokens: 800,
+    const response = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 1200,
+      system:
+        "You are a professional fashion consultant providing personalized style advice.",
+      messages: [{ role: "user", content: prompt }],
     });
 
-    return response.choices[0].message.content || "Your style profile shows great potential for fashion exploration.";
-
+    return (
+      extractText(response) ||
+      "Your style profile shows great potential for fashion exploration."
+    );
   } catch (error) {
     console.error("Style analysis error:", error);
     return "Complete your style profile to receive personalized fashion insights and recommendations.";
@@ -244,43 +253,40 @@ export interface ShoppingItem {
   searchQuery: string;
 }
 
-// ── Text-based shopping extraction (no Vision API — uses stored outfit text)
 export async function extractShoppingItemsFromText(
   primaryRecommendation: string,
   backupRecommendation: string,
   occasion: string,
-  profileContext?: string
+  profileContext?: string,
 ): Promise<ShoppingItem[]> {
   try {
     const outfitDescription = [
       `Primary look: ${primaryRecommendation}`,
       backupRecommendation ? `Backup look: ${backupRecommendation}` : "",
       `Occasion: ${occasion}`,
-    ].filter(Boolean).join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+    const response = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 800,
+      system: `You are a fashion shopping assistant. Given an outfit description, identify 4-5 specific shoppable clothing or accessory pieces.
+For each piece return a targeted search query that would find it on a shopping site.
+Return JSON only (no markdown fences): { "items": [{ "name": string, "description": string, "category": string, "searchQuery": string }] }
+Categories: Top, Bottom, Shoes, Outerwear, Accessory, Bag.
+Keep descriptions concise and search queries specific (include color, material, silhouette where mentioned).`,
       messages: [
         {
-          role: "system",
-          content: `You are a fashion shopping assistant. Given an outfit description, identify 4–5 specific shoppable clothing or accessory pieces.
-For each piece return a targeted search query that would find it on a shopping site.
-Return JSON only: { "items": [{ "name": string, "description": string, "category": string, "searchQuery": string }] }
-Categories: Top, Bottom, Shoes, Outerwear, Accessory, Bag.
-Keep descriptions concise and search queries specific (include color, material, silhouette where mentioned).`
-        },
-        {
           role: "user",
-          content: `Extract shoppable items from this outfit description:\n\n${outfitDescription}`
-        }
+          content: `Extract shoppable items from this outfit description:\n\n${outfitDescription}\n\nRespond with valid JSON only.`,
+        },
       ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 600,
     });
 
-    const content = response.choices[0].message.content;
-    if (!content) return [];
-    const parsed = JSON.parse(content);
+    const text = extractText(response);
+    if (!text) return [];
+    const parsed = parseJsonResponse(text);
     const items = parsed.items || [];
     console.log(`Text-based extraction: found ${items.length} shopping items`);
     return items;
@@ -290,66 +296,10 @@ Keep descriptions concise and search queries specific (include color, material, 
   }
 }
 
-export async function extractShoppingItemsFromImage(imageUrl: string): Promise<ShoppingItem[]> {
-  try {
-    console.log(`Extracting shopping items from image: ${imageUrl}`);
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a fashion shopping assistant that analyzes outfit images and identifies individual clothing and accessory items for shopping. Extract each distinct fashion item with detailed descriptions."
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Analyze this outfit image and identify each distinct clothing and accessory item. For each item, provide:
-1. A clear name (e.g., "White Linen Shirt", "Brown Leather Ankle Boots")
-2. A detailed description (style, material, key features)
-3. The category (e.g., "Top", "Bottom", "Shoes", "Accessories")
-4. A search query optimized for Google Shopping (e.g., "buy white linen button-down shirt women")
-
-Focus on items that are clearly visible and identifiable. Return a JSON object with an "items" array.`
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: imageUrl
-              }
-            }
-          ]
-        }
-      ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 1000,
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content) {
-      console.error("No content in GPT-4 Vision response");
-      return [];
-    }
-
-    const parsed = JSON.parse(content);
-    const items = parsed.items || [];
-    
-    console.log(`Extracted ${items.length} shopping items from image`);
-    return items;
-
-  } catch (error) {
-    console.error("GPT-4 Vision extraction error:", error);
-    return [];
-  }
-}
-
-// ── NOVA Chat Stylist: conversational AI using profile context
 export async function novaChatResponse(
   message: string,
   profile: StyleProfile | null,
-  history: { role: "user" | "assistant"; content: string }[]
+  history: { role: "user" | "assistant"; content: string }[],
 ): Promise<string> {
   try {
     let profileContext = "";
@@ -357,7 +307,9 @@ export async function novaChatResponse(
       const personality = profile.personality ? JSON.parse(profile.personality) : {};
       const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
       const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
-      const impressionGoals = personality.impressionGoals ? JSON.parse(personality.impressionGoals) : [];
+      const impressionGoals = personality.impressionGoals
+        ? JSON.parse(personality.impressionGoals)
+        : [];
       profileContext = `
 User Style Profile:
 - Identity: ${personality.identityWord || "not set"}
@@ -372,56 +324,71 @@ User Style Profile:
 `;
     }
 
-    const systemPrompt = `${aurraSystemPrompt}
-
-${profileContext ? `ACTIVE USER PROFILE:\n${profileContext}\nUse this profile to ground your answers in the user's specific identity, presence archetype, and context.` : "No profile available — give general decisive advice."}
+    const novaSystem: Anthropic.TextBlockParam[] = [
+      {
+        type: "text",
+        text: aurraSystemPrompt,
+        cache_control: { type: "ephemeral" },
+      },
+      {
+        type: "text",
+        text: `${
+          profileContext
+            ? `ACTIVE USER PROFILE:\n${profileContext}\nUse this profile to ground your answers in the user's specific identity, presence archetype, and context.`
+            : "No profile available — give general decisive advice."
+        }
 
 CONVERSATIONAL MODE:
-This is a chat. Respond in 2–4 short sentences max. Be direct and decisive.
+This is a chat. Respond in 2-4 short sentences max. Be direct and decisive.
 Do not use JSON format. Respond in plain text.
-Sound like a trusted advisor, not a chatbot.`;
-
-    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-      { role: "system", content: systemPrompt },
-      ...history.slice(-6), // Keep last 6 messages for context
-      { role: "user", content: message },
+Sound like a trusted advisor, not a chatbot.`,
+      },
     ];
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+    const messages: Anthropic.MessageParam[] = [
+      ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
+      { role: "user" as const, content: message },
+    ];
+
+    const response = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 400,
+      system: novaSystem,
       messages,
-      max_completion_tokens: 300,
     });
 
-    return response.choices[0].message.content || "I'm not sure — try rephrasing your question.";
+    return extractText(response) || "I'm not sure — try rephrasing your question.";
   } catch (error) {
     console.error("NOVA chat error:", error);
     return "I'm unavailable right now. Try again in a moment.";
   }
 }
 
-// ── Try-On: generate photorealistic image of user wearing an outfit
 export async function generateTryOnImage(
   avatarPhotoUrl: string,
   outfitText: string,
-  occasion: string
+  occasion: string,
 ): Promise<string | null> {
   try {
     console.log(`Generating try-on image for occasion: ${occasion}`);
 
     const prompt = `a photo of a woman img, wearing ${outfitText}, full body outfit shot, professional fashion editorial photography, clean studio background, sharp focus, high-end fashion magazine quality`;
 
-    const output = await replicate.run("tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4", {
-      input: {
-        prompt,
-        input_image: avatarPhotoUrl,
-        num_outputs: 1,
-        style_name: "Photographic (Default)",
-        style_strength_ratio: 20,
-        num_steps: 20,
-        negative_prompt: "nsfw, cartoon, illustration, painting, deformed, bad anatomy, ugly, blurry",
-      }
-    }) as any[];
+    const output = (await replicate.run(
+      "tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4",
+      {
+        input: {
+          prompt,
+          input_image: avatarPhotoUrl,
+          num_outputs: 1,
+          style_name: "Photographic (Default)",
+          style_strength_ratio: 20,
+          num_steps: 20,
+          negative_prompt:
+            "nsfw, cartoon, illustration, painting, deformed, bad anatomy, ugly, blurry",
+        },
+      },
+    )) as any[];
 
     if (output && output.length > 0) {
       const url = output[0]?.url ? output[0].url() : String(output[0]);

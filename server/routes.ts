@@ -1,11 +1,12 @@
-import type { Express } from "express";
+console.log("Loading server/routes.ts");
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./googleAuth";
 import { generateOutfitRecommendations, analyzeStyleProfile, generateOutfitImage, extractShoppingItemsFromText, novaChatResponse, generateTryOnImage } from "./openai";
 import { downloadAndSaveImage, isImageUrlExpired } from "./imageUtils";
-import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema, insertWardrobeItemSchema } from "@shared/schema";
+import { insertStyleProfileSchema, insertOutfitSchema, insertCollectionSchema, insertShoppingAnalyticsSchema, insertWardrobeItemSchema } from "../shared/schema";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
@@ -41,8 +42,8 @@ const profilePhotoUpload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from public directory (for outfit images)
-  app.use('/outfit-images', (await import('express')).default.static(path.join(__dirname, '..', 'public', 'outfit-images')));
-  app.use('/profile-photos', (await import('express')).default.static(profilePhotosDir));
+  app.use('/outfit-images', express.static(path.join(__dirname, '..', 'public', 'outfit-images')));
+  app.use('/profile-photos', express.static(profilePhotosDir));
 
   // Auth middleware
   await setupAuth(app);
@@ -51,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      
+
       try {
         // Try to fetch from database first
         const user = await storage.getUser(userId);
@@ -126,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const profile = await storage.createOrUpdateStyleProfile(profileData);
-      
+
       // Award points for completing profile
       if (profileData.completed) {
         await storage.updateUserPoints(userId, 200);
@@ -144,11 +145,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { occasion } = req.body;
-      
+
       console.log(`Generating Aurra recommendation for user ${userId}, occasion: ${occasion}`);
-      
+
       const profile = await storage.getStyleProfile(userId);
-      
+
       if (!profile || !profile.completed) {
         return res.status(400).json({ message: "Complete your style profile first" });
       }
@@ -162,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Aurra always gives ONE primary direction as per spec
       const recommendations = await generateOutfitRecommendations(profile, occasion, 1);
       const recommendation = recommendations[0];
-      
+
       // Save the recommendation as an "outfit" for persistence
       const savedOutfit = await storage.createOutfit({
         name: "Aurra Recommendation",
@@ -209,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const outfits = await storage.getUserOutfits(userId);
-      
+
       // Asynchronously regenerate expired images in the background
       // This won't block the response
       outfits.forEach((outfit) => {
@@ -236,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   profile,
                   outfit.occasion || 'casual'
                 );
-                
+
                 if (temporaryImageUrl) {
                   const localImageUrl = await downloadAndSaveImage(temporaryImageUrl, outfit.id);
                   if (localImageUrl) {
@@ -251,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })();
         }
       });
-      
+
       // Return outfits immediately, even if some images are expired
       // The client can show placeholders while images are being regenerated
       res.json(outfits);
@@ -354,10 +355,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const collection = await storage.createCollection(collectionData);
-      
+
       // Award points for creating collection
       await storage.updateUserPoints(userId, 100);
-      
+
       res.json(collection);
     } catch (error) {
       console.error("Error creating collection:", error);
@@ -370,11 +371,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       let points = await storage.getUserPoints(userId);
-      
+
       if (!points) {
         points = await storage.initializeUserPoints(userId);
       }
-      
+
       res.json(points);
     } catch (error) {
       console.error("Error fetching user points:", error);
@@ -387,22 +388,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!stripe) {
       return res.status(503).json({ message: "Payment processing not configured. Please contact support." });
     }
-    
+
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
       if (user.stripeSubscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-        
+
         if (subscription.latest_invoice && typeof subscription.latest_invoice === 'object') {
           const invoice = subscription.latest_invoice as any;
           const paymentIntent = invoice.payment_intent;
-          
+
           res.json({
             subscriptionId: subscription.id,
             clientSecret: typeof paymentIntent === 'object' ? paymentIntent?.client_secret : null,
@@ -410,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
       }
-      
+
       if (!user.email) {
         return res.status(400).json({ message: 'No user email on file' });
       }
@@ -433,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const latestInvoice = subscription.latest_invoice;
       const paymentIntent = typeof latestInvoice === 'object' && (latestInvoice as any)?.payment_intent;
-      
+
       res.json({
         subscriptionId: subscription.id,
         clientSecret: typeof paymentIntent === 'object' ? paymentIntent?.client_secret : null,
@@ -601,17 +602,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId,
       });
-      
+
       await storage.trackShoppingClick(analyticsData);
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error tracking shopping click:", error);
-      
+
       // Return 400 for validation errors, 500 for other errors
       if (error.name === 'ZodError') {
         return res.status(400).json({ message: "Invalid request data", errors: error.errors });
       }
-      
+
       res.status(500).json({ message: "Failed to track shopping click" });
     }
   });
@@ -621,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "writersure369@gmail.com",
     "novacreates888@gmail.com"
   ];
-  
+
   const isAdmin = (req: any, res: any, next: any) => {
     if (!req.user || !ADMIN_EMAILS.includes(req.user.claims.email)) {
       return res.status(403).json({ message: "Admin access required" });
@@ -689,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const userId = req.user.claims.sub;
         const amount = captureResult.data?.purchase_units?.[0]?.amount?.value;
         const plan = parseFloat(amount || "0") > 15 ? "pro" : "premium";
-        
+
         await storage.updateUserSubscription(userId, plan);
         console.log(`User ${userId} upgraded to ${plan} after successful PayPal payment`);
       }
@@ -706,30 +707,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { plan, discountCode } = req.body;
-      
+
       // If discount code provided, validate it belongs to user and consume it
       if (discountCode) {
         // First verify the code belongs to this user
         const userActiveDiscount = await storage.getActiveDiscountCode(userId);
         if (!userActiveDiscount || userActiveDiscount.code !== discountCode) {
-          return res.status(400).json({ 
-            message: "Invalid discount code. This code doesn't belong to your account or has already been used." 
+          return res.status(400).json({
+            message: "Invalid discount code. This code doesn't belong to your account or has already been used."
           });
         }
-        
+
         // Consume the discount code
         const discountResult = await storage.useDiscountCode(discountCode);
         if (!discountResult.success) {
-          return res.status(400).json({ 
-            message: "Failed to apply discount code. It may have already been used." 
+          return res.status(400).json({
+            message: "Failed to apply discount code. It may have already been used."
           });
         }
         console.log(`Discount code ${discountCode} applied for user ${userId}: $${(discountResult.discountAmount / 100).toFixed(2)} off`);
       }
-      
+
       // Update user subscription status
       await storage.updateUserSubscription(userId, plan || 'premium');
-      
+
       res.json({ success: true, message: 'Subscription upgraded successfully' });
     } catch (error) {
       console.error("Error upgrading subscription:", error);
@@ -742,17 +743,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       let points = await storage.getUserPoints(userId);
-      
+
       // Initialize points if not exists
       if (!points) {
         points = await storage.initializeUserPoints(userId);
       }
-      
+
       const transactions = await storage.getPointTransactions(userId);
       const activeTrial = await storage.getActivePremiumTrial(userId);
       const activeDiscount = await storage.getActiveDiscountCode(userId);
       const freeOutfitCredits = await storage.getFreeOutfitCredits(userId);
-      
+
       res.json({
         points: points.points ?? 0,
         level: points.level ?? 'Beginner',

@@ -27,7 +27,7 @@ import {
   type FreeOutfitCredits,
   type WardrobeItem,
   type InsertWardrobeItem,
-} from "@shared/schema";
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, lt, sql } from "drizzle-orm";
 
@@ -40,11 +40,11 @@ export interface IStorage {
   updateUserAvatarPhoto(userId: string, avatarPhotoUrl: string): Promise<User>;
   getOutfitByShareToken(token: string): Promise<Outfit | undefined>;
   setOutfitShareToken(id: string, userId: string, token: string): Promise<Outfit>;
-  
+
   // Style profile operations
   getStyleProfile(userId: string): Promise<StyleProfile | undefined>;
   createOrUpdateStyleProfile(profile: InsertStyleProfile): Promise<StyleProfile>;
-  
+
   // Outfit operations
   getUserOutfits(userId: string): Promise<Outfit[]>;
   getUserDeletedOutfits(userId: string): Promise<Outfit[]>;
@@ -57,18 +57,18 @@ export interface IStorage {
   restoreOutfit(id: string): Promise<Outfit>;
   cleanupOldDeletedOutfits(): Promise<void>; // Remove outfits deleted over 30 days ago
   toggleFavoriteOutfit(id: string): Promise<Outfit>;
-  
+
   // Collection operations
   getUserCollections(userId: string): Promise<StyleCollection[]>;
   createCollection(collection: InsertCollection): Promise<StyleCollection>;
   updateCollection(id: string, updates: Partial<InsertCollection>): Promise<StyleCollection>;
   deleteCollection(id: string): Promise<void>;
-  
+
   // Points operations
   getUserPoints(userId: string): Promise<UserPoints | undefined>;
   updateUserPoints(userId: string, pointsToAdd: number): Promise<UserPoints>;
   initializeUserPoints(userId: string): Promise<UserPoints>;
-  
+
   // Point redemption operations
   createPointTransaction(userId: string, type: string, action: string, points: number, description: string): Promise<PointTransaction>;
   getPointTransactions(userId: string): Promise<PointTransaction[]>;
@@ -78,12 +78,12 @@ export interface IStorage {
   getActivePremiumTrial(userId: string): Promise<PremiumTrial | undefined>;
   getActiveDiscountCode(userId: string): Promise<DiscountCode | undefined>;
   useDiscountCode(code: string): Promise<{ success: boolean; discountAmount: number }>;
-  
+
   // Free outfit credits operations
   getFreeOutfitCredits(userId: string): Promise<number>;
   addFreeOutfitCredit(userId: string): Promise<void>;
   useFreeOutfitCredit(userId: string): Promise<boolean>;
-  
+
   // Shopping analytics operations
   trackShoppingClick(analytics: InsertShoppingAnalytics): Promise<ShoppingAnalytics>;
 
@@ -91,7 +91,7 @@ export interface IStorage {
   getWardrobeItems(userId: string): Promise<WardrobeItem[]>;
   createWardrobeItem(item: InsertWardrobeItem): Promise<WardrobeItem>;
   deleteWardrobeItem(id: string, userId: string): Promise<void>;
-  
+
   // Admin operations
   getAllUsers(): Promise<User[]>;
   getAllOutfits(): Promise<Outfit[]>;
@@ -166,7 +166,7 @@ export class DatabaseStorage implements IStorage {
 
   async createOrUpdateStyleProfile(profile: InsertStyleProfile): Promise<StyleProfile> {
     const existing = await this.getStyleProfile(profile.userId);
-    
+
     if (existing) {
       const [updated] = await db
         .update(styleProfiles)
@@ -359,17 +359,17 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPoints(userId: string, pointsToAdd: number): Promise<UserPoints> {
     const existing = await this.getUserPoints(userId);
-    
+
     if (existing) {
       const newPoints = (existing.points ?? 0) + pointsToAdd;
       const newTotal = (existing.totalEarned ?? 0) + pointsToAdd;
       let newLevel = existing.level;
-      
+
       // Level progression
       if (newTotal >= 10000) newLevel = "Expert";
       else if (newTotal >= 5000) newLevel = "Advanced";
       else if (newTotal >= 1000) newLevel = "Intermediate";
-      
+
       const [updated] = await db
         .update(userPoints)
         .set({
@@ -428,7 +428,7 @@ export class DatabaseStorage implements IStorage {
   async redeemPointsForOutfit(userId: string): Promise<{ success: boolean; message: string }> {
     const COST = 50;
     const userPts = await this.getUserPoints(userId);
-    
+
     if (!userPts || (userPts.points ?? 0) < COST) {
       return { success: false, message: `You need ${COST} points to redeem a free outfit. You have ${userPts?.points ?? 0} points.` };
     }
@@ -451,7 +451,7 @@ export class DatabaseStorage implements IStorage {
   async redeemPointsForPremiumTrial(userId: string): Promise<{ success: boolean; message: string; expiresAt?: Date }> {
     const COST = 100;
     const userPts = await this.getUserPoints(userId);
-    
+
     if (!userPts || (userPts.points ?? 0) < COST) {
       return { success: false, message: `You need ${COST} points for a 24-hour premium trial. You have ${userPts?.points ?? 0} points.` };
     }
@@ -484,7 +484,7 @@ export class DatabaseStorage implements IStorage {
     const COST = 200;
     const DISCOUNT_CENTS = 200; // $2 off
     const userPts = await this.getUserPoints(userId);
-    
+
     if (!userPts || (userPts.points ?? 0) < COST) {
       return { success: false, message: `You need ${COST} points for a $2 discount. You have ${userPts?.points ?? 0} points.` };
     }
@@ -574,14 +574,14 @@ export class DatabaseStorage implements IStorage {
 
   async addFreeOutfitCredit(userId: string): Promise<void> {
     const existing = await this.getFreeOutfitCredits(userId);
-    
+
     if (existing === 0) {
       // Check if record exists first
       const [record] = await db
         .select()
         .from(freeOutfitCredits)
         .where(eq(freeOutfitCredits.userId, userId));
-      
+
       if (record) {
         await db
           .update(freeOutfitCredits)
@@ -602,7 +602,7 @@ export class DatabaseStorage implements IStorage {
 
   async useFreeOutfitCredit(userId: string): Promise<boolean> {
     const credits = await this.getFreeOutfitCredits(userId);
-    
+
     if (credits <= 0) {
       return false;
     }
@@ -611,7 +611,7 @@ export class DatabaseStorage implements IStorage {
       .update(freeOutfitCredits)
       .set({ credits: credits - 1, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(freeOutfitCredits.userId, userId));
-    
+
     return true;
   }
 
@@ -654,7 +654,7 @@ export class DatabaseStorage implements IStorage {
     const totalUsers = await db.select().from(users);
     const totalOutfits = await db.select().from(outfits);
     const premiumUsers = totalUsers.filter(u => u.subscriptionStatus && u.subscriptionStatus !== 'free');
-    
+
     return {
       totalUsers: totalUsers.length,
       totalOutfits: totalOutfits.length,
