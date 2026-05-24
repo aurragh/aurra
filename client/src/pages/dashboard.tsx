@@ -171,6 +171,14 @@ export default function Dashboard() {
   });
 
   const handleGenerate = (overrideOccasion?: string) => {
+    if (needsProfile) {
+      toast({
+        title: "Finish your style profile first",
+        description: "It takes about 2 minutes and unlocks personalized looks.",
+      });
+      setLocation("/quiz");
+      return;
+    }
     const occasion = (overrideOccasion ?? occasionInput).trim() || "general";
     generateOutfitsMutation.mutate({ occasion, count: 1 });
   };
