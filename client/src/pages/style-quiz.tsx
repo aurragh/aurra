@@ -16,7 +16,7 @@ const PHASES = [
   { id: 1, name: "Who You Are" },
   { id: 2, name: "How You Show Up" },
   { id: 3, name: "The Decision" },
-];
+] as const;
 
 interface Option {
   value: string;
@@ -35,6 +35,7 @@ interface Question {
 }
 
 const QUESTIONS: Question[] = [
+  // ───── PHASE 1: WHO YOU ARE (5 questions) ─────
   {
     id: "identityWord",
     phase: 1,
@@ -94,9 +95,26 @@ const QUESTIONS: Question[] = [
     field: "confidenceTrigger",
   },
   {
+    id: "emotionalGoal",
+    phase: 1,
+    novaText: "When you walk out the door dressed right — what do you want to feel?",
+    type: "single",
+    options: [
+      { value: "Powerful and in command", label: "Powerful and in command", desc: "Unstoppable, undeniable" },
+      { value: "Calm and composed", label: "Calm and composed", desc: "Nothing rattles you" },
+      { value: "Warm and approachable", label: "Warm and approachable", desc: "People feel safe with you" },
+      { value: "Playful and expressive", label: "Playful and expressive", desc: "You show up with energy" },
+      { value: "Grounded and steady", label: "Grounded and steady", desc: "Rooted, present, clear" },
+      { value: "Creative and distinctive", label: "Creative and distinctive", desc: "Your style signals your vision" },
+    ],
+    field: "emotionalGoal",
+  },
+
+  // ───── PHASE 2: HOW YOU SHOW UP (14 questions) ─────
+  {
     id: "presenceArchetype",
     phase: 2,
-    novaText: "When you're at your best — which of these is closest to how you show up?",
+    novaText: "When you're operating at your best — which of these is closest to how you actually show up?",
     type: "single",
     options: [
       { value: "Commands silence", label: "The person who commands silence", desc: "Rooms adjust when you enter" },
@@ -124,9 +142,109 @@ const QUESTIONS: Question[] = [
     field: "bodyType",
   },
   {
+    id: "gender",
+    phase: 2,
+    novaText: "How would you like your outfits styled — this shapes the silhouettes I choose for you.",
+    type: "single",
+    options: [
+      { value: "Feminine", label: "Feminine", desc: "Fluid drapes, defined waist, curved silhouettes" },
+      { value: "Masculine", label: "Masculine", desc: "Structured shoulders, straight lines, clean volume" },
+      { value: "Androgynous", label: "Androgynous & fluid", desc: "Clean geometry, non-gendered proportion" },
+      { value: "Classic tailored", label: "Classic tailored", desc: "Sharp, precise lines — gender-neutral" },
+      { value: "No preference", label: "No preference", desc: "Let body type and occasion guide it" },
+    ],
+    field: "appearance",
+    subfield: "gender",
+  },
+  {
+    id: "height",
+    phase: 2,
+    novaText: "Your height — this lets me balance proportions and recommend the right silhouette length.",
+    type: "single",
+    options: [
+      { value: "Under 5'3\"", label: "Under 5'3\"", desc: "Petite proportions" },
+      { value: "5'3\"–5'6\"", label: "5'3\"–5'6\"", desc: "Versatile range" },
+      { value: "5'7\"–5'10\"", label: "5'7\"–5'10\"", desc: "Balanced proportions" },
+      { value: "5'11\" and above", label: "5'11\" and above", desc: "Tall proportions" },
+      { value: "Prefer not to say", label: "Prefer not to say" },
+    ],
+    field: "appearance",
+    subfield: "height",
+  },
+  {
+    id: "skinUndertone",
+    phase: 2,
+    novaText: "One more thing about you — what best describes your natural coloring?",
+    type: "single",
+    options: [
+      { value: "Fair & cool-toned", label: "Fair & cool-toned", desc: "Light skin, pink or blue undertones" },
+      { value: "Fair & warm-toned", label: "Fair & warm-toned", desc: "Light skin, golden or peach undertones" },
+      { value: "Medium & cool-toned", label: "Medium & cool-toned", desc: "Olive or medium skin, cool base" },
+      { value: "Medium & warm-toned", label: "Medium & warm-toned", desc: "Golden or tan skin, warm base" },
+      { value: "Deep & cool-toned", label: "Deep & cool-toned", desc: "Deep skin, cool or neutral base" },
+      { value: "Deep & warm-toned", label: "Deep & warm-toned", desc: "Deep skin, warm or golden base" },
+      { value: "Skip", label: "Skip this" },
+    ],
+    field: "appearance",
+    subfield: "skinUndertone",
+  },
+  {
+    id: "hairColor",
+    phase: 2,
+    novaText: "Your hair color — I use this to find colors that make you look your most vibrant.",
+    type: "single",
+    options: [
+      { value: "Blonde", label: "Blonde", desc: "Light golden to platinum" },
+      { value: "Light brown", label: "Light brown", desc: "Sandy to medium brown" },
+      { value: "Dark brown", label: "Dark brown", desc: "Deep brunette" },
+      { value: "Black", label: "Black", desc: "Deep black" },
+      { value: "Red", label: "Red", desc: "Fiery red to copper" },
+      { value: "Auburn", label: "Auburn", desc: "Red-brown tones" },
+      { value: "Silver / Grey", label: "Silver / Grey", desc: "Natural or dyed grey tones" },
+      { value: "Platinum / White", label: "Platinum / White", desc: "Very light or white" },
+    ],
+    field: "appearance",
+    subfield: "hairColor",
+  },
+  {
+    id: "eyeColor",
+    phase: 2,
+    novaText: "Your eye color — some palettes make eyes pop, others mute them. I'll use this to your advantage.",
+    type: "single",
+    options: [
+      { value: "Brown", label: "Brown", desc: "Warm medium brown" },
+      { value: "Dark brown", label: "Dark brown", desc: "Deep, rich brown" },
+      { value: "Hazel", label: "Hazel", desc: "Brown-green blend" },
+      { value: "Green", label: "Green", desc: "Light to deep green" },
+      { value: "Blue", label: "Blue", desc: "Light to deep blue" },
+      { value: "Grey", label: "Grey", desc: "Cool grey tones" },
+      { value: "Skip", label: "Skip this" },
+    ],
+    field: "appearance",
+    subfield: "eyeColor",
+  },
+  {
+    id: "faceShape",
+    phase: 2,
+    novaText: "Your face shape — this guides necklines, collars, and accessories.",
+    type: "single",
+    options: [
+      { value: "Oval", label: "Oval", desc: "Balanced, slightly longer than wide" },
+      { value: "Round", label: "Round", desc: "Equal width and length, soft jaw" },
+      { value: "Square", label: "Square", desc: "Strong jaw, equal width top and bottom" },
+      { value: "Heart", label: "Heart", desc: "Wider forehead, narrower chin" },
+      { value: "Diamond", label: "Diamond", desc: "Narrow forehead and chin, wide cheekbones" },
+      { value: "Oblong", label: "Oblong", desc: "Long and narrow" },
+      { value: "Not sure", label: "Not sure" },
+      { value: "Skip", label: "Skip this" },
+    ],
+    field: "appearance",
+    subfield: "faceShape",
+  },
+  {
     id: "colorPalette",
     phase: 2,
-    novaText: "What color palette feels most like you — or what you want to project?",
+    novaText: "Which color world feels most natural to you — or what you want to project?",
     type: "single",
     options: [
       { value: "neutral", label: "Neutrals & Earth Tones", desc: "Black, navy, charcoal, camel, olive" },
@@ -137,6 +255,48 @@ const QUESTIONS: Question[] = [
       { value: "soft", label: "Soft & Understated", desc: "Muted pastels, lavender, dusty rose" },
     ],
     field: "colorPalette",
+  },
+  {
+    id: "colorComfort",
+    phase: 2,
+    novaText: "How far do you go with color — honestly?",
+    type: "single",
+    options: [
+      { value: "Neutrals only", label: "Neutrals only", desc: "Black, white, grey, navy — nothing else" },
+      { value: "Neutrals with one accent", label: "Neutrals with one accent", desc: "I'll add one color piece when it matters" },
+      { value: "Open to color", label: "Open to color", desc: "Color is part of how I express myself" },
+      { value: "Color is my signature", label: "Color is my signature", desc: "I use color intentionally and boldly" },
+    ],
+    field: "styleDetails",
+    subfield: "colorComfort",
+  },
+  {
+    id: "accessories",
+    phase: 2,
+    novaText: "What's your relationship with accessories?",
+    type: "single",
+    options: [
+      { value: "Minimal — one or none", label: "Minimal — one or none", desc: "Less is more" },
+      { value: "Functional only", label: "Functional only", desc: "Watch, bag — practical pieces" },
+      { value: "Intentional statement", label: "Intentional statement", desc: "One piece that does the work" },
+      { value: "Layered and expressive", label: "Layered and expressive", desc: "Accessories are part of the look" },
+    ],
+    field: "styleDetails",
+    subfield: "accessories",
+  },
+  {
+    id: "fabric",
+    phase: 2,
+    novaText: "Last detail — how do you feel about texture and fabric?",
+    type: "single",
+    options: [
+      { value: "Clean & structured", label: "Clean & structured", desc: "Tailored, crisp, minimal texture" },
+      { value: "Soft & relaxed", label: "Soft & relaxed", desc: "Cashmere, jersey, fluid drapes" },
+      { value: "Rich & textured", label: "Rich & textured", desc: "Bouclé, tweed, knit, velvet" },
+      { value: "Mix it up", label: "Mix it up", desc: "Depends on the occasion" },
+    ],
+    field: "styleDetails",
+    subfield: "fabric",
   },
   {
     id: "industry",
@@ -171,10 +331,12 @@ const QUESTIONS: Question[] = [
     field: "lifestyle",
     subfield: "dailyRoutine",
   },
+
+  // ───── PHASE 3: THE DECISION (3 questions) ─────
   {
     id: "budget",
     phase: 3,
-    novaText: "What's your investment range per piece? There's no wrong answer — this is about what feels right for you.",
+    novaText: "What's your investment range per piece?",
     type: "single",
     options: [
       { value: "budget", label: "Under $100", desc: "Smart, accessible choices" },
@@ -186,9 +348,21 @@ const QUESTIONS: Question[] = [
     field: "budget",
   },
   {
+    id: "sustainability",
+    phase: 3,
+    novaText: "How important is sustainability to you when it comes to fashion?",
+    type: "single",
+    options: [
+      { value: "Very important", label: "Very important", desc: "I prioritize sustainable and ethical brands" },
+      { value: "Somewhat important", label: "Somewhat important", desc: "I'll choose sustainable when available" },
+      { value: "Not a priority", label: "Not a priority right now", desc: "I focus on fit, quality, and price" },
+    ],
+    field: "sustainability",
+  },
+  {
     id: "occasions",
     phase: 3,
-    novaText: "Last one — what are you actually dressing for right now? I'll build your first recommendation around this.",
+    novaText: "What are you dressing for right now? I'll build everything around this.",
     type: "multi",
     options: [
       { value: "A room with power (High-stakes meeting)", label: "A room with power", desc: "High-stakes meeting" },
@@ -204,15 +378,33 @@ const QUESTIONS: Question[] = [
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Answers {
+  // Phase 1
   identityWord: string;
   dressingRelationship: string;
   impressionGoals: string[];
   confidenceTrigger: string;
+  emotionalGoal: string;
+  // Phase 2
   presenceArchetype: string;
   bodyType: string;
+  appearance: {
+    gender?: string;
+    height?: string;
+    skinUndertone?: string;
+    hairColor?: string;
+    eyeColor?: string;
+    faceShape?: string;
+  };
   colorPalette: string;
+  styleDetails: {
+    colorComfort?: string;
+    accessories?: string;
+    fabric?: string;
+  };
   lifestyle: { industry?: string; dailyRoutine?: string };
+  // Phase 3
   budget: string;
+  sustainability: string;
   occasions: string[];
 }
 
@@ -221,11 +413,15 @@ const defaultAnswers: Answers = {
   dressingRelationship: "",
   impressionGoals: [],
   confidenceTrigger: "",
+  emotionalGoal: "",
   presenceArchetype: "",
   bodyType: "",
+  appearance: {},
   colorPalette: "",
+  styleDetails: {},
   lifestyle: {},
   budget: "",
+  sustainability: "",
   occasions: [],
 };
 
@@ -235,6 +431,7 @@ function buildOccasionContext(answers: Answers): string {
   const primaryOccasion = answers.occasions[0] || "General styling";
   const parts: string[] = [];
   if (answers.identityWord) parts.push(`Identity: ${answers.identityWord}`);
+  if (answers.emotionalGoal) parts.push(`Goal: ${answers.emotionalGoal}`);
   if (answers.presenceArchetype) parts.push(`Presence: ${answers.presenceArchetype}`);
   if (answers.confidenceTrigger) parts.push(`Confidence trigger: ${answers.confidenceTrigger}`);
   if (answers.lifestyle.industry) parts.push(`Environment: ${answers.lifestyle.industry}`);
@@ -657,17 +854,23 @@ export default function StyleQuiz() {
       const colorPrefs = JSON.parse(existingProfile.colorPreferences || "[]");
       const occasions = JSON.parse(existingProfile.occasions || "[]");
       const lifestyle = JSON.parse(existingProfile.lifestyle || "{}");
+      const appearance = JSON.parse((existingProfile as any).appearance || "{}");
+      const styleDetails = JSON.parse((existingProfile as any).styleDetails || "{}");
 
       setAnswers({
         identityWord: personality.identityWord || "",
         dressingRelationship: personality.dressingRelationship || "",
         impressionGoals: personality.impressionGoals ? JSON.parse(personality.impressionGoals) : [],
         confidenceTrigger: personality.confidenceTrigger || "",
+        emotionalGoal: personality.emotionalGoal || "",
         presenceArchetype: personality.presenceArchetype || personality.presenceGoal || "",
         bodyType: existingProfile.bodyType || "",
+        appearance,
         colorPalette: colorPrefs[0] || "",
+        styleDetails,
         lifestyle,
         budget: existingProfile.budget || "",
+        sustainability: (existingProfile as any).sustainability || "",
         occasions,
       });
       setIsEditing(true);
@@ -708,11 +911,14 @@ export default function StyleQuiz() {
     },
   });
 
+  // Nested field keys (composite JSON answers)
+  const NESTED_FIELDS = new Set(["lifestyle", "appearance", "styleDetails"]);
+
   // ── Get current answer value
   const getCurrentValue = (): string | string[] => {
     const q = question;
-    if (q.field === "lifestyle" && q.subfield) {
-      return (answers.lifestyle as any)[q.subfield] || "";
+    if (NESTED_FIELDS.has(q.field) && q.subfield) {
+      return ((answers as any)[q.field] as any)?.[q.subfield] || "";
     }
     return (answers as any)[q.field] ?? (q.type === "multi" ? [] : "");
   };
@@ -723,10 +929,10 @@ export default function StyleQuiz() {
       const q = question;
 
       if (q.type === "single") {
-        if (q.field === "lifestyle" && q.subfield) {
+        if (NESTED_FIELDS.has(q.field) && q.subfield) {
           setAnswers((prev) => ({
             ...prev,
-            lifestyle: { ...prev.lifestyle, [q.subfield!]: value },
+            [q.field]: { ...((prev as any)[q.field] || {}), [q.subfield!]: value },
           }));
         } else {
           setAnswers((prev) => ({ ...prev, [q.field]: value }));
@@ -773,6 +979,7 @@ export default function StyleQuiz() {
       dressingRelationship: finalAnswers.dressingRelationship,
       impressionGoals: JSON.stringify(finalAnswers.impressionGoals),
       confidenceTrigger: finalAnswers.confidenceTrigger,
+      emotionalGoal: finalAnswers.emotionalGoal,
       presenceArchetype: finalAnswers.presenceArchetype,
       presenceGoal: finalAnswers.presenceArchetype,
       intentMoments: JSON.stringify(finalAnswers.occasions),
@@ -784,7 +991,10 @@ export default function StyleQuiz() {
       stylePreferences: JSON.stringify([finalAnswers.presenceArchetype].filter(Boolean)),
       clothingItems: JSON.stringify([]),
       lifestyle: JSON.stringify(finalAnswers.lifestyle),
+      appearance: JSON.stringify(finalAnswers.appearance),
+      styleDetails: JSON.stringify(finalAnswers.styleDetails),
       budget: finalAnswers.budget,
+      sustainability: finalAnswers.sustainability,
       occasions: JSON.stringify(finalAnswers.occasions),
       completed: true,
     };

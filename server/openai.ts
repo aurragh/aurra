@@ -67,6 +67,8 @@ function buildOutfitVars(profile: StyleProfile, occasion: string): OutfitVars {
   const personality = profile.personality ? JSON.parse(profile.personality) : {};
   const colorPrefs = profile.colorPreferences ? JSON.parse(profile.colorPreferences) : [];
   const lifestyle = profile.lifestyle ? JSON.parse(profile.lifestyle) : {};
+  const appearance = (profile as any).appearance ? JSON.parse((profile as any).appearance) : {};
+  const styleDetails = (profile as any).styleDetails ? JSON.parse((profile as any).styleDetails) : {};
 
   const impressionGoals = personality.impressionGoals
     ? JSON.parse(personality.impressionGoals).join(", ")
@@ -76,16 +78,31 @@ function buildOutfitVars(profile: StyleProfile, occasion: string): OutfitVars {
     : "";
 
   return {
+    // Phase 1
     identityWord: personality.identityWord,
     dressingRelationship: personality.dressingRelationship,
     impressionGoals,
     confidenceTrigger: personality.confidenceTrigger,
+    emotionalGoal: personality.emotionalGoal,
+    // Phase 2 — presence + body
     presenceArchetype: personality.presenceArchetype || personality.presenceGoal,
     bodyType: profile.bodyType ?? undefined,
+    gender: appearance.gender,
+    height: appearance.height,
+    skinUndertone: appearance.skinUndertone,
+    hairColor: appearance.hairColor,
+    eyeColor: appearance.eyeColor,
+    faceShape: appearance.faceShape,
+    // Phase 2 — style depth
     colorPalette: colorPrefs.join(", "),
+    colorComfort: styleDetails.colorComfort,
+    accessories: styleDetails.accessories,
+    fabric: styleDetails.fabric,
     industry: lifestyle.industry,
     dailyRoutine: lifestyle.dailyRoutine,
+    // Phase 3
     budget: profile.budget ?? undefined,
+    sustainability: (profile as any).sustainability ?? undefined,
     occasion,
     intentMoments: intentMoments || occasion,
   };

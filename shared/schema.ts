@@ -42,13 +42,21 @@ export const users = pgTable("users", {
 export const styleProfiles = pgTable("style_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
+  // JSON blob — psychological signature (identityWord, dressingRelationship,
+  // impressionGoals, confidenceTrigger, emotionalGoal, presenceArchetype, intentMoments)
   personality: text("personality"),
   bodyType: varchar("body_type"),
   colorPreferences: text("color_preferences"),
   stylePreferences: text("style_preferences"),
   clothingItems: text("clothing_items"),
+  // JSON blob — lifestyle (industry, dailyRoutine)
   lifestyle: text("lifestyle"),
+  // JSON blob — appearance (gender, height, skinUndertone, hairColor, eyeColor, faceShape)
+  appearance: text("appearance"),
+  // JSON blob — styling preferences (colorComfort, accessories, fabric)
+  styleDetails: text("style_details"),
   budget: varchar("budget"),
+  sustainability: varchar("sustainability"),
   occasions: text("occasions"),
   completed: boolean("completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),

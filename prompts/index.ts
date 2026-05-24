@@ -40,16 +40,31 @@ function render(template: string, vars: Record<string, string | number | undefin
 }
 
 export interface OutfitVars {
+  // Phase 1 — psychological signature
   identityWord?: string;
   dressingRelationship?: string;
   impressionGoals?: string;
   confidenceTrigger?: string;
+  emotionalGoal?: string;
+  // Phase 2 — presence + appearance
   presenceArchetype?: string;
   bodyType?: string;
+  gender?: string;
+  height?: string;
+  skinUndertone?: string;
+  hairColor?: string;
+  eyeColor?: string;
+  faceShape?: string;
+  // Phase 2 — style depth
   colorPalette?: string;
+  colorComfort?: string;
+  accessories?: string;
+  fabric?: string;
   industry?: string;
   dailyRoutine?: string;
+  // Phase 3 — decision
   budget?: string;
+  sustainability?: string;
   occasion: string;
   intentMoments?: string;
 }
