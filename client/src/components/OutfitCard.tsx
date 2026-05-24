@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles, Camera, Share2, Shuffle } from "lucide-react";
+import { ShoppingBag, Heart, Info, ChevronDown, ChevronUp, Trash2, Sparkles, Camera, Share2, Shuffle, ImageOff } from "lucide-react";
 
 interface OutfitCardProps {
   outfit: any;
@@ -30,6 +30,7 @@ export function OutfitCard({
 }: OutfitCardProps) {
   const [showWhy, setShowWhy] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [imageBroken, setImageBroken] = useState(false);
 
   const hasDetails = outfit.backupRecommendation || outfit.avoidRecommendation;
 
@@ -82,7 +83,7 @@ export function OutfitCard({
       </div>
 
       {/* Image */}
-      {outfit.imageUrl ? (
+      {outfit.imageUrl && !imageBroken ? (
         <div
           className="relative w-full cursor-pointer"
           onClick={() => onImageClick(outfit.imageUrl, outfit.name)}
@@ -93,6 +94,7 @@ export function OutfitCard({
             alt={outfit.name}
             className="w-full object-contain max-h-[500px]"
             data-testid={`img-outfit-${outfit.id}`}
+            onError={() => setImageBroken(true)}
           />
           {outfit.occasion && (
             <span
@@ -123,10 +125,23 @@ export function OutfitCard({
         </div>
       ) : (
         <div
-          className="w-full h-48 flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.03)" }}
+          className="w-full h-48 flex flex-col items-center justify-center gap-2"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(124,58,237,0.06), rgba(168,85,247,0.02)), repeating-linear-gradient(45deg, transparent 0 8px, rgba(255,255,255,0.015) 8px 9px)",
+          }}
         >
-          <p className="text-gray-600 text-sm">Generating image...</p>
+          {imageBroken ? (
+            <>
+              <ImageOff className="w-5 h-5 text-purple-300/40" />
+              <p className="text-purple-300/50 text-[11px] uppercase tracking-wider">Image unavailable</p>
+            </>
+          ) : (
+            <>
+              <div className="w-5 h-5 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin" />
+              <p className="text-purple-300/60 text-[11px] uppercase tracking-wider">Generating image…</p>
+            </>
+          )}
         </div>
       )}
 

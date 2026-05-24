@@ -231,8 +231,15 @@ export default function Dashboard() {
         }}
       >
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <img src="/Logo.png" alt="Aurra" className="w-7 h-7 rounded-full" />
+          <div className="flex items-center gap-2">
+            {/* A small purple dot as monogram, paired with serif wordmark — clean + brand-consistent */}
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+                boxShadow: "0 0 8px rgba(168,85,247,0.5)",
+              }}
+            />
             <h1
               className="font-display text-2xl text-white tracking-tight"
               style={{ letterSpacing: "-0.02em" }}
