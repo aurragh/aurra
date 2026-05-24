@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, Send, Volume2, VolumeX, X, Minus } from "lucide-react";
+import { MessageCircle, Send, Volume2, VolumeX, X, Minus, Mic, MicOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAurraTTS } from "@/hooks/useAurraTTS";
 import { apiRequest } from "@/lib/queryClient";
@@ -50,7 +50,7 @@ export function NovaDrawer() {
 
   useEffect(() => {
     if (open && messages.length === 0 && user) {
-      const welcome = "I'm NOVA. Ask me anything about what to wear.";
+      const welcome = "I'm Aurra. Ask me anything about what to wear.";
       setMessages([{ role: "assistant", content: welcome }]);
       setTimeout(() => speak(welcome), 400);
       setTimeout(() => inputRef.current?.focus(), 200);
@@ -95,7 +95,7 @@ export function NovaDrawer() {
           history: updated.slice(-8).map((m) => ({ role: m.role, content: m.content })),
         });
         const data = await res.json();
-        const reply: Message = { role: "assistant", content: data.reply || "I'm not sure — try again." };
+        const reply: Message = { role: "assistant", content: data.reply || "I'm not sure, try again." };
         setMessages((prev) => [...prev, reply]);
         speak(reply.content);
       } catch {
@@ -119,7 +119,7 @@ export function NovaDrawer() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Chat with NOVA"
+          aria-label="Chat with Aurra"
           className="fixed bottom-5 right-5 z-40 flex items-center gap-2 px-4 py-3 rounded-full text-white text-sm font-semibold shadow-2xl transition-all hover:scale-105 active:scale-95"
           style={{
             background: "linear-gradient(135deg, #7c3aed, #a855f7)",
@@ -127,7 +127,7 @@ export function NovaDrawer() {
           }}
         >
           <MessageCircle className="w-4 h-4" />
-          Chat with NOVA
+          Chat with Aurra
         </button>
       )}
 
@@ -135,7 +135,7 @@ export function NovaDrawer() {
       {open && (
         <div
           role="dialog"
-          aria-label="Chat with NOVA"
+          aria-label="Chat with Aurra"
           className="nova-window fixed bottom-5 right-5 z-40 flex flex-col rounded-2xl overflow-hidden"
           style={{
             width: "min(380px, calc(100vw - 2.5rem))",
@@ -157,7 +157,7 @@ export function NovaDrawer() {
             <div className="flex items-center gap-3">
               <NovaOrbDot speaking={speaking} />
               <div className="text-left">
-                <p className="text-white text-sm font-semibold leading-none m-0">NOVA</p>
+                <p className="text-white text-sm font-semibold leading-none m-0">Aurra</p>
                 <p className="text-purple-300/60 text-[11px] mt-1">
                   {isThinking ? "Thinking…" : speaking ? "Speaking…" : "Chat Stylist"}
                 </p>
@@ -246,7 +246,7 @@ export function NovaDrawer() {
                     send(input);
                   }
                 }}
-                placeholder="Ask NOVA…"
+                placeholder="Ask Aurra…"
                 className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none"
                 disabled={isThinking}
               />

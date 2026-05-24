@@ -36,8 +36,19 @@ export default function Navigation({ onLogin, onSignup }: NavigationProps) {
     <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10" data-testid="navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent" data-testid="heading-brand">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-2.5 h-2.5 rounded-full"
+              style={{
+                background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+                boxShadow: "0 0 12px rgba(168,85,247,0.7)",
+              }}
+            />
+            <h1
+              className="font-display text-3xl text-white tracking-tight"
+              style={{ letterSpacing: "-0.02em" }}
+              data-testid="heading-brand"
+            >
               Aurra
             </h1>
           </div>

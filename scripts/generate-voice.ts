@@ -14,38 +14,38 @@ import { synthesize } from "../server/elevenlabs";
 import { createHash } from "node:crypto";
 
 const PHRASES: string[] = [
-  // Quiz welcome
-  "Hi, I'm NOVA. I'll help you build your style profile. Let's start with a few questions about you.",
-  // ─── Phase 1: Who You Are (5 questions) ───
-  "When you walk into a room feeling completely yourself — what one word describes that version of you?",
+  // Welcome
+  "Hi, I'm Aurra. I'll help you build your style profile. Let's start with a few questions about you.",
+  // Phase 1: Who You Are (5)
+  "When you walk into a room feeling completely yourself, what one word describes that version of you?",
   "What's your honest relationship with getting dressed in the morning?",
   "What do you most want people to feel when they first encounter you? Pick all that apply.",
   "When you feel most confident, what are you typically wearing?",
-  "When you walk out the door dressed right — what do you want to feel?",
-  // ─── Phase 2: How You Show Up (14 questions) ───
-  "When you're operating at your best — which of these is closest to how you actually show up?",
-  "Your frame — this helps me recommend silhouettes that work with you, not against you.",
-  "How would you like your outfits styled — this shapes the silhouettes I choose for you.",
-  "Your height — this lets me balance proportions and recommend the right silhouette length.",
-  "One more thing about you — what best describes your natural coloring?",
-  "Your hair color — I use this to find colors that make you look your most vibrant.",
-  "Your eye color — some palettes make eyes pop, others mute them. I'll use this to your advantage.",
-  "Your face shape — this guides necklines, collars, and accessories.",
-  "Which color world feels most natural to you — or what you want to project?",
-  "How far do you go with color — honestly?",
+  "When you walk out the door dressed right, what do you want to feel?",
+  // Phase 2: How You Show Up (14)
+  "When you're operating at your best, which of these is closest to how you actually show up?",
+  "Your frame. This helps me recommend silhouettes that work with you, not against you.",
+  "How would you like your outfits styled? This shapes the silhouettes I choose for you.",
+  "Your height. This lets me balance proportions and recommend the right silhouette length.",
+  "One more thing about you. What best describes your natural coloring?",
+  "Your hair color. I use this to find colors that make you look your most vibrant.",
+  "Your eye color. Some palettes make eyes pop, others mute them. I'll use this to your advantage.",
+  "Your face shape. This guides necklines, collars, and accessories.",
+  "Which color world feels most natural to you, or what you want to project?",
+  "How far do you go with color, honestly?",
   "What's your relationship with accessories?",
-  "Last detail — how do you feel about texture and fabric?",
+  "Last detail. How do you feel about texture and fabric?",
   "What world do you operate in?",
-  "And your typical day looks like...",
-  // ─── Phase 3: The Decision (3 questions) ───
+  "And your typical day looks like.",
+  // Phase 3: The Decision (3)
   "What's your investment range per piece?",
   "How important is sustainability to you when it comes to fashion?",
   "What are you dressing for right now? I'll build everything around this.",
   // Transitions
   "Got everything I need. Building your first recommendation now.",
   "Your first look is ready.",
-  // NOVA drawer welcome
-  "I'm NOVA. Ask me anything about what to wear.",
+  // Aurra drawer welcome
+  "I'm Aurra. Ask me anything about what to wear.",
 ];
 
 function phraseHash(text: string): string {

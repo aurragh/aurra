@@ -232,7 +232,7 @@ export default function Dashboard() {
       >
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* A small purple dot as monogram, paired with serif wordmark — clean + brand-consistent */}
+            {/* A small purple dot as monogram, paired with serif wordmark, clean + brand-consistent */}
             <div
               className="w-2 h-2 rounded-full"
               style={{
@@ -281,7 +281,7 @@ export default function Dashboard() {
               <Link href="/chat">
                 <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-chat">
                   <MessageCircle className="mr-2 h-4 w-4" />
-                  Chat with NOVA
+                  Chat with Aurra
                 </DropdownMenuItem>
               </Link>
               <Link href="/wardrobe">
@@ -327,7 +327,7 @@ export default function Dashboard() {
             </div>
             <h2 className="text-white text-xl font-semibold mb-2">Build your style profile</h2>
             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-              Answer 11 questions with NOVA to get personalized look recommendations.
+              Answer 22 quick questions with Aurra to get personalized look recommendations.
             </p>
             <Link href="/quiz">
               <button
@@ -597,7 +597,7 @@ export default function Dashboard() {
           data-testid="button-nova-chat"
         >
           <MessageCircle className="w-4 h-4" />
-          Chat with NOVA
+          Chat with Aurra
         </button>
       </Link>
     </div>

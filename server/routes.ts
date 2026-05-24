@@ -30,8 +30,11 @@ const profilePhotoUpload = multer({
     destination: (_req, _file, cb) => cb(null, profilePhotosDir),
     filename: (req: any, file, cb) => {
       const userId = req.user?.claims?.sub || "unknown";
+      // Sanitize: replace ':' and other shell-unsafe chars; Replicate's image lib (PIL) chokes on colons in filenames.
+      const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
       const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
-      cb(null, `${userId}${ext}`);
+      // Append timestamp so the URL changes on re-upload (cache-bust on client)
+      cb(null, `${safeId}_${Date.now()}${ext}`);
     },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },

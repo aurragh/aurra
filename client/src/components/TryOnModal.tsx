@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,6 +16,16 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [step, setStep] = useState<"setup" | "generating" | "result">("setup");
+
+  // Reset state every time the modal opens with a different outfit
+  // (or re-opens on the same one) so we don't show a stale result.
+  useEffect(() => {
+    if (outfitId) {
+      setGeneratedImage(null);
+      setStep("setup");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [outfitId]);
 
   const { data: profilePhoto } = useQuery<{ avatarPhotoUrl: string | null }>({
     queryKey: ["/api/profile/photo"],
@@ -65,6 +75,8 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) uploadPhotoMutation.mutate(file);
+    // Reset input value so the same filename can be selected again
+    if (e.target) e.target.value = "";
   };
 
   const handleGenerate = () => {
@@ -104,12 +116,7 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span className="text-white font-semibold text-sm">Try It On</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full transition-colors hover:bg-white/10"
-          >
-            <X className="w-4 h-4 text-gray-400" />
-          </button>
+          {/* Close button comes from the Dialog primitive (auto-rendered top-right) */}
         </div>
 
         <div className="p-5">
@@ -199,7 +206,7 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
                 }}
               >
                 <p className="text-xs text-purple-300/70 leading-relaxed">
-                  Aurra uses your selfie to generate an AI image of you wearing this outfit. Results are styled illustrations — not a virtual mirror.
+                  Aurra uses your selfie to generate an AI image of you wearing this outfit. Results are styled illustrations, not a virtual mirror.
                 </p>
               </div>
 
@@ -295,7 +302,7 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
               </div>
 
               <p className="text-center text-xs text-gray-600">
-                AI-generated image — results may vary
+                AI-generated image, results may vary
               </p>
             </div>
           )}

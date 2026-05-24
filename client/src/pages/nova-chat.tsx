@@ -85,7 +85,7 @@ export default function NovaChat() {
   // Welcome message
   useEffect(() => {
     if (!isLoading && user) {
-      const welcome = "I'm NOVA. Ask me anything about what to wear.";
+      const welcome = "I'm Aurra. Ask me anything about what to wear.";
       setMessages([{ role: "assistant", content: welcome }]);
       setTimeout(() => speakReply(welcome), 600);
     }
@@ -131,7 +131,7 @@ export default function NovaChat() {
           content: "I'm unavailable right now. Try again in a moment.",
         };
         setMessages((prev) => [...prev, errorMsg]);
-        toast({ title: "Connection error", description: "NOVA couldn't respond.", variant: "destructive" });
+        toast({ title: "Connection error", description: "Aurra couldn't respond.", variant: "destructive" });
       } finally {
         setIsThinking(false);
         setTimeout(() => inputRef.current?.focus(), 100);
@@ -189,7 +189,7 @@ export default function NovaChat() {
             </button>
             <NovaOrbSmall speaking={novaSpeaking} />
             <div>
-              <p className="text-white font-semibold text-sm">NOVA</p>
+              <p className="text-white font-semibold text-sm">Aurra</p>
               <p className="text-purple-400/60 text-xs">
                 {isThinking ? "Thinking..." : novaSpeaking ? "Speaking..." : "Chat Stylist"}
               </p>
@@ -320,7 +320,7 @@ export default function NovaChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask NOVA anything..."
+                placeholder="Ask Aurra anything..."
                 className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-600 outline-none"
                 disabled={isThinking}
               />

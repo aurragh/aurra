@@ -39,7 +39,7 @@ const QUESTIONS: Question[] = [
   {
     id: "identityWord",
     phase: 1,
-    novaText: "When you walk into a room feeling completely yourself — what one word describes that version of you?",
+    novaText: "When you walk into a room feeling completely yourself, what one word describes that version of you?",
     type: "single",
     options: [
       { value: "Powerful", label: "Powerful", desc: "You own the space" },
@@ -97,7 +97,7 @@ const QUESTIONS: Question[] = [
   {
     id: "emotionalGoal",
     phase: 1,
-    novaText: "When you walk out the door dressed right — what do you want to feel?",
+    novaText: "When you walk out the door dressed right, what do you want to feel?",
     type: "single",
     options: [
       { value: "Powerful and in command", label: "Powerful and in command", desc: "Unstoppable, undeniable" },
@@ -114,7 +114,7 @@ const QUESTIONS: Question[] = [
   {
     id: "presenceArchetype",
     phase: 2,
-    novaText: "When you're operating at your best — which of these is closest to how you actually show up?",
+    novaText: "When you're operating at your best, which of these is closest to how you actually show up?",
     type: "single",
     options: [
       { value: "Commands silence", label: "The person who commands silence", desc: "Rooms adjust when you enter" },
@@ -127,7 +127,7 @@ const QUESTIONS: Question[] = [
   {
     id: "bodyType",
     phase: 2,
-    novaText: "Your frame — this helps me recommend silhouettes that work with you, not against you.",
+    novaText: "Your frame, this helps me recommend silhouettes that work with you, not against you.",
     type: "single",
     options: [
       { value: "slim", label: "Slim / Lean" },
@@ -144,13 +144,13 @@ const QUESTIONS: Question[] = [
   {
     id: "gender",
     phase: 2,
-    novaText: "How would you like your outfits styled — this shapes the silhouettes I choose for you.",
+    novaText: "How would you like your outfits styled, this shapes the silhouettes I choose for you.",
     type: "single",
     options: [
       { value: "Feminine", label: "Feminine", desc: "Fluid drapes, defined waist, curved silhouettes" },
       { value: "Masculine", label: "Masculine", desc: "Structured shoulders, straight lines, clean volume" },
       { value: "Androgynous", label: "Androgynous & fluid", desc: "Clean geometry, non-gendered proportion" },
-      { value: "Classic tailored", label: "Classic tailored", desc: "Sharp, precise lines — gender-neutral" },
+      { value: "Classic tailored", label: "Classic tailored", desc: "Sharp, precise lines, gender-neutral" },
       { value: "No preference", label: "No preference", desc: "Let body type and occasion guide it" },
     ],
     field: "appearance",
@@ -159,7 +159,7 @@ const QUESTIONS: Question[] = [
   {
     id: "height",
     phase: 2,
-    novaText: "Your height — this lets me balance proportions and recommend the right silhouette length.",
+    novaText: "Your height, this lets me balance proportions and recommend the right silhouette length.",
     type: "single",
     options: [
       { value: "Under 5'3\"", label: "Under 5'3\"", desc: "Petite proportions" },
@@ -174,7 +174,7 @@ const QUESTIONS: Question[] = [
   {
     id: "skinUndertone",
     phase: 2,
-    novaText: "One more thing about you — what best describes your natural coloring?",
+    novaText: "One more thing about you, what best describes your natural coloring?",
     type: "single",
     options: [
       { value: "Fair & cool-toned", label: "Fair & cool-toned", desc: "Light skin, pink or blue undertones" },
@@ -191,7 +191,7 @@ const QUESTIONS: Question[] = [
   {
     id: "hairColor",
     phase: 2,
-    novaText: "Your hair color — I use this to find colors that make you look your most vibrant.",
+    novaText: "Your hair color, I use this to find colors that make you look your most vibrant.",
     type: "single",
     options: [
       { value: "Blonde", label: "Blonde", desc: "Light golden to platinum" },
@@ -209,7 +209,7 @@ const QUESTIONS: Question[] = [
   {
     id: "eyeColor",
     phase: 2,
-    novaText: "Your eye color — some palettes make eyes pop, others mute them. I'll use this to your advantage.",
+    novaText: "Your eye color, some palettes make eyes pop, others mute them. I'll use this to your advantage.",
     type: "single",
     options: [
       { value: "Brown", label: "Brown", desc: "Warm medium brown" },
@@ -226,7 +226,7 @@ const QUESTIONS: Question[] = [
   {
     id: "faceShape",
     phase: 2,
-    novaText: "Your face shape — this guides necklines, collars, and accessories.",
+    novaText: "Your face shape, this guides necklines, collars, and accessories.",
     type: "single",
     options: [
       { value: "Oval", label: "Oval", desc: "Balanced, slightly longer than wide" },
@@ -244,7 +244,7 @@ const QUESTIONS: Question[] = [
   {
     id: "colorPalette",
     phase: 2,
-    novaText: "Which color world feels most natural to you — or what you want to project?",
+    novaText: "Which color world feels most natural to you, or what you want to project?",
     type: "single",
     options: [
       { value: "neutral", label: "Neutrals & Earth Tones", desc: "Black, navy, charcoal, camel, olive" },
@@ -259,10 +259,10 @@ const QUESTIONS: Question[] = [
   {
     id: "colorComfort",
     phase: 2,
-    novaText: "How far do you go with color — honestly?",
+    novaText: "How far do you go with color, honestly?",
     type: "single",
     options: [
-      { value: "Neutrals only", label: "Neutrals only", desc: "Black, white, grey, navy — nothing else" },
+      { value: "Neutrals only", label: "Neutrals only", desc: "Black, white, grey, navy, nothing else" },
       { value: "Neutrals with one accent", label: "Neutrals with one accent", desc: "I'll add one color piece when it matters" },
       { value: "Open to color", label: "Open to color", desc: "Color is part of how I express myself" },
       { value: "Color is my signature", label: "Color is my signature", desc: "I use color intentionally and boldly" },
@@ -276,8 +276,8 @@ const QUESTIONS: Question[] = [
     novaText: "What's your relationship with accessories?",
     type: "single",
     options: [
-      { value: "Minimal — one or none", label: "Minimal — one or none", desc: "Less is more" },
-      { value: "Functional only", label: "Functional only", desc: "Watch, bag — practical pieces" },
+      { value: "Minimal, one or none", label: "Minimal, one or none", desc: "Less is more" },
+      { value: "Functional only", label: "Functional only", desc: "Watch, bag, practical pieces" },
       { value: "Intentional statement", label: "Intentional statement", desc: "One piece that does the work" },
       { value: "Layered and expressive", label: "Layered and expressive", desc: "Accessories are part of the look" },
     ],
@@ -287,7 +287,7 @@ const QUESTIONS: Question[] = [
   {
     id: "fabric",
     phase: 2,
-    novaText: "Last detail — how do you feel about texture and fabric?",
+    novaText: "Last detail, how do you feel about texture and fabric?",
     type: "single",
     options: [
       { value: "Clean & structured", label: "Clean & structured", desc: "Tailored, crisp, minimal texture" },
@@ -323,7 +323,7 @@ const QUESTIONS: Question[] = [
     type: "single",
     options: [
       { value: "Mostly office / boardroom", label: "Mostly office / boardroom" },
-      { value: "Mix of meetings and field work", label: "Mix — meetings and field work" },
+      { value: "Mix of meetings and field work", label: "Mix, meetings and field work" },
       { value: "Client-facing all day", label: "Client-facing all day" },
       { value: "Remote / flexible", label: "Remote / flexible" },
       { value: "Travel-heavy", label: "Travel-heavy" },
@@ -437,7 +437,7 @@ function buildOccasionContext(answers: Answers): string {
   if (answers.lifestyle.industry) parts.push(`Environment: ${answers.lifestyle.industry}`);
   if (answers.impressionGoals.length > 0) parts.push(`Impression goal: ${answers.impressionGoals.join(", ")}`);
   if (parts.length === 0) return primaryOccasion;
-  return `${primaryOccasion} — ${parts.join(", ")}`;
+  return `${primaryOccasion}, ${parts.join(", ")}`;
 }
 
 // ─── Typewriter Hook ──────────────────────────────────────────────────────────
@@ -649,7 +649,7 @@ function NovaGeneratingScreen({
     }
   }, [isComplete]);
 
-  // NOVA voice — via ElevenLabs (consistent across users)
+  // NOVA voice, via ElevenLabs (consistent across users)
   useEffect(() => {
     genTts.speak("Got everything I need. Building your first recommendation now.", { muted: isMuted });
   }, []);
@@ -725,7 +725,7 @@ function NovaGeneratingScreen({
       {isComplete && showCTA && (
         <div className="space-y-4 animate-fadeIn">
           <p className="text-white text-lg font-semibold">Your first look is ready.</p>
-          <p className="text-purple-300/70 text-sm">NOVA built this from your profile.</p>
+          <p className="text-purple-300/70 text-sm">Aurra built this from your profile.</p>
           <button
             onClick={onGoToDashboard}
             className="mt-4 flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-base transition-all duration-200 hover:scale-105 active:scale-95"
@@ -835,7 +835,7 @@ export default function StyleQuiz() {
     if (!isLoading && user && !isMuted) {
       const delay = setTimeout(() => {
         speakText(
-          "Hi, I'm NOVA. I'll help you build your style profile. Let's start with a few questions about you."
+          "Hi, I'm Aurra. I'll help you build your style profile. Let's start with a few questions about you."
         );
       }, 600);
       return () => clearTimeout(delay);
@@ -969,7 +969,7 @@ export default function StyleQuiz() {
     }
   };
 
-  // ── Submit — shows generating screen immediately (T001)
+  // ── Submit, shows generating screen immediately (T001)
   const handleSubmit = (currentAnswers?: Answers) => {
     const finalAnswers = currentAnswers || answers;
     tts.cancel();
@@ -1079,7 +1079,7 @@ export default function StyleQuiz() {
     }
     toast({
       title: "Didn't match",
-      description: `I heard: "${transcripts[0]}" — try tapping your answer instead.`,
+      description: `I heard: "${transcripts[0]}", try tapping your answer instead.`,
       variant: "destructive",
     });
   };
@@ -1101,16 +1101,16 @@ export default function StyleQuiz() {
     const q = QUESTIONS[qIndex];
     if (q.type === "multi") {
       const arr = (answers as any)[q.field] as string[];
-      if (!arr || arr.length === 0) return "—";
+      if (!arr || arr.length === 0) return "…";
       const labels = arr.map((v) => q.options.find((o) => o.value === v)?.label || v);
       return labels.slice(0, 2).join(", ") + (labels.length > 2 ? ` +${labels.length - 2}` : "");
     }
     if (q.field === "lifestyle" && q.subfield) {
       const val = (answers.lifestyle as any)[q.subfield];
-      return q.options.find((o) => o.value === val)?.label || val || "—";
+      return q.options.find((o) => o.value === val)?.label || val || "…";
     }
     const val = (answers as any)[q.field];
-    return q.options.find((o) => o.value === val)?.label || val || "—";
+    return q.options.find((o) => o.value === val)?.label || val || "…";
   };
 
   const prevPhase = currentQ > 0 ? QUESTIONS[currentQ - 1].phase : null;
@@ -1177,7 +1177,7 @@ export default function StyleQuiz() {
           <div className="flex items-center gap-3">
             <NovaOrb state={orbState} />
             <div>
-              <p className="text-white font-semibold text-sm">NOVA</p>
+              <p className="text-white font-semibold text-sm">Aurra</p>
               <p className="text-purple-400/70 text-xs">
                 {isListening ? "Listening..." : orbState === "speaking" ? "Speaking..." : `Question ${currentQ + 1} of ${totalQ}`}
               </p>
@@ -1195,7 +1195,7 @@ export default function StyleQuiz() {
                 }}
                 className="p-2 rounded-full transition-colors"
                 style={{ background: "rgba(255,255,255,0.05)" }}
-                title={isMuted ? "Unmute NOVA" : "Mute NOVA"}
+                title={isMuted ? "Unmute Aurra" : "Mute Aurra"}
               >
                 {isMuted
                   ? <VolumeX className="w-4 h-4 text-gray-500" />
