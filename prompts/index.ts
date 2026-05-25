@@ -19,6 +19,8 @@ const TPL_OUTFIT = load("templates/outfit-recommendation.md");
 const TPL_NOVA = load("templates/nova-chat.md");
 const TPL_SHOPPING = load("templates/shopping-extraction.md");
 const TPL_ANALYSIS = load("templates/style-analysis.md");
+const TPL_OUTFIT_IMAGE = load("templates/outfit-image.md");
+const TPL_TRYON = load("templates/try-on.md");
 
 /** Strip the markdown front-matter header (everything before the first `---` separator after the title). */
 function stripHeader(md: string): string {
@@ -96,5 +98,27 @@ export function renderStyleAnalysis(profileJson: string): { system: string; user
   return {
     system: systemPart.replace(/^##\s*SYSTEM\s*$/m, "").trim(),
     user: render(userPart.trim(), { profileJson }),
+  };
+}
+
+/** Extract the `## PROMPT` section body from a template .md file. */
+function extractSection(md: string, header: string): string {
+  const re = new RegExp(`##\\s*${header}\\s*\\n([\\s\\S]*?)(?=\\n##\\s|$)`, "i");
+  const m = md.match(re);
+  return (m?.[1] ?? "").trim();
+}
+
+export function renderOutfitImagePrompt(vars: { itemsDesc: string; occasion: string }): string {
+  const body = extractSection(TPL_OUTFIT_IMAGE, "PROMPT");
+  return render(body, vars);
+}
+
+export function renderTryOnPrompt(vars: { outfitText: string; occasion: string }): {
+  prompt: string;
+  negativePrompt: string;
+} {
+  return {
+    prompt: render(extractSection(TPL_TRYON, "PROMPT"), vars),
+    negativePrompt: extractSection(TPL_TRYON, "NEGATIVE PROMPT"),
   };
 }

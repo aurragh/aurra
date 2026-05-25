@@ -16,21 +16,20 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [step, setStep] = useState<"setup" | "generating" | "result">("setup");
+  // Session-only photo: every modal open requires a fresh upload.
+  // We do NOT auto-load any previously-saved profile photo.
+  const [sessionPhotoUrl, setSessionPhotoUrl] = useState<string | null>(null);
+  const [sessionPhotoPreview, setSessionPhotoPreview] = useState<string | null>(null);
 
-  // Reset state every time the modal opens with a different outfit
-  // (or re-opens on the same one) so we don't show a stale result.
   useEffect(() => {
     if (outfitId) {
       setGeneratedImage(null);
       setStep("setup");
+      setSessionPhotoUrl(null);
+      setSessionPhotoPreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [outfitId]);
-
-  const { data: profilePhoto } = useQuery<{ avatarPhotoUrl: string | null }>({
-    queryKey: ["/api/profile/photo"],
-    enabled: !!outfitId,
-  });
 
   const uploadPhotoMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -42,11 +41,13 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Upload failed");
-      return res.json();
+      return res.json() as Promise<{ avatarPhotoUrl: string }>;
     },
-    onSuccess: () => {
+    onSuccess: (data, file) => {
+      setSessionPhotoUrl(data.avatarPhotoUrl);
+      setSessionPhotoPreview(URL.createObjectURL(file));
       queryClient.invalidateQueries({ queryKey: ["/api/profile/photo"] });
-      toast({ title: "Photo saved", description: "Ready to generate your try-on look." });
+      toast({ title: "Photo ready", description: "Tap Generate to see yourself in this look." });
     },
     onError: () => {
       toast({ title: "Upload failed", description: "Please try again.", variant: "destructive" });
@@ -93,7 +94,10 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
     a.click();
   };
 
-  const hasPhoto = !!profilePhoto?.avatarPhotoUrl;
+  // Only "has photo" if user uploaded one IN THIS SESSION.
+  // We deliberately do NOT auto-load previously saved photos — every Try It On
+  // starts with a clean upload prompt.
+  const hasPhoto = !!sessionPhotoUrl;
 
   return (
     <Dialog open={!!outfitId} onOpenChange={(open) => !open && onClose()}>
@@ -139,9 +143,9 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
                   >
                     {uploadPhotoMutation.isPending ? (
                       <div className="w-5 h-5 rounded-full border-2 border-purple-400 border-t-transparent animate-spin" />
-                    ) : hasPhoto ? (
+                    ) : sessionPhotoPreview ? (
                       <img
-                        src={profilePhoto.avatarPhotoUrl!}
+                        src={sessionPhotoPreview}
                         alt="Your photo"
                         className="w-full h-full object-cover"
                       />
@@ -155,21 +159,21 @@ export function TryOnModal({ outfitId, onClose }: TryOnModalProps) {
                       <div className="space-y-1.5">
                         <p className="text-xs text-green-400 font-medium">Photo ready</p>
                         <p className="text-xs text-gray-500 leading-relaxed">
-                          Aurra will style you in this look. Tap to change.
+                          Tap Generate below. Or replace this photo.
                         </p>
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           className="text-xs text-purple-400 underline underline-offset-2"
                           disabled={uploadPhotoMutation.isPending}
                         >
-                          Change photo
+                          Replace photo
                         </button>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
-                        <p className="text-sm text-white font-medium">Upload a selfie</p>
+                        <p className="text-sm text-white font-medium">Upload a fresh selfie</p>
                         <p className="text-xs text-gray-500 leading-relaxed">
-                          A clear front-facing photo works best. Saved to your profile.
+                          Clear, front-facing, good lighting. We don't reuse previous photos.
                         </p>
                         <button
                           onClick={() => fileInputRef.current?.click()}

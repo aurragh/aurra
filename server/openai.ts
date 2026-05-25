@@ -7,6 +7,8 @@ import {
   renderNovaSystemAppend,
   renderShoppingExtraction,
   renderStyleAnalysis,
+  renderOutfitImagePrompt,
+  renderTryOnPrompt,
   type OutfitVars,
 } from "../prompts/index";
 
@@ -188,7 +190,7 @@ export async function generateOutfitRecommendations(
 
 async function generateWithReplicate(basicItems: string, occasion: string): Promise<string | null> {
   const itemsDesc = basicItems || "stylish outfit";
-  const imagePrompt = `Professional fashion photography: complete outfit flat lay on pure white background. Items: ${itemsDesc} for ${occasion}. Vertically arranged: top garment at top, bottom garment in middle, shoes at bottom, accessories around. High-end fashion catalog aesthetic, crisp studio lighting, editorial quality. Ultra sharp focus, luxury brand photography. No models, no mannequins, no hangers.`;
+  const imagePrompt = renderOutfitImagePrompt({ itemsDesc, occasion });
 
   console.log(`[replicate] image prompt: ${imagePrompt}`);
 
@@ -356,7 +358,7 @@ export async function generateTryOnImage(
   try {
     console.log(`[replicate] try-on for occasion: ${occasion}`);
 
-    const prompt = `a photo of a woman img, wearing ${outfitText}, full body outfit shot, professional fashion editorial photography, clean studio background, sharp focus, high-end fashion magazine quality`;
+    const { prompt, negativePrompt } = renderTryOnPrompt({ outfitText, occasion });
 
     const output = (await replicate.run(
       "tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4",
@@ -366,10 +368,10 @@ export async function generateTryOnImage(
           input_image: avatarPhotoUrl,
           num_outputs: 1,
           style_name: "Photographic (Default)",
-          style_strength_ratio: 20,
-          num_steps: 20,
-          negative_prompt:
-            "nsfw, cartoon, illustration, painting, deformed, bad anatomy, ugly, blurry",
+          style_strength_ratio: 15,
+          num_steps: 30,
+          guidance_scale: 5,
+          negative_prompt: negativePrompt,
         },
       },
     )) as any[];
