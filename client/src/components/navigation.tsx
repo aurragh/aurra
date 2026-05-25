@@ -36,27 +36,14 @@ export default function Navigation({ onLogin, onSignup }: NavigationProps) {
     <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10" data-testid="navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{
-                background: "linear-gradient(135deg, #7c3aed, #a855f7)",
-                boxShadow: "0 0 12px rgba(168,85,247,0.7)",
-              }}
+          <a href="/" className="flex items-center" data-testid="heading-brand" aria-label="House of Nova home">
+            <img
+              src="/Logo.png"
+              alt="House of Nova"
+              className="h-11 w-auto"
+              style={{ filter: "invert(1) brightness(1.05)" }}
             />
-            <div className="flex items-baseline gap-2.5">
-              <h1
-                className="font-display text-3xl text-white tracking-tight leading-none"
-                style={{ letterSpacing: "-0.02em" }}
-                data-testid="heading-brand"
-              >
-                Aurra
-              </h1>
-              <span className="text-[11px] text-purple-300/50 uppercase tracking-[0.15em] hidden sm:inline">
-                by House of Nova
-              </span>
-            </div>
-          </div>
+          </a>
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
