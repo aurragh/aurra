@@ -111,7 +111,7 @@ export async function setupAuth(app: Express) {
     "/api/auth/google/callback",
     passport.authenticate("google", {
       failureRedirect: "/?auth=failed",
-      successRedirect: "/",
+      successRedirect: "/dashboard",
     }),
   );
 
