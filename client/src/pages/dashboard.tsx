@@ -257,12 +257,12 @@ export default function Dashboard() {
             >
               <DropdownMenuLabel className="text-gray-500 text-xs">Navigation</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-800" />
-              <Link href="/landing">
-                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-landing">
+              <a href="https://house-of-nova.vercel.app/" data-testid="menu-item-landing">
+                <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer">
                   <Home className="mr-2 h-4 w-4" />
-                  Back to Landing
+                  House of Nova
                 </DropdownMenuItem>
-              </Link>
+              </a>
               <Link href="/quiz">
                 <DropdownMenuItem className="text-gray-300 hover:text-white focus:text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer" data-testid="menu-item-quiz">
                   <RefreshCw className="mr-2 h-4 w-4" />
