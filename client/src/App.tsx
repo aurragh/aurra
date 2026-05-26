@@ -21,12 +21,22 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Hold a neutral surface while the auth query resolves so the post-OAuth
+  // redirect doesn't briefly flash Landing or 404 before /dashboard mounts.
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-2 border-foreground/20 border-t-foreground/70 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <Switch>
       {/* Public routes — always accessible */}
       <Route path="/look/:token" component={SharedLook} />
 
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/landing" component={Landing} />
