@@ -152,6 +152,21 @@ export async function generateOutfitRecommendations(
       console.warn("[aurra] response missing required fields, using fallbacks", result);
     }
 
+    // Structured items power the image generator. If Aurra didn't return them
+    // (older prompt rev, parse hiccup, etc), store an empty object — the image
+    // step will fall back to using the prose `primary`.
+    const structured =
+      result.items && typeof result.items === "object" && !Array.isArray(result.items)
+        ? {
+            top: typeof result.items.top === "string" ? result.items.top : null,
+            bottom: typeof result.items.bottom === "string" ? result.items.bottom : null,
+            shoes: typeof result.items.shoes === "string" ? result.items.shoes : null,
+            bag: typeof result.items.bag === "string" ? result.items.bag : null,
+            accessory:
+              typeof result.items.accessory === "string" ? result.items.accessory : null,
+          }
+        : {};
+
     return [
       {
         primary: result.primary || "",
@@ -160,14 +175,7 @@ export async function generateOutfitRecommendations(
         why: result.why || "",
         name: "Aurra Recommendation",
         description: result.primary || "",
-        items: JSON.stringify([
-          {
-            category: "Recommendation",
-            description: result.primary,
-            color: "N/A",
-            style: "N/A",
-          },
-        ]),
+        items: JSON.stringify(structured),
         aiRecommendation: `WHY: ${result.why || ""}\n\nBACKUP: ${result.backup || ""}\n\nAVOID: ${result.avoid || ""}`,
       },
     ];
@@ -188,11 +196,10 @@ export async function generateOutfitRecommendations(
   }
 }
 
-async function generateWithReplicate(basicItems: string, occasion: string): Promise<string | null> {
-  const itemsDesc = basicItems || "stylish outfit";
-  const imagePrompt = renderOutfitImagePrompt({ itemsDesc, occasion });
+async function generateWithReplicate(itemsList: string, occasion: string): Promise<string | null> {
+  const imagePrompt = renderOutfitImagePrompt({ itemsList, occasion });
 
-  console.log(`[replicate] image prompt: ${imagePrompt}`);
+  console.log(`[replicate] image prompt:\n${imagePrompt}`);
 
   try {
     const output = await replicate.run("black-forest-labs/flux-schnell", {
@@ -219,17 +226,41 @@ async function generateWithReplicate(basicItems: string, occasion: string): Prom
   }
 }
 
+/**
+ * Build the bullet list passed to Flux. Each line starts with "ONE" so the
+ * model has explicit cardinality at every item. Null fields are skipped so
+ * Flux is never given an empty slot to fill in with extras.
+ */
+function buildItemsList(structured: Record<string, string | null>): string {
+  const lines: string[] = [];
+  if (structured.top) lines.push(`- ONE top: ${structured.top}`);
+  if (structured.bottom) lines.push(`- ONE bottom: ${structured.bottom}`);
+  if (structured.shoes) lines.push(`- ONE pair of shoes: ${structured.shoes}`);
+  if (structured.bag) lines.push(`- ONE bag: ${structured.bag}`);
+  if (structured.accessory) lines.push(`- ONE accessory: ${structured.accessory}`);
+  return lines.join("\n");
+}
+
 export async function generateOutfitImage(
   outfit: GeneratedOutfit,
   profile: StyleProfile,
   occasion: string,
 ): Promise<string | null> {
   try {
-    const items = JSON.parse(outfit.items || "[]") as OutfitItem[];
-    const allItems = items
-      .map((item) => `${item.color} ${item.category.toLowerCase()}`)
-      .join(", ");
-    return await generateWithReplicate(allItems || outfit.primary, occasion);
+    const parsed = JSON.parse(outfit.items || "{}") as Record<string, string | null>;
+    // New path: structured items from the LLM. If we have at least a top + bottom,
+    // build the constrained list.
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && (parsed.top || parsed.bottom)) {
+      const itemsList = buildItemsList(parsed);
+      return await generateWithReplicate(itemsList, occasion);
+    }
+
+    // Legacy/fallback path: no structured items, fall back to the prose `primary`
+    // wrapped as a single line. Still cardinality-locked via the "ONE" prefix.
+    const fallback = outfit.primary
+      ? `- ONE complete outfit as described: ${outfit.primary}`
+      : "- ONE outfit appropriate to the occasion, no duplicates";
+    return await generateWithReplicate(fallback, occasion);
   } catch (error: any) {
     console.error("[replicate] outfit image error:", error);
     return null;

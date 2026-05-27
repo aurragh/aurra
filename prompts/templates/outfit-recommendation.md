@@ -84,3 +84,29 @@ Produce one outfit recommendation following the **CORE PROMISE** structure from 
 Do not invent any preferences not stated above. If a field is "not specified", treat it as unknown and avoid making assumptions in that dimension.
 
 Respond with valid JSON only — no markdown fences, no preamble, no commentary.
+
+### Required JSON schema
+
+```json
+{
+  "primary": "one decisive recommendation, single sentence in plain prose",
+  "items": {
+    "top": "specific top garment description: color + cut + fabric (e.g. 'navy single-breasted wool blazer over an ivory silk shell')",
+    "bottom": "specific bottom garment description: color + cut + fabric",
+    "shoes": "one pair, specific style and color, no alternatives",
+    "bag": "one bag, specific style and color, OR null if not appropriate for the occasion",
+    "accessory": "at most one small accessory (watch, belt, scarf, eyewear) OR null if accessories are minimal in this look"
+  },
+  "backup": "secondary direction in plain prose",
+  "avoid": "what to exclude",
+  "why": "rationale grounded in profile"
+}
+```
+
+### Strict constraints on `items`
+
+- Exactly one garment per category. No duplicates. No "or" alternatives inside a single field.
+- Item descriptions must be visually concrete (color + cut + fabric or material), not abstract ("appropriate top" is not valid; "navy single-breasted wool blazer" is).
+- If a category is genuinely not part of the look (e.g. no bag for a black-tie event), set that field to `null`. Do not invent items to fill slots.
+- `accessory` should be `null` unless the recommendation specifically calls for one. Most looks have at most one statement piece.
+- The items must exactly match the garments named in `primary`. The image renderer reads from `items`, not from `primary`.

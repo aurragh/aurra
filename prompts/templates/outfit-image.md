@@ -2,11 +2,20 @@
 
 Used for the **flat-lay outfit photo** that appears on every OutfitCard. Sent to `black-forest-labs/flux-schnell` on Replicate.
 
-Edit the prompt below to change how generated outfit images look. The whole `## PROMPT` body is sent verbatim (with variables interpolated).
+The prompt is intentionally restrictive. Flux will happily improvise extra items if you give it loose categorical lists, so we constrain count explicitly and avoid plural language.
 
-## Variables
-- `{{itemsDesc}}` — comma-joined description of outfit items (color + category). Defaults to `"stylish outfit"` if empty.
+## Variables (injected by `prompts/index.ts`)
+- `{{itemsList}}` — bullet list of items, one per line, built server-side from the structured `items` object the LLM returned. Each line begins with "ONE" to lock cardinality.
 - `{{occasion}}` — the occasion string (e.g. "important board meeting")
 
 ## PROMPT
-Professional fashion photography: complete outfit flat lay on pure white background. Items: {{itemsDesc}} for {{occasion}}. Vertically arranged: top garment at top, bottom garment in middle, shoes at bottom, accessories around. High-end fashion catalog aesthetic, crisp studio lighting, editorial quality. Ultra sharp focus, luxury brand photography. No models, no mannequins, no hangers.
+Professional fashion photography flat lay on pure white seamless background. Single outfit composition. ONE garment per category. No duplicates. No alternative pieces shown. No variants.
+
+The outfit, for {{occasion}}:
+{{itemsList}}
+
+Layout: vertical composition, centered. Top garment in the upper third of the frame. Bottom garment in the middle third. Single pair of shoes in the lower third. Bag (if present) framed at the left. Accessory (if present) at the right. Generous negative space.
+
+Hard constraints: exactly the items listed above, ONE of each. NO duplicate garments. NO alternative versions. NO additional pieces beyond those listed. NO models, mannequins, or hangers. Pure white seamless background. Even soft studio lighting.
+
+Editorial fashion catalog aesthetic. Crisp studio lighting. Ultra sharp focus. Luxury brand photography. High-end fashion magazine quality.
