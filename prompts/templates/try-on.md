@@ -10,8 +10,9 @@ Used when a user clicks **Try It On** in the OutfitCard. Sent to `tencentarc/pho
 - The prompt should focus on the **outfit and scene**, not on the user's appearance — otherwise PhotoMaker will try to "improve" the face
 
 ## Variables
-- `{{outfitText}}` — Aurra's primary recommendation (the outfit description)
-- `{{occasion}}` — the occasion (currently unused in prompt, available if needed)
+- `{{outfitText}}` — Aurra's primary recommendation in prose, plus the structured items if available (built server-side)
+- `{{occasion}}` — the occasion string
+- `{{aestheticMood}}` — profile-derived visual tone (same field used by the flat-lay image prompt)
 
 ## Settings (in server/openai.ts, not in this file)
 - `style_strength_ratio: 15` — minimum recommended for face fidelity
@@ -20,7 +21,7 @@ Used when a user clicks **Try It On** in the OutfitCard. Sent to `tencentarc/pho
 - `style_name: "Photographic (Default)"`
 
 ## PROMPT
-a person img wearing {{outfitText}}, full body fashion editorial photo, clean neutral studio background, soft natural lighting, sharp focus on outfit details, same exact face as reference photo, preserve facial features, preserve skin tone, preserve hair color and style, realistic photography, high-end fashion magazine quality
+a person img wearing {{outfitText}}, full-body fashion editorial photograph for {{occasion}}, {{aestheticMood}}, clean neutral seamless studio background, soft natural diffused studio lighting, sharp focus on outfit details and fabric texture, same exact face as reference photo, preserve facial features, preserve skin tone, preserve hair color and style, preserve face structure, NET-A-PORTER caliber editorial fashion photography, premium catalog quality, true-to-life color rendering of every garment as described
 
 ## NEGATIVE PROMPT
-different person, different face, changed face, distorted face, deformed face, asymmetric eyes, bad anatomy, extra limbs, mutated hands, fused fingers, blurry, low quality, jpeg artifacts, watermark, text, signature, cartoon, illustration, painting, anime, nsfw
+different person, different face, changed face, distorted face, deformed face, asymmetric eyes, asymmetric face, plastic-looking skin, smoothed face, airbrushed face, bad anatomy, extra limbs, extra arms, extra legs, mutated hands, fused fingers, missing fingers, deformed body, duplicate garments, two of any item, multiple shoes, multiple bags, multiple shirts, alternative outfit pieces, layered alternate looks, hangers, mannequins, dress forms, blurry, motion blur, low quality, low resolution, jpeg artifacts, compression artifacts, watermark, text, captions, signature, brand logos, price tags, cartoon, illustration, painting, anime, 3d render, cgi, nsfw, nudity, underwear visible

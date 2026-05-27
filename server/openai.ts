@@ -196,8 +196,18 @@ export async function generateOutfitRecommendations(
   }
 }
 
-async function generateWithReplicate(itemsList: string, occasion: string): Promise<string | null> {
-  const imagePrompt = renderOutfitImagePrompt({ itemsList, occasion });
+async function generateWithReplicate(
+  itemsList: string,
+  occasion: string,
+  aestheticMood: string,
+  paletteAnchor: string,
+): Promise<string | null> {
+  const imagePrompt = renderOutfitImagePrompt({
+    itemsList,
+    occasion,
+    aestheticMood,
+    paletteAnchor,
+  });
 
   console.log(`[replicate] image prompt:\n${imagePrompt}`);
 
@@ -241,18 +251,98 @@ function buildItemsList(structured: Record<string, string | null>): string {
   return lines.join("\n");
 }
 
+/**
+ * Derive the aesthetic mood phrase from the user's profile.
+ * Maps identity + presence + emotional goal to a short visual descriptor that
+ * tells Flux *how* to feel, not what to render.
+ */
+function buildAestheticMood(profile: StyleProfile): string {
+  const personality = safeJson<Record<string, any>>(profile.personality, {});
+  const identity = String(personality.identityWord || "").toLowerCase();
+  const presence = String(personality.presenceArchetype || personality.presenceGoal || "").toLowerCase();
+  const emotion = String(personality.emotionalGoal || "").toLowerCase();
+
+  const identityMood: Record<string, string> = {
+    powerful: "commanding restrained authority",
+    sharp: "sharp structured precision",
+    quiet: "quiet grounded confidence",
+    bold: "deliberate bold composure",
+    warm: "warm approachable presence",
+    grounded: "grounded composed presence",
+  };
+
+  const archetypeBeat: Record<string, string> = {
+    "commands silence": "with negative space and weight",
+    "draws people in": "with softness and welcoming warmth",
+    "reads the room": "with neutral readability",
+    "gets things done": "with utility and clean function",
+  };
+
+  const emotionTexture: Record<string, string> = {
+    powerful: "elevated luxury finish",
+    calm: "softly composed finish",
+    warm: "warm magazine finish",
+    grounded: "natural editorial finish",
+    creative: "considered editorial finish",
+    playful: "polished editorial finish",
+  };
+
+  const mood = identityMood[identity] || "considered editorial confidence";
+  const beat = archetypeBeat[presence] || "with confident balance";
+  const texture = emotionTexture[emotion] || "premium catalog finish";
+  return `${mood} ${beat}, ${texture}`;
+}
+
+/**
+ * Derive the palette anchor phrase. Tells Flux the color world the outfit
+ * sits in — used as a colour-grading hint, not a replacement for the items'
+ * own colours (those are still authoritative).
+ */
+function buildPaletteAnchor(profile: StyleProfile): string {
+  const colorPrefs = safeJson<string[]>(profile.colorPreferences, []);
+  const palette = String(colorPrefs[0] || "").toLowerCase();
+  const appearance = safeJson<Record<string, any>>((profile as any).appearance, {});
+  const undertone = String(appearance.skinUndertone || "").toLowerCase();
+
+  const paletteBase: Record<string, string> = {
+    neutral: "cool-toned neutrals, deep charcoal and stone foundation",
+    classic: "classic deep neutrals, midnight navy and oxblood accents",
+    warm: "warm earthy palette with cream and camel anchors",
+    bold: "saturated deep colour story, jewel-tone accents grounded in black",
+    minimal: "monochrome editorial greyscale with crisp white space",
+    soft: "softly muted palette, dusty pastels grounded in cool grey",
+  };
+
+  let base = paletteBase[palette] || "considered neutral palette with restrained accents";
+  if (undertone.includes("cool")) base += ", cool white balance";
+  else if (undertone.includes("warm")) base += ", subtly warm white balance";
+  return base;
+}
+
+function safeJson<T>(input: string | null | undefined, fallback: T): T {
+  if (!input) return fallback;
+  try {
+    return JSON.parse(input) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function generateOutfitImage(
   outfit: GeneratedOutfit,
   profile: StyleProfile,
   occasion: string,
 ): Promise<string | null> {
   try {
+    const aestheticMood = buildAestheticMood(profile);
+    const paletteAnchor = buildPaletteAnchor(profile);
+
     const parsed = JSON.parse(outfit.items || "{}") as Record<string, string | null>;
     // New path: structured items from the LLM. If we have at least a top + bottom,
     // build the constrained list.
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && (parsed.top || parsed.bottom)) {
       const itemsList = buildItemsList(parsed);
-      return await generateWithReplicate(itemsList, occasion);
+      return await generateWithReplicate(itemsList, occasion, aestheticMood, paletteAnchor);
     }
 
     // Legacy/fallback path: no structured items, fall back to the prose `primary`
@@ -260,7 +350,7 @@ export async function generateOutfitImage(
     const fallback = outfit.primary
       ? `- ONE complete outfit as described: ${outfit.primary}`
       : "- ONE outfit appropriate to the occasion, no duplicates";
-    return await generateWithReplicate(fallback, occasion);
+    return await generateWithReplicate(fallback, occasion, aestheticMood, paletteAnchor);
   } catch (error: any) {
     console.error("[replicate] outfit image error:", error);
     return null;
@@ -385,11 +475,20 @@ export async function generateTryOnImage(
   avatarPhotoUrl: string,
   outfitText: string,
   occasion: string,
+  profile?: StyleProfile,
 ): Promise<string | null> {
   try {
     console.log(`[replicate] try-on for occasion: ${occasion}`);
 
-    const { prompt, negativePrompt } = renderTryOnPrompt({ outfitText, occasion });
+    const aestheticMood = profile
+      ? buildAestheticMood(profile)
+      : "considered editorial confidence with restrained authority, premium catalog finish";
+
+    const { prompt, negativePrompt } = renderTryOnPrompt({
+      outfitText,
+      occasion,
+      aestheticMood,
+    });
 
     const output = (await replicate.run(
       "tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4",

@@ -108,12 +108,21 @@ function extractSection(md: string, header: string): string {
   return (m?.[1] ?? "").trim();
 }
 
-export function renderOutfitImagePrompt(vars: { itemsList: string; occasion: string }): string {
+export function renderOutfitImagePrompt(vars: {
+  itemsList: string;
+  occasion: string;
+  aestheticMood: string;
+  paletteAnchor: string;
+}): string {
   const body = extractSection(TPL_OUTFIT_IMAGE, "PROMPT");
   return render(body, vars);
 }
 
-export function renderTryOnPrompt(vars: { outfitText: string; occasion: string }): {
+export function renderTryOnPrompt(vars: {
+  outfitText: string;
+  occasion: string;
+  aestheticMood: string;
+}): {
   prompt: string;
   negativePrompt: string;
 } {

@@ -620,7 +620,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : `${protocol}://${host}${user.avatarPhotoUrl}`;
 
       console.log(`Try-on: generating for outfit ${outfitId}, avatar: ${absoluteAvatarUrl}`);
-      const imageUrl = await generateTryOnImage(absoluteAvatarUrl, outfitText, occasion);
+      const profile = await storage.getStyleProfile(userId);
+      const imageUrl = await generateTryOnImage(
+        absoluteAvatarUrl,
+        outfitText,
+        occasion,
+        profile ?? undefined,
+      );
 
       if (!imageUrl) {
         return res.status(500).json({ message: "Failed to generate try-on image" });
