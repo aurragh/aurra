@@ -16,6 +16,23 @@ type SpeakStatus = "idle" | "loading" | "speaking";
 type Manifest = Record<string, string>;
 
 let manifestPromise: Promise<Manifest> | null = null;
+let normalizedPromise: Promise<Manifest> | null = null;
+
+/**
+ * Punctuation-normalized key so a phrase still matches its pre-recorded MP3
+ * after an editorial tweak (commas vs periods, etc). The audio is correct as
+ * long as the words are the same; we just need the lookup to be lenient about
+ * how the sentence is written in the code today.
+ */
+function normalizeKey(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[.,!?;:\-–—…]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function loadManifest(): Promise<Manifest> {
   if (!manifestPromise) {
@@ -24,6 +41,19 @@ function loadManifest(): Promise<Manifest> {
       .catch(() => ({}));
   }
   return manifestPromise;
+}
+
+function loadNormalized(): Promise<Manifest> {
+  if (!normalizedPromise) {
+    normalizedPromise = loadManifest().then((m) => {
+      const out: Manifest = {};
+      for (const [key, url] of Object.entries(m)) {
+        out[normalizeKey(key)] = url;
+      }
+      return out;
+    });
+  }
+  return normalizedPromise;
 }
 
 export function useAurraTTS() {
@@ -62,8 +92,14 @@ export function useAurraTTS() {
       try {
         let audioUrl: string | null = null;
 
-        // 1. Static manifest — covers all pre-generated fixed phrases
-        const m = manifest[text] || (await loadManifest())[text];
+        // 1. Static manifest — covers all pre-generated fixed phrases.
+        //    First try an exact match (fast path), then a punctuation-normalized
+        //    lookup so a code-side tweak like comma-for-period doesn't break the
+        //    pre-recorded audio match.
+        const m =
+          manifest[text] ||
+          (await loadManifest())[text] ||
+          (await loadNormalized())[normalizeKey(text)];
         if (m) {
           audioUrl = m;
         } else {
