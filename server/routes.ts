@@ -615,17 +615,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const protocol = req.get('x-forwarded-proto') === 'https' ? 'https' : req.protocol;
       const host = req.get('host') || 'localhost:5000';
-      const absoluteAvatarUrl = user.avatarPhotoUrl.startsWith('http')
-        ? user.avatarPhotoUrl
-        : `${protocol}://${host}${user.avatarPhotoUrl}`;
+      const toAbsolute = (u: string | null | undefined) =>
+        !u ? null : u.startsWith('http') ? u : `${protocol}://${host}${u}`;
 
-      console.log(`Try-on: generating for outfit ${outfitId}, avatar: ${absoluteAvatarUrl}`);
+      const absoluteAvatarUrl = toAbsolute(user.avatarPhotoUrl) as string;
+      // FASHN needs a garment image. Use the outfit's generated flat-lay as the
+      // garment to put on the user; falls back to PhotoMaker (text-based) if the
+      // outfit has no image or FASHN isn't configured.
+      const absoluteGarmentUrl = toAbsolute(outfit.imageUrl);
+
+      console.log(`Try-on: outfit ${outfitId}, avatar: ${absoluteAvatarUrl}, garment: ${absoluteGarmentUrl}`);
       const profile = await storage.getStyleProfile(userId);
       const imageUrl = await generateTryOnImage(
         absoluteAvatarUrl,
         outfitText,
         occasion,
         profile ?? undefined,
+        absoluteGarmentUrl,
       );
 
       if (!imageUrl) {

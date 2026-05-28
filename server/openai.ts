@@ -471,12 +471,83 @@ export async function novaChatResponse(
   }
 }
 
+const FASHN_API_KEY = process.env.FASHN_API_KEY;
+
+/**
+ * Virtual try-on via FASHN AI (fashn.ai). Puts a specific garment image onto
+ * the user's photo. Far more realistic than PhotoMaker for garment-on-person.
+ * Async: FASHN returns a prediction id, we poll /status until completed.
+ * Both image inputs must be PUBLICLY reachable URLs (FASHN fetches them).
+ */
+async function generateTryOnFashn(
+  modelImageUrl: string,
+  garmentImageUrl: string,
+  category: "auto" | "tops" | "bottoms" | "one-pieces" = "auto",
+): Promise<string | null> {
+  if (!FASHN_API_KEY) return null;
+  try {
+    const runRes = await fetch("https://api.fashn.ai/v1/run", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${FASHN_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model_name: "tryon-v1.6",
+        inputs: {
+          model_image: modelImageUrl,
+          garment_image: garmentImageUrl,
+          category,
+        },
+      }),
+    });
+    const runJson: any = await runRes.json();
+    if (!runRes.ok || runJson.error || !runJson.id) {
+      console.error("[fashn] run failed:", runJson.error ?? runRes.status);
+      return null;
+    }
+    const id = runJson.id as string;
+    console.log(`[fashn] prediction queued: ${id}`);
+
+    // Poll up to ~50s (FASHN try-on typically completes in 10-30s).
+    for (let i = 0; i < 25; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const stRes = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
+        headers: { Authorization: `Bearer ${FASHN_API_KEY}` },
+      });
+      const st: any = await stRes.json();
+      if (st.status === "completed" && Array.isArray(st.output) && st.output[0]) {
+        console.log(`[fashn] try-on completed: ${st.output[0]}`);
+        return st.output[0] as string;
+      }
+      if (st.status === "failed") {
+        console.error("[fashn] try-on failed:", st.error);
+        return null;
+      }
+    }
+    console.warn("[fashn] try-on timed out");
+    return null;
+  } catch (err) {
+    console.error("[fashn] error:", err);
+    return null;
+  }
+}
+
 export async function generateTryOnImage(
   avatarPhotoUrl: string,
   outfitText: string,
   occasion: string,
   profile?: StyleProfile,
+  garmentImageUrl?: string | null,
 ): Promise<string | null> {
+  // Prefer FASHN when configured and we have a garment image. It produces a
+  // far more realistic garment-on-person result than PhotoMaker.
+  if (FASHN_API_KEY && garmentImageUrl) {
+    const fashnUrl = await generateTryOnFashn(avatarPhotoUrl, garmentImageUrl, "auto");
+    if (fashnUrl) return fashnUrl;
+    console.warn("[tryon] FASHN failed or unavailable, falling back to PhotoMaker");
+  }
+
   try {
     console.log(`[replicate] try-on for occasion: ${occasion}`);
 
