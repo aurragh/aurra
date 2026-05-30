@@ -580,8 +580,9 @@ export default function Dashboard() {
       {/* Floating NOVA Chat button */}
       <Link href="/chat">
         <button
-          className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 active:scale-95 z-40"
+          className="fixed right-6 flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 active:scale-95 z-40"
           style={{
+            bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
             background: "linear-gradient(135deg, #7c3aed, #a855f7)",
             boxShadow: "0 4px 24px rgba(139,92,246,0.45)",
           }}

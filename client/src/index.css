@@ -118,12 +118,30 @@
   .text-gradient {
     @apply bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent;
   }
-  
+
   .hero-gradient {
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #581c87 100%);
   }
-  
+
   .card-glass {
     @apply bg-white/10 backdrop-blur-sm border-white/20;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pb-safe-4 {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  .pb-safe-5 {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
   }
 }

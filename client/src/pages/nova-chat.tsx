@@ -211,7 +211,7 @@ export default function NovaChat() {
         </div>
 
         {/* Chat messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-5 pb-32 max-w-lg mx-auto w-full">
+        <div className="flex-1 overflow-y-auto px-4 py-5 max-w-lg mx-auto w-full" style={{ paddingBottom: "calc(8rem + env(safe-area-inset-bottom, 0px))" }}>
           {/* Starter prompts — show when only the welcome message exists */}
           {messages.length <= 1 && (
             <div className="mb-6 msg-in">
@@ -303,8 +303,8 @@ export default function NovaChat() {
 
         {/* Input bar */}
         <div
-          className="fixed bottom-0 left-0 right-0 px-4 pb-5 pt-3 z-20"
-          style={{ background: "linear-gradient(to top, rgba(13,8,18,1) 70%, transparent)" }}
+          className="fixed bottom-0 left-0 right-0 px-4 pt-3 z-20 pb-safe-5"
+          style={{ background: "linear-gradient(to top, rgba(13,8,18,1) 70%, transparent)", paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
         >
           <div className="max-w-lg mx-auto">
             <div

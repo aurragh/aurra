@@ -89,7 +89,7 @@ export default function FeaturesSection() {
             </div>
             
             {/* Floating UI elements */}
-            <div className="absolute -top-4 -right-4 bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20" data-testid="floating-ui-element">
+            <div className="hidden sm:block absolute -top-4 -right-4 bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20" data-testid="floating-ui-element">
               <div className="flex items-center space-x-2">
                 <Brain className="w-5 h-5 text-purple-400" />
                 <span className="text-sm font-medium text-white">AI Powered</span>

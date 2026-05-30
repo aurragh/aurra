@@ -182,14 +182,14 @@ export function OutfitCard({
         <div className="flex items-center gap-0.5 flex-shrink-0">
           <button
             onClick={() => onRemix(outfit)}
-            className="p-1.5 rounded-full transition-colors hover:bg-purple-500/15 group"
+            className="p-2 rounded-full transition-colors hover:bg-purple-500/15 active:bg-purple-500/20 group"
             title="Remix this look"
           >
             <Shuffle className="w-3.5 h-3.5 text-gray-500 group-hover:text-purple-400 transition-colors" />
           </button>
           <button
             onClick={() => onShare(outfit.id)}
-            className="p-1.5 rounded-full transition-colors hover:bg-blue-500/15 group"
+            className="p-2 rounded-full transition-colors hover:bg-blue-500/15 active:bg-blue-500/20 group"
             title="Share"
           >
             <Share2 className="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-400 transition-colors" />
@@ -197,7 +197,7 @@ export function OutfitCard({
           <button
             onClick={() => onDelete(outfit.id)}
             disabled={isDeletePending}
-            className="p-1.5 rounded-full transition-colors hover:bg-red-500/15 group"
+            className="p-2 rounded-full transition-colors hover:bg-red-500/15 active:bg-red-500/20 group"
             title="Remove"
           >
             <Trash2 className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition-colors" />

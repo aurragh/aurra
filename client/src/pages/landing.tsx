@@ -100,7 +100,7 @@ export default function Landing() {
             </Button>
           </div>
           
-          <div className="mt-12 flex justify-center items-center space-x-8 text-muted-foreground">
+          <div className="mt-12 flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-muted-foreground">
             <div className="flex items-center" data-testid="stat-users">
               <Users className="w-5 h-5 mr-2" />
               <span>10K+ Users</span>
@@ -120,7 +120,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="bg-slate-950 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
             <div>
               <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4" data-testid="heading-footer-brand">
                 Aurra

@@ -358,7 +358,7 @@ export default function Wardrobe() {
                     <button
                       onClick={() => deleteMutation.mutate(item.id)}
                       disabled={deleteMutation.isPending}
-                      className="p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                      className="p-2 rounded-full transition-colors hover:bg-red-500/20 active:bg-red-500/30"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
                     </button>
